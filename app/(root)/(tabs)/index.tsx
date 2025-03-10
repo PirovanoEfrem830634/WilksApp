@@ -11,6 +11,7 @@ export default function Index() {
       }}
     >
     
+    <Text className="font-bold text-lg">Welcome</Text>
 
     <Link href="/sign-in">Signin</Link>
     <Link href="/explore">Explore</Link>
