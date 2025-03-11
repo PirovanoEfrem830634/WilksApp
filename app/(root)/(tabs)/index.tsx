@@ -11,8 +11,8 @@ export default function Index() {
       }}
     >
     
-    <Text className="text-lg font-opensans-light">Welcome with OpenSans Light</Text>
-        
+    <Text className="text-secondary text-lg font-opensans-light">Welcome with OpenSans Light</Text>
+
     <Link href="/sign-in">Signin</Link>
     <Link href="/explore">Explore</Link>
     <Link href="/profile">Profile</Link>
