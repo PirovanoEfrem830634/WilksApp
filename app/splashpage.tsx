@@ -15,7 +15,7 @@ export default function SplashPage() {
 
   return (
     <View style={styles.container}>
-      <Image source={require("../assets/images/icon.png")} style={styles.logo} />
+      <Image source={require("../assets/images/Wilks-splash-icon.png")} style={styles.logo} />
       <Text style={styles.title}>Welcome to WilksApp</Text>
       <Text style={styles.subtitle}>Empowering Your Fitness Journey</Text>
     </View>
