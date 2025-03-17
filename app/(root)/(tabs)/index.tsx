@@ -21,6 +21,7 @@ export default function Index() {
     <Link href="/home">Home</Link>
     <Link href="/tracking">Tracking</Link>
     <Link href="/trackinghistory">Tracking History</Link>
+    <Link href="/predictive">Predictive</Link>
 
     </View>
   );
