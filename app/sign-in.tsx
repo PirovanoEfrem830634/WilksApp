@@ -33,6 +33,10 @@ export default function SignIn() {
       <Pressable onPress={() => router.push("/recover-password")} className="mt-4">
         <Text className="text-secondary">Forgot Password?</Text>
       </Pressable>
+
+      <Pressable onPress={() => router.push("/sign-up")} className="mt-4">
+        <Text className="text-secondary">Sign Up</Text>
+      </Pressable>
     </View>
   );
 }
