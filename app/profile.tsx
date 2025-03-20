@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, Image, Pressable, ActivityIndicator } from "react-native";
+import React, { useEffect, useState, useLayoutEffect } from "react";
+import { View, Text, Image, Pressable, ActivityIndicator, StyleSheet } from "react-native";
 import { auth, db } from "../firebaseconfig"; // Assicurati che il percorso sia corretto
 import { getDoc, doc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
-import { useRouter } from "expo-router";
+import { useRouter, useNavigation } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 // Definizione dell'interfaccia per i dati utente
 interface UserData {
@@ -12,12 +13,20 @@ interface UserData {
   email: string;
   age?: number;
   city?: string;
+  phone?: string;
+  height?: string;
+  weight?: string;
 }
 
 export default function Profile() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const navigation = useNavigation();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ headerShown: false });
+  }, [navigation]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -48,33 +57,102 @@ export default function Profile() {
   }
 
   return (
-    <View className="flex-1 bg-light px-6 py-10 items-center">
-      <Text className="text-3xl font-bold text-primary mb-4">Profile</Text>
+    <View style={styles.container}>
+      {/* Sezione Profilo */}
+      <View style={styles.profileHeader}>
+        <Image source={{ uri: "https://via.placeholder.com/150" }} style={styles.avatar} />
+        <Text style={styles.name}>{userData?.firstName} {userData?.lastName}</Text>
+        <Text style={styles.email}>{userData?.email}</Text>
+      </View>
 
-      {/* Immagine Profilo (Puoi cambiarla con una reale se disponibile) */}
-      <Image
-        source={{ uri: "https://via.placeholder.com/150" }}
-        className="w-32 h-32 rounded-full mb-4"
-      />
+      {/* Informazioni Utente */}
+      <View style={styles.infoCard}>
+        <Text style={styles.infoText}>
+          <Ionicons name="calendar-outline" size={16} color="#5DADE2" /> Data di nascita: <Text style={styles.infoValue}>{userData?.age || "Non fornita"}</Text>
+        </Text>
+        <Text style={styles.infoText}>
+          <Ionicons name="location-outline" size={16} color="#5DADE2" /> Città: <Text style={styles.infoValue}>{userData?.city || "Non fornita"}</Text>
+        </Text>
+        <Text style={styles.infoText}>
+          <Ionicons name="call-outline" size={16} color="#5DADE2" /> Telefono: <Text style={styles.infoValue}>{userData?.phone || "Non fornito"}</Text>
+        </Text>
+        <Text style={styles.infoText}>
+          <Ionicons name="body-outline" size={16} color="#5DADE2" /> Altezza: <Text style={styles.infoValue}>{userData?.height || "Non fornita"}</Text>
+        </Text>
+        <Text style={styles.infoText}>
+          <Ionicons name="scale-outline" size={16} color="#5DADE2" /> Peso: <Text style={styles.infoValue}>{userData?.weight || "Non fornito"}</Text>
+        </Text>
+      </View>
 
-      {userData ? (
-        <>
-          <Text className="text-xl font-semibold text-primary">{userData.firstName} {userData.lastName}</Text>
-          <Text className="text-lg text-secondary">{userData.email}</Text>
-
-          <View className="mt-6 space-y-2">
-            <Text className="text-lg">Età: {userData.age || "Non fornita"}</Text>
-            <Text className="text-lg">Città: {userData.city || "Non fornita"}</Text>
-          </View>
-
-          {/* Pulsante di Logout */}
-          <Pressable className="bg-red-500 p-3 rounded-lg mt-6" onPress={handleLogout}>
-            <Text className="text-white text-center font-bold">Logout</Text>
-          </Pressable>
-        </>
-      ) : (
-        <Text className="text-lg text-gray-600">Nessun dato disponibile.</Text>
-      )}
+      {/* Pulsante Logout */}
+      <Pressable style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutText}>Logout</Text>
+      </Pressable>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#FDFEFE",
+    alignItems: "center",
+    paddingTop: 50,
+  },
+  profileHeader: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 10,
+  },
+  name: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#2C3E50",
+  },
+  email: {
+    fontSize: 16,
+    color: "#5DADE2",
+  },
+  infoCard: {
+    width: "90%",
+    backgroundColor: "#FFF",
+    padding: 15,
+    borderRadius: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+    marginBottom: 20,
+  },
+  infoText: {
+    fontSize: 16,
+    color: "#2C3E50",
+    marginBottom: 10,
+  },
+  infoValue: {
+    fontWeight: "600",
+  },
+  logoutButton: {
+    backgroundColor: "#E74C3C",
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  logoutText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#FFF",
+  },
+});
