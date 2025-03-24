@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { Agenda } from "react-native-calendars";
+import { View, Text, StyleSheet, Platform } from "react-native";
+import { Agenda, Calendar } from "react-native-calendars";
 import { collection, getDocs } from "firebase/firestore";
 import { auth, db } from "../firebaseconfig";
+import BottomNavigation from "../app/BottomNavigation";
 
 export default function SymptomCalendar() {
-  const [items, setItems] = useState({});
+  const [items, setItems] = useState<Record<string, { name: string; description: string }[]>>({});
+  const [markedDates, setMarkedDates] = useState({});
 
   const fetchSymptoms = async () => {
     const uid = auth.currentUser?.uid;
@@ -15,25 +17,71 @@ export default function SymptomCalendar() {
     const snapshot = await getDocs(ref);
 
     const loadedItems: any = {};
+    const marks: any = {};
+
     snapshot.docs.forEach(doc => {
       const data = doc.data();
-      const date = doc.id; // es. '2025-03-24'
+      const date = doc.id;
+
+      // Filtra solo i campi significativi
+      const sintomiAttivi = Object.entries(data)
+        .filter(([key, value]) => {
+          if (typeof value === "boolean") return value === true;
+          if (typeof value === "string") return value.trim() !== "";
+          if (typeof value === "number") return value > 0;
+          return false;
+        })
+        .map(([key, value]) => `${key}: ${value}`)
+        .join("\n");
 
       loadedItems[date] = [
         {
-          name: `Fatigue: ${data.affaticamentoMuscolare}/10`,
-          description: data.andamentoSintomi || "No description",
-          fullData: data,
+          name: "Sintomi registrati",
+          description: sintomiAttivi || "Nessun sintomo significativo registrato.",
         }
       ];
+
+      marks[date] = { marked: true, dotColor: "#007AFF" };
     });
 
     setItems(loadedItems);
+    console.log("Loaded items:", loadedItems);
+    setMarkedDates(marks);
   };
 
   useEffect(() => {
     fetchSymptoms();
   }, []);
+
+  if (Platform.OS === "web") {
+    const [selectedSymptom, setSelectedSymptom] = useState<{ date: string; item: { name: string; description: string } } | null>(null);
+  
+    return (
+      <View style={{ padding: 20 }}>
+        <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>Symptom Calendar (Web)</Text>
+        <Calendar
+          markedDates={markedDates}
+          onDayPress={(day: { dateString: string }) => {
+            const selected = day.dateString;
+            const item = items[selected]?.[0];
+            if (item) {
+              setSelectedSymptom({ date: selected, item });
+            } else {
+              setSelectedSymptom({ date: selected, item: { name: "Nessun dato registrato", description: "" } });
+            }
+          }}
+        />
+  
+        {selectedSymptom && (
+          <View style={styles.webDetailBox}>
+            <Text style={styles.dateTitle}>{selectedSymptom.date}</Text>
+            <Text style={styles.title}>{selectedSymptom.item.name}</Text>
+            <Text>{selectedSymptom.item.description}</Text>
+          </View>
+        )}
+      </View>
+    );
+  }  
 
   return (
     <Agenda
@@ -47,11 +95,12 @@ export default function SymptomCalendar() {
       )}
       renderEmptyDate={() => (
         <View style={styles.emptyDate}>
-          <Text style={styles.emptyText}>No data for this day</Text>
+          <Text style={styles.emptyText}>Nessun dato per questo giorno</Text>
         </View>
       )}
     />
-  );
+  )
+  
 }
 
 const styles = StyleSheet.create({
@@ -82,4 +131,17 @@ const styles = StyleSheet.create({
     color: "#999",
     textAlign: "center",
   },
+  webDetailBox: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  dateTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 5,
+  },  
 });
