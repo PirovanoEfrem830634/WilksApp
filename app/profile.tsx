@@ -5,6 +5,7 @@ import { getDoc, doc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { useRouter, useNavigation } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import BottomNavigation from "../app/BottomNavigation";
 
 // Definizione dell'interfaccia per i dati utente
 interface UserData {
