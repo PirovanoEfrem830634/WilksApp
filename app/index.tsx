@@ -36,7 +36,7 @@ export default function Index() {
             </Pressable>
           </Link>
           
-          <Link href="/properties/1" asChild>
+          <Link href="/info" asChild>
             <Pressable style={styles.card}>
               <Ionicons name="home-outline" size={30} color="#5DADE2" />
               <Text style={styles.cardText}>Properties</Text>

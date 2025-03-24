@@ -116,7 +116,7 @@ export default function SymptomTracking() {
       
       {/* Bottom Navigation */}
       <View style={styles.bottomBar}>
-        <Pressable onPress={() => router.push("/home")} style={styles.navButton}>
+        <Pressable onPress={() => router.push("/")} style={styles.navButton}>
           <Home size={24} color="#007AFF" />
           <Text style={styles.navText}>Home</Text>
         </Pressable>
