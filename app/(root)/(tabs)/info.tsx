@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, Pressable, LayoutAnimation, Platform, UIManager, Animated } from "react-native";
-import { Activity, Eye, Wind, ChevronsDown, DivideCircle, Mic, ChevronDown, ChevronUp, Home, User } from "lucide-react-native";
+import { View, Text, ScrollView, StyleSheet, Pressable, LayoutAnimation, Platform, UIManager, Animated, TextInput } from "react-native";
+import { Activity, Eye, Wind, ChevronsDown, DivideCircle, Mic, ChevronDown, ChevronUp, Home, User, Search } from "lucide-react-native";
 import { useRouter } from "expo-router";
 
 if (Platform.OS === 'android') {
@@ -84,6 +84,7 @@ const symptoms = [
 
 export default function SymptomInfo() {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -100,6 +101,10 @@ export default function SymptomInfo() {
     }).start();
   }, []);
 
+  const filteredSymptoms = symptoms.filter((symptom) =>
+    symptom.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <View style={{ flex: 1 }}>
       <ScrollView style={styles.container} contentInsetAdjustmentBehavior="never">
@@ -108,35 +113,47 @@ export default function SymptomInfo() {
           <Text style={styles.subtitle}>Tap on each item to learn what it means and what you can do.</Text>
         </Animated.View>
 
-        {symptoms.map((symptom) => {
+        <View style={styles.searchContainer}>
+          <Search size={20} color="#888" style={{ marginRight: 8 }} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search a symptom..."
+            value={searchTerm}
+            onChangeText={setSearchTerm}
+            placeholderTextColor="#888"
+          />
+        </View>
+
+        {filteredSymptoms.map((symptom) => {
           const isExpanded = expanded === symptom.key;
           return (
-            <Pressable
-              key={symptom.key}
-              onPress={() => toggleCard(symptom.key)}
-              style={[styles.card, isExpanded && styles.cardExpanded]}
-            >
-              <View style={styles.cardHeader}>
-                <View style={styles.iconTitleContainer}>
-                  {symptom.icon}
-                  <Text style={styles.cardTitle}>{symptom.title}</Text>
+            <Animated.View key={symptom.key} style={{ opacity: fadeAnim }}>
+              <Pressable
+                onPress={() => toggleCard(symptom.key)}
+                style={[styles.card, isExpanded && styles.cardExpanded]}
+              >
+                <View style={styles.cardHeader}>
+                  <View style={styles.iconTitleContainer}>
+                    {symptom.icon}
+                    <Text style={styles.cardTitle}>{symptom.title}</Text>
+                  </View>
+                  {isExpanded ? (
+                    <ChevronUp size={22} color="#2C3E50" />
+                  ) : (
+                    <ChevronDown size={22} color="#2C3E50" />
+                  )}
                 </View>
-                {isExpanded ? (
-                  <ChevronUp size={22} color="#2C3E50" />
-                ) : (
-                  <ChevronDown size={22} color="#2C3E50" />
+                <Text style={styles.description}>{symptom.description}</Text>
+                {isExpanded && (
+                  <View style={styles.actionContainer}>
+                    <Text style={styles.actionTitle}>What You Can Do:</Text>
+                    {symptom.actions.map((item, idx) => (
+                      <Text key={idx} style={styles.actionItem}>• {item}</Text>
+                    ))}
+                  </View>
                 )}
-              </View>
-              <Text style={styles.description}>{symptom.description}</Text>
-              {isExpanded && (
-                <View style={styles.actionContainer}>
-                  <Text style={styles.actionTitle}>What You Can Do:</Text>
-                  {symptom.actions.map((item, idx) => (
-                    <Text key={idx} style={styles.actionItem}>• {item}</Text>
-                  ))}
-                </View>
-              )}
-            </Pressable>
+              </Pressable>
+            </Animated.View>
           );
         })}
       </ScrollView>
@@ -181,6 +198,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#5D6D7E",
     textAlign: "center",
+    marginBottom: 10,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 20,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#000",
   },
   card: {
     backgroundColor: "#FFFFFF",
