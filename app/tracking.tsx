@@ -12,6 +12,8 @@ import Slider from '@react-native-community/slider';
 import { Activity, Eye, Wind, ChevronsDown, DivideCircle, Mic, Home, User, HeartPulse, Brain, AlertTriangle, TrendingUp, Smile, BedDouble } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import BottomNavigation from "../app/BottomNavigation";
+import { doc, setDoc, Timestamp } from "firebase/firestore";
+import { auth, db } from "../firebaseconfig";
 
 // Type per i dati del form
 type FormDataType = {
@@ -47,6 +49,31 @@ export default function SymptomTracking() {
 
   const handleInputChange = <K extends keyof FormDataType>(field: K, value: FormDataType[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const saveSymptoms = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      alert("Utente non loggato");
+      return;
+    }
+
+    const uid = user.uid;
+    const today = new Date().toISOString().split("T")[0];
+    const symptomsDocRef = doc(db, "users", uid, "symptoms", today);
+
+    const dataToSave = {
+      ...formData,
+      dataInserimento: Timestamp.now(),
+    };
+
+    try {
+      await setDoc(symptomsDocRef, dataToSave);
+      alert("Sintomi salvati con successo!");
+    } catch (error) {
+      console.error("Errore salvataggio sintomi:", error);
+      alert("Errore nel salvataggio.");
+    }
   };
 
   return (
@@ -153,14 +180,13 @@ export default function SymptomTracking() {
           <Text style={styles.sliderValue}>{formData.affaticamentoMuscolare}</Text>
         </View>
 
-        <Pressable onPress={() => alert("Submitted") } style={styles.submitButton}>
+        <Pressable onPress={saveSymptoms} style={styles.submitButton}>
           <Text style={styles.submitButtonText}>Submit</Text>
         </Pressable>
       </ScrollView>
 
       {/* Bottom Navigation */}
-            <BottomNavigation />
-
+      <BottomNavigation />
     </View>
   );
 }
