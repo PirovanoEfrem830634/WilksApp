@@ -1,50 +1,171 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebaseconfig";
 import { useRouter } from "expo-router";
+import BottomNavigation from "../app/BottomNavigation";
 
 export default function SignUp() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const router = useRouter();
 
   const handleSignUp = async () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+
       await setDoc(doc(db, "users", user.uid), {
         firstName,
         lastName,
         email,
       });
 
-      Alert.alert("Success", "User registered successfully!");
+      Alert.alert("Registrazione completata", "Benvenuto!");
       router.push("/sign-in");
     } catch (error) {
-      Alert.alert("Error");
+      Alert.alert("Errore", "Registrazione fallita. Riprova.");
     }
   };
 
   return (
-    <View className="flex-1 justify-center items-center bg-light p-6">
-      <Text className="text-3xl font-bold mb-8 text-primary">Sign Up</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView contentContainerStyle={styles.innerContainer} keyboardShouldPersistTaps="handled">
+        {/* Logo e Titolo */}
+        <Image source={require("../assets/images/Wilks-logo3x.png")} style={styles.logo} />
+        <Text style={styles.logoText}>Wilks</Text>
 
-      <TextInput placeholder="First Name" value={firstName} onChangeText={setFirstName} className="w-full border border-pale rounded-lg p-3 mb-4" />
-      <TextInput placeholder="Last Name" value={lastName} onChangeText={setLastName} className="w-full border border-pale rounded-lg p-3 mb-4" />
-      <TextInput placeholder="Email" value={email} onChangeText={setEmail} className="w-full border border-pale rounded-lg p-3 mb-4" />
-      <TextInput placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry className="w-full border border-pale rounded-lg p-3 mb-6" />
+        {/* Card di registrazione */}
+        <View style={styles.card}>
+          <Text style={styles.title}>Sign Up</Text>
 
-      <Pressable onPress={handleSignUp} className="bg-primary p-4 rounded-lg shadow-md w-full">
-        <Text className="text-light text-center font-bold text-lg">Sign Up</Text>
-      </Pressable>
+          <TextInput
+            placeholder="First Name"
+            style={styles.input}
+            value={firstName}
+            onChangeText={setFirstName}
+          />
+          <TextInput
+            placeholder="Last Name"
+            style={styles.input}
+            value={lastName}
+            onChangeText={setLastName}
+          />
+          <TextInput
+            placeholder="Email"
+            style={styles.input}
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+          />
+          <TextInput
+            placeholder="Password"
+            style={styles.input}
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
 
-      <Pressable onPress={() => router.push("/sign-in")} className="mt-4">
-        <Text className="text-secondary">Already have an account? <Text className="font-bold">Sign In</Text></Text>
-      </Pressable>
-    </View>
+          <Pressable style={styles.button} onPress={handleSignUp}>
+            <Text style={styles.buttonText}>Sign Up</Text>
+          </Pressable>
+
+          <Pressable onPress={() => router.push("/sign-in")} style={{ marginTop: 12 }}>
+            <Text style={styles.footerText}>
+              Already have an account? <Text style={styles.linkText}>Sign In</Text>
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+
+      {/* Bottom bar */}
+      <BottomNavigation />
+    </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  innerContainer: {
+    alignItems: "center",
+    paddingVertical: 50,
+    paddingHorizontal: 20,
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    marginBottom: 10,
+  },
+  logoText: {
+    fontSize: 26,
+    fontWeight: "bold",
+    color: "#5DADE2",
+    marginBottom: 30,
+  },
+  card: {
+    backgroundColor: "#FFFFFF",
+    width: "100%",
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#2C3E50",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#D6DBDF",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 15,
+  },
+  button: {
+    backgroundColor: "#5DADE2",
+    paddingVertical: 14,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  buttonText: {
+    textAlign: "center",
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  footerText: {
+    textAlign: "center",
+    color: "#555",
+  },
+  linkText: {
+    color: "#5DADE2",
+    fontWeight: "600",
+  },
+});
