@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Pressable, LayoutAnimation, Platform, UIManager, Animated, TextInput } from "react-native";
 import { Activity, Eye, Wind, ChevronsDown, DivideCircle, Mic, ChevronDown, ChevronUp, Home, User, Search } from "lucide-react-native";
 import { useRouter } from "expo-router";
+import BottomNavigation from "../app/BottomNavigation";
 
 if (Platform.OS === 'android') {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
@@ -159,20 +160,8 @@ export default function SymptomInfo() {
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomBar}>
-        <Pressable onPress={() => router.push("/")} style={styles.navButton}>
-          <Home size={24} color="#007AFF" />
-          <Text style={styles.navText}>Home</Text>
-        </Pressable>
-        <Pressable onPress={() => router.push("/tracking")} style={styles.navButton}>
-          <Activity size={24} color="#007AFF" />
-          <Text style={styles.navText}>Tracking</Text>
-        </Pressable>
-        <Pressable onPress={() => router.push("/profile")} style={styles.navButton}>
-          <User size={24} color="#007AFF" />
-          <Text style={styles.navText}>Profile</Text>
-        </Pressable>
-      </View>
+      <BottomNavigation />
+
     </View>
   );
 }

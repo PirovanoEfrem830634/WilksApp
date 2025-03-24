@@ -2,6 +2,7 @@ import React, { useLayoutEffect } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView, Image } from "react-native";
 import { Link, useNavigation } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
+import BottomNavigation from "../app/BottomNavigation";
 
 export default function Index() {
   const navigation = useNavigation();
@@ -53,25 +54,7 @@ export default function Index() {
       </ScrollView>
       
       {/* Bottom Navigation Bar */}
-      <View style={styles.bottomBar}>
-        <Link href="/home" asChild>
-          <Pressable style={styles.bottomIcon}>
-            <Ionicons name="home-outline" size={28} color="#5DADE2" />
-          </Pressable>
-        </Link>
-        
-        <Link href="/profile" asChild>
-          <Pressable style={styles.bottomIcon}>
-            <Ionicons name="person-outline" size={28} color="#5DADE2" />
-          </Pressable>
-        </Link>
-
-        <Link href="/trackinghistory" asChild>
-          <Pressable style={styles.bottomIcon}>
-            <Ionicons name="location-outline" size={28} color="#5DADE2" />
-          </Pressable>
-        </Link>
-      </View>
+      <BottomNavigation />
     </View>
   );
 }
