@@ -9,8 +9,9 @@ import {
   StyleSheet,
 } from "react-native";
 import Slider from '@react-native-community/slider';
-import { Activity, Eye, Wind, ChevronsDown, DivideCircle, Mic, Home, User } from "lucide-react-native";
+import { Activity, Eye, Wind, ChevronsDown, DivideCircle, Mic, Home, User, HeartPulse, Brain, AlertTriangle, TrendingUp, Smile, BedDouble } from "lucide-react-native";
 import { useRouter } from "expo-router";
+import BottomNavigation from "../app/BottomNavigation";
 
 // Type per i dati del form
 type FormDataType = {
@@ -22,6 +23,9 @@ type FormDataType = {
   ptosi: boolean;
   diplopia: boolean;
   difficoltaRespiratorie: boolean;
+  ansia: boolean;
+  umore: string;
+  sonno: string;
 };
 
 export default function SymptomTracking() {
@@ -34,11 +38,13 @@ export default function SymptomTracking() {
     ptosi: false,
     diplopia: false,
     difficoltaRespiratorie: false,
+    ansia: false,
+    umore: "",
+    sonno: "",
   });
-  
+
   const router = useRouter();
 
-  // Funzione per aggiornare i dati
   const handleInputChange = <K extends keyof FormDataType>(field: K, value: FormDataType[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -70,11 +76,17 @@ export default function SymptomTracking() {
           label: "Breathing Difficulties",
           key: "difficoltaRespiratorie",
           icon: <Wind size={24} color="#333" />
+        }, {
+          label: "Anxiety",
+          key: "ansia",
+          icon: <AlertTriangle size={24} color="#333" />
         }].map((item) => (
           <View key={item.key} style={styles.card}>
             <View style={styles.cardHeader}>
-              {item.icon}
-              <Text style={styles.cardText}>{item.label}</Text>
+              <View style={styles.cardIconText}>
+                {item.icon}
+                <Text style={styles.cardText}>{item.label}</Text>
+              </View>
               <Switch
                 value={formData[item.key as keyof FormDataType] as boolean}
                 onValueChange={(value) => handleInputChange(item.key as keyof FormDataType, value)}
@@ -83,9 +95,13 @@ export default function SymptomTracking() {
           </View>
         ))}
 
-        {/* Input per andamento sintomi */}
         <View style={styles.card}>
-          <Text style={styles.cardText}>Symptom Progression</Text>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardIconText}>
+              <TrendingUp size={24} color="#333" />
+              <Text style={styles.cardText}>Symptom Progression</Text>
+            </View>
+          </View>
           <TextInput
             style={styles.input}
             placeholder="Describe progression"
@@ -94,7 +110,36 @@ export default function SymptomTracking() {
           />
         </View>
 
-        {/* Slider per affaticamento muscolare */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardIconText}>
+              <Smile size={24} color="#333" />
+              <Text style={styles.cardText}>Mood</Text>
+            </View>
+          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Describe your mood"
+            value={formData.umore}
+            onChangeText={(text) => handleInputChange("umore", text)}
+          />
+        </View>
+
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardIconText}>
+              <BedDouble size={24} color="#333" />
+              <Text style={styles.cardText}>Sleep Quality</Text>
+            </View>
+          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="How was your sleep?"
+            value={formData.sonno}
+            onChangeText={(text) => handleInputChange("sonno", text)}
+          />
+        </View>
+
         <View style={styles.card}>
           <Text style={styles.cardText}>Muscle Fatigue Level</Text>
           <Slider
@@ -108,27 +153,14 @@ export default function SymptomTracking() {
           <Text style={styles.sliderValue}>{formData.affaticamentoMuscolare}</Text>
         </View>
 
-        {/* Submit Button */}
-        <Pressable onPress={() => alert("Submitted")} style={styles.submitButton}>
+        <Pressable onPress={() => alert("Submitted") } style={styles.submitButton}>
           <Text style={styles.submitButtonText}>Submit</Text>
         </Pressable>
       </ScrollView>
-      
+
       {/* Bottom Navigation */}
-      <View style={styles.bottomBar}>
-        <Pressable onPress={() => router.push("/")} style={styles.navButton}>
-          <Home size={24} color="#007AFF" />
-          <Text style={styles.navText}>Home</Text>
-        </Pressable>
-        <Pressable onPress={() => router.push("/tracking")} style={styles.navButton}>
-          <Activity size={24} color="#007AFF" />
-          <Text style={styles.navText}>Tracking</Text>
-        </Pressable>
-        <Pressable onPress={() => router.push("/profile")} style={styles.navButton}>
-          <User size={24} color="#007AFF" />
-          <Text style={styles.navText}>Profile</Text>
-        </Pressable>
-      </View>
+            <BottomNavigation />
+
     </View>
   );
 }
@@ -136,38 +168,44 @@ export default function SymptomTracking() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#F2F2F7",
   },
   scrollView: {
     padding: 20,
   },
   card: {
-    backgroundColor: "#FFF",
-    borderRadius: 15,
-    padding: 15,
-    marginBottom: 12,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 15,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
+  cardIconText: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
   cardText: {
     fontSize: 17,
     fontWeight: "600",
-    color: "#333",
+    color: "#1C1C1E",
+    marginLeft: 10,
   },
   input: {
-    marginTop: 10,
-    padding: 10,
+    marginTop: 12,
+    padding: 12,
     borderWidth: 1,
-    borderColor: "#DDD",
-    borderRadius: 10,
+    borderColor: "#D1D1D6",
+    borderRadius: 12,
     fontSize: 16,
     backgroundColor: "#FAFAFA",
   },
@@ -176,33 +214,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#555",
+    marginTop: 10,
   },
   submitButton: {
     backgroundColor: "#007AFF",
-    padding: 12,
-    borderRadius: 12,
+    padding: 15,
+    borderRadius: 15,
     alignItems: "center",
     marginTop: 20,
   },
   submitButtonText: {
     fontSize: 17,
     fontWeight: "600",
-    color: "#FFF",
+    color: "#FFFFFF",
   },
   bottomBar: {
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
     height: 60,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 5,
     elevation: 5,
-  },
-  bottomIcon: {
-    padding: 10,
   },
   navButton: {
     alignItems: "center",
@@ -214,5 +250,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#007AFF",
     marginTop: 4,
-  },  
+  },
 });
