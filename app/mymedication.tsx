@@ -8,6 +8,9 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Pill } from "lucide-react-native";
+import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { auth, db } from "../firebaseconfig";
+import { Trash2 } from "lucide-react-native";
 
 // Dummy type (in seguito lo connetteremo a Firebase o AsyncStorage)
 type Medication = {
@@ -23,23 +26,50 @@ export default function MyMedications() {
   const router = useRouter();
 
   useEffect(() => {
-    // MOCK: dati di esempio temporanei
-    setMedications([
-      {
-        id: "1",
-        name: "Pyridostigmine",
-        dose: "60mg",
-        days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-        times: ["08:00", "14:00", "20:00"],
-      },
-    ]);
+    const fetchMedications = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const medsRef = collection(db, "users", user.uid, "medications");
+      const snapshot = await getDocs(medsRef);
+
+      console.log("[DEBUG] Firebase meds snapshot:", snapshot.docs);
+
+      const meds = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        console.log("[DEBUG] Single doc:", data);
+        return {
+          id: doc.id,
+          name: data.name || "",
+          dose: data.dose || "",
+          days: Array.isArray(data.days) ? data.days : [],
+          times: Array.isArray(data.times) ? data.times : [],
+        };
+      });
+
+      console.log("[DEBUG] Parsed medications:", meds);
+      setMedications(meds);
+    };
+
+    fetchMedications();
   }, []);
+
+  const handleDelete = async (id: string) => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    await deleteDoc(doc(db, "users", user.uid, "medications", id));
+    setMedications((prev) => prev.filter((med) => med.id !== id));
+  };
 
   const renderItem = ({ item }: { item: Medication }) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <Pill color="#007AFF" />
         <Text style={styles.title}>{item.name} ({item.dose})</Text>
+        <TouchableOpacity onPress={() => handleDelete(item.id)}>
+          <Trash2 size={20} color="#FF3B30" />
+        </TouchableOpacity>
       </View>
       <Text style={styles.sub}>Days: {item.days.join(", ")}</Text>
       <Text style={styles.sub}>Times: {item.times.join(", ")}</Text>

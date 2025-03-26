@@ -29,6 +29,8 @@ export default function AddMedication() {
 
   const router = useRouter();
 
+  const [manualTime, setManualTime] = useState("");
+
   const toggleDay = (day: string) => {
     setDays((prev) =>
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
@@ -136,24 +138,47 @@ export default function AddMedication() {
           </View>
         ))}
 
-        {Platform.OS !== "web" && (
-          <TouchableOpacity
-            style={styles.addTimeButton}
-            onPress={() => setShowPicker(true)}
-          >
-            <CalendarPlus size={20} color="#007AFF" />
-            <Text style={styles.addTimeText}>Add Time</Text>
-          </TouchableOpacity>
-        )}
+        {Platform.OS === "web" ? (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <TextInput
+              placeholder="Enter time (e.g. 08:00)"
+              style={[styles.input, { flex: 1 }]}
+              value={manualTime}
+              onChangeText={setManualTime}
+            />
+            <TouchableOpacity
+              onPress={() => {
+                const trimmed = manualTime.trim();
+                if (trimmed && !times.includes(trimmed)) {
+                  setTimes((prev) => [...prev, trimmed]);
+                  setManualTime("");
+                }
+              }}
+              style={styles.addTimeButton}
+            >
+              <Text style={styles.addTimeText}>+ Add</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <>
+            <TouchableOpacity
+              style={styles.addTimeButton}
+              onPress={() => setShowPicker(true)}
+            >
+              <CalendarPlus size={20} color="#007AFF" />
+              <Text style={styles.addTimeText}>Add Time</Text>
+            </TouchableOpacity>
 
-        {showPicker && Platform.OS !== "web" && (
-          <DateTimePicker
-            value={new Date()}
-            mode="time"
-            is24Hour={true}
-            display="default"
-            onChange={addTime}
-          />
+            {showPicker && (
+              <DateTimePicker
+                value={new Date()}
+                mode="time"
+                is24Hour={true}
+                display="default"
+                onChange={addTime}
+              />
+            )}
+          </>
         )}
 
         <TextInput
