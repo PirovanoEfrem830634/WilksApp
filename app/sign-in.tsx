@@ -18,7 +18,7 @@ export default function SignIn() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       Alert.alert("Success", "Logged in successfully!");
-      router.push("/home");
+      router.push("/");
     } catch (error) {
       Alert.alert("Error", "Invalid email or password");
     }

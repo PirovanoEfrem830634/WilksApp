@@ -1,15 +1,63 @@
-import React, { useLayoutEffect } from "react";
+import React, { useLayoutEffect, useEffect, useState } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView, Image } from "react-native";
 import { Link, useNavigation } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
 import BottomNavigation from "../app/BottomNavigation";
+import { auth, db } from "../firebaseconfig";
+import { collection, getDocs } from "firebase/firestore";
+
 
 export default function Index() {
   const navigation = useNavigation();
+  const [nextMedication, setNextMedication] = useState<string | null>(null);
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
+
+  useEffect(() => {
+    const fetchNextMedication = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const today = new Date();
+      const dayName = today.toLocaleString("en-US", { weekday: "short" }); // "Mon", "Tue"...
+      const currentTime = today.getHours() * 60 + today.getMinutes();
+
+      const medsRef = collection(db, "users", user.uid, "medications");
+      const snapshot = await getDocs(medsRef);
+
+      const medsToday: { name: string; dose: string; time: string }[] = [];
+
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        if (data.days?.includes(dayName) && Array.isArray(data.times)) {
+          data.times.forEach((time: string) => {
+            const [h, m] = time.split(":").map((n) => parseInt(n));
+            const total = h * 60 + m;
+            if (total >= currentTime) {
+              medsToday.push({ name: data.name, dose: data.dose, time });
+            }
+          });
+        }
+      });
+
+      medsToday.sort((a, b) => {
+        const [h1, m1] = a.time.split(":").map((n) => parseInt(n));
+        const [h2, m2] = b.time.split(":").map((n) => parseInt(n));
+        return h1 * 60 + m1 - (h2 * 60 + m2);
+      });
+
+      if (medsToday.length > 0) {
+        const med = medsToday[0];
+        setNextMedication(`${med.name}, ${med.time}`);
+      } else {
+        setNextMedication(null);
+      }
+    };
+
+    fetchNextMedication();
+  }, []);
 
 return (
   <View style={styles.wrapper}>
@@ -23,9 +71,11 @@ return (
 
       {/* Medication Reminder */}
       <View style={styles.infoCard}>
-        <Text style={styles.cardTitle}>💊 Next Medication</Text>
-        <Text style={styles.cardValue}>Pyridostigmine, 14:00</Text>
-      </View>
+          <Text style={styles.cardTitle}>💊 Next Medication</Text>
+          <Text style={styles.cardValue}>
+            {nextMedication ? nextMedication : "No medication scheduled today"}
+          </Text>
+        </View>
 
       {/* Well-being Summary */}
       <View style={styles.infoCard}>
