@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Platform } from "react-native";
+import { View, Text, StyleSheet, Platform, ScrollView } from "react-native";
 import { Agenda, Calendar } from "react-native-calendars";
 import { collection, getDocs } from "firebase/firestore";
 import { auth, db } from "../firebaseconfig";
@@ -8,6 +8,7 @@ import BottomNavigation from "../app/BottomNavigation";
 export default function SymptomCalendar() {
   const [items, setItems] = useState<Record<string, { name: string; description: string }[]>>({});
   const [markedDates, setMarkedDates] = useState({});
+  const [selectedSymptom, setSelectedSymptom] = useState<{ date: string; item: { name: string; description: string } } | null>(null);
 
   const fetchSymptoms = async () => {
     const uid = auth.currentUser?.uid;
@@ -23,7 +24,6 @@ export default function SymptomCalendar() {
       const data = doc.data();
       const date = doc.id;
 
-      // Filtra solo i campi significativi
       const sintomiAttivi = Object.entries(data)
         .filter(([key, value]) => {
           if (typeof value === "boolean") return value === true;
@@ -45,7 +45,6 @@ export default function SymptomCalendar() {
     });
 
     setItems(loadedItems);
-    console.log("Loaded items:", loadedItems);
     setMarkedDates(marks);
   };
 
@@ -54,53 +53,56 @@ export default function SymptomCalendar() {
   }, []);
 
   if (Platform.OS === "web") {
-    const [selectedSymptom, setSelectedSymptom] = useState<{ date: string; item: { name: string; description: string } } | null>(null);
-  
     return (
-      <View style={{ padding: 20 }}>
-        <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>Symptom Calendar (Web)</Text>
-        <Calendar
-          markedDates={markedDates}
-          onDayPress={(day: { dateString: string }) => {
-            const selected = day.dateString;
-            const item = items[selected]?.[0];
-            if (item) {
-              setSelectedSymptom({ date: selected, item });
-            } else {
-              setSelectedSymptom({ date: selected, item: { name: "Nessun dato registrato", description: "" } });
-            }
-          }}
-        />
-  
-        {selectedSymptom && (
-          <View style={styles.webDetailBox}>
-            <Text style={styles.dateTitle}>{selectedSymptom.date}</Text>
-            <Text style={styles.title}>{selectedSymptom.item.name}</Text>
-            <Text>{selectedSymptom.item.description}</Text>
-          </View>
-        )}
+      <View style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ padding: 20 }}>
+          <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>Symptom Calendar (Web)</Text>
+          <Calendar
+            markedDates={markedDates}
+            onDayPress={(day: { dateString: string }) => {
+              const selected = day.dateString;
+              const item = items[selected]?.[0];
+              if (item) {
+                setSelectedSymptom({ date: selected, item });
+              } else {
+                setSelectedSymptom({ date: selected, item: { name: "Nessun dato registrato", description: "" } });
+              }
+            }}
+          />
+
+          {selectedSymptom && (
+            <View style={styles.webDetailBox}>
+              <Text style={styles.dateTitle}>{selectedSymptom.date}</Text>
+              <Text style={styles.title}>{selectedSymptom.item.name}</Text>
+              <Text>{selectedSymptom.item.description}</Text>
+            </View>
+          )}
+        </ScrollView>
+        <BottomNavigation />
       </View>
     );
-  }  
+  }
 
   return (
-    <Agenda
-      items={items}
-      selected={new Date().toISOString().split("T")[0]}
-      renderItem={(item: { name: string; description: string }, firstItemInDay: boolean) => (
-        <View style={styles.item}>
-          <Text style={styles.title}>{item.name}</Text>
-          <Text>{item.description}</Text>
-        </View>
-      )}
-      renderEmptyDate={() => (
-        <View style={styles.emptyDate}>
-          <Text style={styles.emptyText}>Nessun dato per questo giorno</Text>
-        </View>
-      )}
-    />
-  )
-  
+    <View style={{ flex: 1 }}>
+      <Agenda
+        items={items}
+        selected={new Date().toISOString().split("T")[0]}
+        renderItem={(item: { name: string; description: string }, firstItemInDay: boolean) => (
+          <View style={styles.item}>
+            <Text style={styles.title}>{item.name}</Text>
+            <Text>{item.description}</Text>
+          </View>
+        )}
+        renderEmptyDate={() => (
+          <View style={styles.emptyDate}>
+            <Text style={styles.emptyText}>Nessun dato per questo giorno</Text>
+          </View>
+        )}
+      />
+      <BottomNavigation />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -143,5 +145,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 5,
-  },  
+  },
 });
