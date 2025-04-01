@@ -13,14 +13,9 @@ export default function BottomNavigation() {
         <Text style={styles.navText}>Home</Text>
       </Pressable>
 
-      <Pressable onPress={() => router.push("/tracking")} style={styles.navButton}>
+      <Pressable onPress={() => router.push("/trackinghistory")} style={styles.navButton}>
         <Activity size={24} color="#007AFF" />
-        <Text style={styles.navText}>Tracking</Text>
-      </Pressable>
-
-      <Pressable onPress={() => router.push("/info")} style={styles.navButton}>
-        <Info size={24} color="#007AFF" />
-        <Text style={styles.navText}>Info</Text>
+        <Text style={styles.navText}>Tracking History</Text>
       </Pressable>
 
       <Pressable onPress={() => router.push("/profile")} style={styles.navButton}>
