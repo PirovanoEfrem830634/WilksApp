@@ -58,7 +58,8 @@ export default function Profile() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.wrapper}>
+      <View style={styles.container}>
       {/* Sezione Profilo */}
       <View style={styles.profileHeader}>
         <Image source={{ uri: "https://via.placeholder.com/150" }} style={styles.avatar} />
@@ -89,6 +90,11 @@ export default function Profile() {
       <Pressable style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutText}>Logout</Text>
       </Pressable>
+     </View>
+
+    {/* Bottom Navigation */}
+          <BottomNavigation />
+
     </View>
   );
 }
@@ -96,9 +102,13 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FDFEFE",
     alignItems: "center",
     paddingTop: 50,
+    paddingBottom: 80, // spazio per la navbar
+  },
+  wrapper: {
+    flex: 1,
+    backgroundColor: "#FDFEFE",
   },
   profileHeader: {
     alignItems: "center",
