@@ -1,11 +1,11 @@
 import React, { useLayoutEffect, useEffect, useState } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView, Image } from "react-native";
+import * as Animatable from "react-native-animatable";
 import { Link, useNavigation } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
 import BottomNavigation from "../app/BottomNavigation";
 import { auth, db } from "../firebaseconfig";
 import { collection, getDocs } from "firebase/firestore";
-
 
 export default function Index() {
   const navigation = useNavigation();
@@ -21,7 +21,7 @@ export default function Index() {
       if (!user) return;
 
       const today = new Date();
-      const dayName = today.toLocaleString("en-US", { weekday: "short" }); // "Mon", "Tue"...
+      const dayName = today.toLocaleString("en-US", { weekday: "short" });
       const currentTime = today.getHours() * 60 + today.getMinutes();
 
       const medsRef = collection(db, "users", user.uid, "medications");
@@ -43,8 +43,8 @@ export default function Index() {
       });
 
       medsToday.sort((a, b) => {
-        const [h1, m1] = a.time.split(":").map((n) => parseInt(n));
-        const [h2, m2] = b.time.split(":").map((n) => parseInt(n));
+        const [h1, m1] = a.time.split(":").map(Number);
+        const [h2, m2] = b.time.split(":").map(Number);
         return h1 * 60 + m1 - (h2 * 60 + m2);
       });
 
@@ -59,61 +59,57 @@ export default function Index() {
     fetchNextMedication();
   }, []);
 
-return (
-  <View style={styles.wrapper}>
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      {/* Header con immagine e titolo */}
-      <View style={styles.header}>
-        <Image source={require("../assets/images/BannerWilks.jpg")} style={styles.banner} />
-        <Text style={styles.headerTitle}>Welcome to Wilks</Text>
-        <Text style={styles.subtitle}>Your journey starts here</Text>
-      </View>
+  return (
+    <View style={styles.wrapper}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <Animatable.View animation="fadeInDown" delay={100} style={styles.header}>
+          <Image source={require("../assets/images/BannerWilks.jpg")} style={styles.banner} />
+          <Text style={styles.headerTitle}>Welcome to Wilks</Text>
+          <Text style={styles.subtitle}>Your journey starts here</Text>
+        </Animatable.View>
 
-      {/* Medication Reminder */}
-      <View style={styles.infoCard}>
-          <Text style={styles.cardTitle}>💊 Next Medication</Text>
-          <Text style={styles.cardValue}>
-            {nextMedication ? nextMedication : "No medication scheduled today"}
-          </Text>
-        </View>
+        <Animatable.View animation="fadeInUp" duration={800} easing="ease-out-cubic" delay={300} style={styles.infoCard}>
+        <Text style={styles.cardTitle}>💊 Next Medication</Text>
+        <Text style={styles.cardValue}>
+          {nextMedication ? nextMedication : "No medication scheduled today"}
+        </Text>
+      </Animatable.View>
 
-      {/* Well-being Summary */}
-      <View style={styles.infoCard}>
+      <Animatable.View animation="fadeInUp" duration={800} easing="ease-out-cubic" delay={500} style={styles.infoCard}>
         <Text style={styles.cardTitle}>📈 Well-being Summary</Text>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryItem}>Fatigue: 7/10</Text>
           <Text style={styles.summaryItem}>Sleep: 😴</Text>
           <Text style={styles.summaryItem}>Mood: 😐</Text>
-        </View>
-      </View>
+        </View></Animatable.View>
 
-      {/* Quick Actions */}
-      <Text style={styles.sectionTitle}>Quick Actions</Text>
-      <View style={styles.quickActions}>
-        <Link href="/tracking" asChild>
-          <Pressable style={styles.actionButton}>
-            <Ionicons name="analytics-outline" size={26} color="#007AFF" />
-            <Text style={styles.actionText}>Track</Text>
-          </Pressable>
-        </Link>
-        <Link href="/mymedication" asChild>
-          <Pressable style={styles.actionButton}>
-            <Ionicons name="medkit-outline" size={26} color="#007AFF" />
-            <Text style={styles.actionText}>Meds</Text>
-          </Pressable>
-        </Link>
-        <Link href="/info" asChild>
-          <Pressable style={styles.actionButton}>
-            <Ionicons name="information-circle-outline" size={26} color="#007AFF" />
-            <Text style={styles.actionText}>Info</Text>
-          </Pressable>
-        </Link>
-      </View>
-    </ScrollView>
+        <Animatable.Text animation="fadeIn" delay={650} style={styles.sectionTitle}>Quick Actions</Animatable.Text>
 
-    <BottomNavigation />
-  </View>
-);
+        <Animatable.View animation="fadeInUp" delay={700} style={styles.quickActions}>
+          <Link href="/tracking" asChild>
+            <Pressable style={styles.actionButton}>
+              <Ionicons name="analytics-outline" size={26} color="#007AFF" />
+              <Text style={styles.actionText}>Track</Text>
+            </Pressable>
+          </Link>
+          <Link href="/mymedication" asChild>
+            <Pressable style={styles.actionButton}>
+              <Ionicons name="medkit-outline" size={26} color="#007AFF" />
+              <Text style={styles.actionText}>Meds</Text>
+            </Pressable>
+          </Link>
+          <Link href="/info" asChild>
+            <Pressable style={styles.actionButton}>
+              <Ionicons name="information-circle-outline" size={26} color="#007AFF" />
+              <Text style={styles.actionText}>Info</Text>
+            </Pressable>
+          </Link>
+        </Animatable.View>
+      </ScrollView>
+
+      <BottomNavigation />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
