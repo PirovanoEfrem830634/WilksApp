@@ -1,26 +1,42 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Platform } from "react-native";
-import { collection, getDoc, getDocs, doc, setDoc } from "firebase/firestore";
+import React, { useEffect, useState, useRef } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  TextInput,
+  ScrollView,
+  Animated,
+} from "react-native";
+import {
+  getDoc,
+  doc,
+  setDoc,
+  Timestamp,
+} from "firebase/firestore";
 import { auth, db } from "../firebaseconfig";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import BottomNavigation from "../app/BottomNavigation";
 
-const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const meals = ["breakfast", "lunch", "dinner", "snack"];
 
 export default function DietTracker() {
-  const [selectedDay, setSelectedDay] = useState(() => {
-    const today = new Date();
-    return days[today.getDay() - 1] || "Mon";
-  });
   const [diet, setDiet] = useState<Record<string, string>>({});
   const [input, setInput] = useState<string>("");
   const [editingMeal, setEditingMeal] = useState<string | null>(null);
+  const toastAnim = useRef(new Animated.Value(0)).current;
+
+  const getDateKey = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  };
 
   const fetchDiet = async () => {
     const user = auth.currentUser;
     if (!user) return;
-    const ref = doc(db, "users", user.uid, "diet", selectedDay);
+
+    const todayKey = getDateKey();
+    const ref = doc(db, "users", user.uid, "diet", todayKey);
     const snap = await getDoc(ref);
     if (snap.exists()) {
       setDiet(snap.data() as Record<string, string>);
@@ -31,41 +47,52 @@ export default function DietTracker() {
 
   useEffect(() => {
     fetchDiet();
-  }, [selectedDay]);
+  }, []);
+
+  const showToast = () => {
+    Animated.sequence([
+      Animated.timing(toastAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.delay(2000),
+      Animated.timing(toastAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
 
   const handleSave = async () => {
-    if (!editingMeal) return;
     const user = auth.currentUser;
     if (!user) return;
 
-    const updatedDiet = { ...diet, [editingMeal]: input };
-    setDiet(updatedDiet);
-    await setDoc(doc(db, "users", user.uid, "diet", selectedDay), updatedDiet);
+    const todayKey = getDateKey();
+    await setDoc(doc(db, "users", user.uid, "diet", todayKey), {
+      ...diet,
+      createdAt: Timestamp.now(),
+    });
+
+    showToast();
     setEditingMeal(null);
     setInput("");
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Weekly Diet Tracker</Text>
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.daySelector}>
-        {days.map((day) => (
-          <TouchableOpacity
-            key={day}
-            style={[styles.dayButton, selectedDay === day && styles.selectedDay]}
-            onPress={() => setSelectedDay(day)}
-          >
-            <Text style={[styles.dayText, selectedDay === day && styles.selectedDayText]}>{day}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <Text style={styles.title}>Daily Diet Tracker</Text>
 
       <ScrollView contentContainerStyle={styles.mealContainer}>
         {meals.map((meal) => (
           <View key={meal} style={styles.mealCard}>
             <View style={styles.mealHeader}>
-              <MaterialCommunityIcons name="silverware-fork-knife" size={18} color="#007AFF" />
+              <MaterialCommunityIcons
+                name="silverware-fork-knife"
+                size={18}
+                color="#007AFF"
+              />
               <Text style={styles.mealTitle}>{meal.toUpperCase()}</Text>
             </View>
             <Text style={styles.mealText}>{diet[meal] || "Not set"}</Text>
@@ -91,11 +118,43 @@ export default function DietTracker() {
             style={styles.input}
             placeholder="Enter meal content"
           />
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={() => {
+              const updatedDiet = { ...diet, [editingMeal]: input };
+              setDiet(updatedDiet);
+              setEditingMeal(null);
+              setInput("");
+            }}
+          >
             <Text style={styles.saveText}>Save</Text>
           </TouchableOpacity>
         </View>
       )}
+
+      <TouchableOpacity style={styles.globalSaveButton} onPress={handleSave}>
+        <Text style={styles.globalSaveText}>Save All</Text>
+      </TouchableOpacity>
+
+      {/* Toast visivo animato */}
+      <Animated.View
+        style={[
+          styles.toast,
+          {
+            opacity: toastAnim,
+            transform: [
+              {
+                translateY: toastAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [60, 0],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <Text style={styles.toastText}>✅ Diet saved successfully!</Text>
+      </Animated.View>
 
       <BottomNavigation />
     </View>
@@ -115,30 +174,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: "#1C1C1E",
   },
-  daySelector: {
-    flexDirection: "row",
-    paddingHorizontal: 10,
-    marginBottom: 10,
-  },
-  dayButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    backgroundColor: "#E5E5EA",
-    marginHorizontal: 4,
-  },
-  selectedDay: {
-    backgroundColor: "#007AFF",
-  },
-  dayText: {
-    fontWeight: "500",
-    color: "#333",
-  },
-  selectedDayText: {
-    color: "#fff",
-  },
   mealContainer: {
     padding: 20,
+    paddingBottom: 100,
   },
   mealCard: {
     backgroundColor: "#fff",
@@ -215,5 +253,33 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  globalSaveButton: {
+    backgroundColor: "#34C759",
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    alignItems: "center",
+    marginHorizontal: 20,
+    marginBottom: 80,
+  },
+  globalSaveText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  toast: {
+    position: "absolute",
+    bottom: 100,
+    left: 20,
+    right: 20,
+    backgroundColor: "#007AFF",
+    padding: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  toastText: {
+    color: "#fff",
+    fontWeight: "600",
   },
 });
