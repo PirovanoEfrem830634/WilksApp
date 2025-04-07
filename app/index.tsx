@@ -160,26 +160,48 @@ export default function Index() {
 
         <Animatable.Text animation="fadeIn" delay={650} style={styles.sectionTitle}>Quick Actions</Animatable.Text>
 
-        <Animatable.View animation="fadeInUp" delay={700} style={styles.quickActions}>
+        <Animatable.View animation="fadeInUp" delay={700} style={styles.quickActionsGrid}>
+        <View style={styles.row}>
           <Link href="/tracking" asChild>
-            <Pressable style={styles.actionButton}>
-              <Ionicons name="analytics-outline" size={26} color="#007AFF" />
+            <Pressable style={styles.actionButtonSmall}>
+              <Ionicons name="analytics-outline" size={24} color="#007AFF" />
               <Text style={styles.actionText}>Track</Text>
             </Pressable>
           </Link>
           <Link href="/mymedication" asChild>
-            <Pressable style={styles.actionButton}>
-              <Ionicons name="medkit-outline" size={26} color="#007AFF" />
+            <Pressable style={styles.actionButtonSmall}>
+              <Ionicons name="medkit-outline" size={24} color="#007AFF" />
               <Text style={styles.actionText}>Meds</Text>
             </Pressable>
           </Link>
           <Link href="/info" asChild>
-            <Pressable style={styles.actionButton}>
-              <Ionicons name="information-circle-outline" size={26} color="#007AFF" />
+            <Pressable style={styles.actionButtonSmall}>
+              <Ionicons name="information-circle-outline" size={24} color="#007AFF" />
               <Text style={styles.actionText}>Info</Text>
             </Pressable>
           </Link>
-        </Animatable.View>
+        </View>
+        <View style={styles.row}>
+          <Link href="/cdss" asChild>
+            <Pressable style={styles.actionButtonSmall}>
+              <Ionicons name="heart-circle-outline" size={24} color="#007AFF" />
+              <Text style={styles.actionText}>CDSS</Text>
+            </Pressable>
+          </Link>
+          <Link href="/trackinghistory" asChild>
+            <Pressable style={styles.actionButtonSmall}>
+              <Ionicons name="time-outline" size={24} color="#007AFF" />
+              <Text style={styles.actionText}>History</Text>
+            </Pressable>
+          </Link>
+          <Link href="/profile" asChild>
+            <Pressable style={styles.actionButtonSmall}>
+              <Ionicons name="person-outline" size={24} color="#007AFF" />
+              <Text style={styles.actionText}>Profile</Text>
+            </Pressable>
+          </Link>
+        </View>
+      </Animatable.View>
       </ScrollView>
 
       <BottomNavigation />
@@ -191,6 +213,10 @@ const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
     backgroundColor: "#F9FAFB",
+  },
+  quickActionsGrid: {
+    gap: 10,
+    marginBottom: 16,
   },
   banner: {
     width: "90%",
@@ -256,6 +282,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 6,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+    marginBottom: 10,
+  },
+  actionButtonSmall: {
+    backgroundColor: "#fff",
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    alignItems: "center",
+    flex: 1,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 6,
+    elevation: 3,
   },
   summaryItem: {
     fontSize: 15,
