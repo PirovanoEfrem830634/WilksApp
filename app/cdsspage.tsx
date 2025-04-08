@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ScrollView, Text, View, Pressable } from "react-native";
 import { MotiView } from "moti";
-import { valutaCDSS, DatiSintomi } from "./utils/valutaCDSS";
+import { valutaCDSS, DatiSintomi } from "../utils/valutaCDSS";
 import { Pill, AlertTriangle, Sparkles } from "lucide-react-native";
 import BottomNavigation from "../app/BottomNavigation";
 
