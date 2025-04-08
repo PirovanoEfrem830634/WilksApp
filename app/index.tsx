@@ -182,7 +182,7 @@ export default function Index() {
           </Link>
         </View>
         <View style={styles.row}>
-          <Link href="/cdss" asChild>
+          <Link href="/cdsspage" asChild>
             <Pressable style={styles.actionButtonSmall}>
               <Ionicons name="heart-circle-outline" size={24} color="#007AFF" />
               <Text style={styles.actionText}>CDSS</Text>
