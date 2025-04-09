@@ -1,67 +1,241 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, Text, View, Pressable } from "react-native";
-import { MotiView } from "moti";
-import { valutaCDSS, DatiSintomi } from "../utils/valutaCDSS";
-import { Pill, AlertTriangle, Sparkles } from "lucide-react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  ScrollView,
+  LayoutAnimation,
+  UIManager,
+  Platform,
+} from "react-native";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../firebaseconfig";
 import BottomNavigation from "../app/BottomNavigation";
+import { ChevronDown, ChevronUp, RefreshCw } from "lucide-react-native";
+import { getAuth } from "firebase/auth";
+import { MotiView } from "moti";
+import Toast from "react-native-toast-message";
 
-const emojiMap = (msg: string) => {
-  if (msg.includes("neurologo")) return { icon: <AlertTriangle size={18} color="red" />, emoji: "🧠" };
-  if (msg.includes("pasti") || msg.includes("sera")) return { icon: <Pill size={18} color="orange" />, emoji: "🍝" };
-  return { icon: <Sparkles size={18} color="#3b82f6" />, emoji: "✨" };
+// Abilita LayoutAnimation su Android
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+type FirestoreData = {
+  diet: any[];
+  medications: any[];
+  sleep: any[];
+  symptoms: any[];
 };
 
-export default function CDSSPage() {
-  const [suggerimenti, setSuggerimenti] = useState<string[]>([]);
+type SectionState = {
+  [key: string]: boolean;
+};
 
-  const calcolaSuggerimenti = () => {
-    const dati: DatiSintomi = {
-      ptosi: 2.1,
-      disfagia: true,
-      pastoPesanteNotte: true,
-    };
-    const risultati = valutaCDSS(dati);
-    setSuggerimenti(risultati);
+const fetchAllData = async (): Promise<FirestoreData> => {
+  const auth = getAuth();
+  const uid = auth.currentUser?.uid;
+
+  if (!uid) {
+    throw new Error("Utente non autenticato");
+  }
+
+  const collections = ["diet", "medications", "sleep", "symptoms"];
+  const data: FirestoreData = { diet: [], medications: [], sleep: [], symptoms: [] };
+
+  for (const name of collections) {
+    const snapshot = await getDocs(collection(db, `users/${uid}/${name}`));
+    const docs = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .sort((a, b) => {
+        const getDate = (entry: any) => {
+          if (entry.createdAt?.seconds) return new Date(entry.createdAt.seconds * 1000);
+          if (entry.createdAt) return new Date(entry.createdAt);
+          return new Date(entry.id);
+        };
+        return getDate(b).getTime() - getDate(a).getTime();
+      });
+
+    data[name as keyof FirestoreData] = docs;
+  }
+
+  return data;
+};
+
+const CDSSPage = () => {
+  const [data, setData] = useState<FirestoreData>({ diet: [], medications: [], sleep: [], symptoms: [] });
+  const [open, setOpen] = useState<SectionState>({
+    sleep: false,
+    diet: false,
+    medications: false,
+    symptoms: false,
+  });
+  const [loading, setLoading] = useState(false);
+
+  const reloadData = async () => {
+    try {
+      setLoading(true);
+      const allData = await fetchAllData();
+      setData(allData);
+      Toast.show({
+        type: 'success',
+        text1: '✅ Dati aggiornati',
+        position: 'top',
+        visibilityTime: 2000,
+      });
+    } catch (err: any) {
+      console.error("Errore durante il fetch:", err);
+      Toast.show({
+        type: 'error',
+        text1: '❌ Errore nel caricamento',
+        text2: err.message,
+        position: 'top',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    calcolaSuggerimenti();
+    reloadData();
   }, []);
 
+  const toggleSection = (section: keyof SectionState) => {
+    LayoutAnimation.easeInEaseOut();
+    setOpen(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const renderSection = (title: string, section: keyof FirestoreData, content: JSX.Element) => {
+    return (
+      <View style={styles.card}>
+        <Pressable onPress={() => toggleSection(section)} style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>{title}</Text>
+          {open[section] ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        </Pressable>
+        {open[section] && <View style={styles.cardBody}>{content}</View>}
+      </View>
+    );
+  };
+
+  const last = {
+    sleep: data.sleep[0],
+    diet: data.diet[0],
+    medications: data.medications[0],
+    symptoms: data.symptoms[0],
+  };
+
   return (
-    <View className="flex-1 bg-gradient-to-b from-white to-blue-50">
-      <ScrollView className="p-5 pb-24">
-        <View className="items-center">
-          <Text className="text-2xl font-bold mb-1 text-gray-900 text-center">🩺 CDSS – Consigli su misura</Text>
-          <Text className="text-base text-gray-600 mb-6 text-center">Analisi basata sui tuoi ultimi dati</Text>
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <Text style={styles.title}>🩺 CDSS – Analisi dei tuoi dati</Text>
+        <Text style={styles.subtitle}>Dati recenti riassunti per supportare il CDSS</Text>
 
-          <Pressable
-            onPress={calcolaSuggerimenti}
-            className="bg-blue-600 rounded-xl py-3 px-5 mb-6"
-          >
-            <Text className="text-white text-base font-medium">🔄 Ricalcola consigli</Text>
-          </Pressable>
+        <Pressable onPress={reloadData} style={styles.reloadButton} disabled={loading}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <MotiView
+              animate={{ rotate: loading ? "360deg" : "0deg" }}
+              transition={{ loop: loading, type: "timing", duration: 1000 }}
+              style={{ width: 20, height: 20 }}
+            >
+              <RefreshCw size={20} color="#fff" />
+            </MotiView>
+            <Text style={styles.reloadText}>Ricarica dati</Text>
+          </View>
+        </Pressable>
 
-          {suggerimenti.map((msg, i) => {
-            const { icon, emoji } = emojiMap(msg);
-            return (
-              <MotiView
-                key={i}
-                from={{ opacity: 0, translateY: 20 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                transition={{ delay: i * 100 }}
-                className="bg-white px-4 py-4 rounded-2xl shadow-md mb-4 flex-row items-center space-x-3 w-full"
-              >
-                <Text className="text-2xl">{emoji}</Text>
-                {icon}
-                <Text className="text-base text-gray-800 flex-1 text-left">{msg}</Text>
-              </MotiView>
-            );
-          })}
-        </View>
+        {/* Sezioni collapsible come prima */}
+        {renderSection("😴 Sonno", "sleep", last.sleep ? (
+          <>
+            <Text>🗓️ {new Date(last.sleep.createdAt.seconds * 1000).toLocaleDateString()}</Text>
+            <Text>⏰ Ore dormite: {last.sleep.hours}</Text>
+            <Text>💤 Qualità: {last.sleep.quality}</Text>
+            <Text>😵 Apnea: {last.sleep.apnea ? "Sì" : "No"}</Text>
+            <Text>🔁 Risvegli frequenti: {last.sleep.frequentWakeups ? "Sì" : "No"}</Text>
+            <Text>🌙 Incubi: {last.sleep.nightmares ? "Sì" : "No"}</Text>
+            <Text>📝 Note: {last.sleep.notes || "—"}</Text>
+          </>
+        ) : <Text>Nessun dato disponibile.</Text>)}
+
+        {renderSection("🥗 Dieta", "diet", last.diet ? (
+          <>
+            <Text>🗓️ {last.diet.id}</Text>
+            <Text>🥐 Colazione: {last.diet.breakfast}</Text>
+            <Text>🍝 Pranzo: {last.diet.lunch}</Text>
+            <Text>🍽️ Cena: {last.diet.dinner}</Text>
+            <Text>🍪 Snack: {last.diet.snack}</Text>
+          </>
+        ) : <Text>Nessun dato disponibile.</Text>)}
+
+        {renderSection("💊 Farmaci", "medications", last.medications ? (
+          <>
+            <Text>🗓️ {new Date(last.medications.createdAt.seconds * 1000).toLocaleDateString()}</Text>
+            <Text>💊 Nome: {last.medications.name}</Text>
+            <Text>💉 Dose: {last.medications.dose}</Text>
+            <Text>📆 Giorni: {last.medications.days?.join(", ")}</Text>
+            <Text>🕐 Orari: {last.medications.times?.join(", ")}</Text>
+            <Text>🔔 Notifiche: {last.medications.notifications ? "Attive" : "Disattivate"}</Text>
+            <Text>📝 Note: {last.medications.notes || "—"}</Text>
+          </>
+        ) : <Text>Nessun dato disponibile.</Text>)}
+
+        {renderSection("🧪 Sintomi", "symptoms", last.symptoms ? (
+          <>
+            <Text>🗓️ {last.symptoms.id}</Text>
+            <Text>💪 Debolezza muscolare: {last.symptoms.debolezzaMuscolare ? "Sì" : "No"}</Text>
+            <Text>🥱 Affaticamento: {last.symptoms.affaticamentoMuscolare}</Text>
+            <Text>🫁 Difficoltà respiratorie: {last.symptoms.difficoltaRespiratorie ? "Sì" : "No"}</Text>
+            <Text>😵 Ansia: {last.symptoms.ansia ? "Sì" : "No"}</Text>
+            <Text>🧠 Umore: {last.symptoms.umore || "—"}</Text>
+            <Text>🗣️ Disartria: {last.symptoms.disartria ? "Sì" : "No"}</Text>
+            <Text>🍽️ Disfagia: {last.symptoms.disfagia ? "Sì" : "No"}</Text>
+            <Text>👁️ Diplopia: {last.symptoms.diplopia ? "Sì" : "No"}</Text>
+            <Text>👁️ Ptosi: {last.symptoms.ptosi ? "Sì" : "No"}</Text>
+            <Text>📈 Andamento: {last.symptoms.andamentoSintomi || "—"}</Text>
+            <Text>🛌 Sonno: {last.symptoms.sonno || "—"}</Text>
+          </>
+        ) : <Text>Nessun dato disponibile.</Text>)}
       </ScrollView>
 
       <BottomNavigation />
+      <Toast />
     </View>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#f0f5ff" },
+  scroll: { padding: 20, paddingBottom: 100 },
+  title: { fontSize: 22, fontWeight: "bold", textAlign: "center", color: "#1f2937" },
+  subtitle: { fontSize: 16, textAlign: "center", color: "#6b7280", marginBottom: 20 },
+  reloadButton: {
+    backgroundColor: "#2563eb",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignSelf: "center",
+    marginBottom: 24,
+  },
+  reloadText: { color: "#fff", fontWeight: "600" },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    marginBottom: 16,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  cardTitle: { fontSize: 18, fontWeight: "600", color: "#1e40af" },
+  cardBody: { paddingTop: 4 },
+});
+
+export default CDSSPage;

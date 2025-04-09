@@ -188,12 +188,12 @@ export default function Index() {
               <Text style={styles.actionText}>CDSS</Text>
             </Pressable>
           </Link>
-          <Link href="/trackinghistory" asChild>
-            <Pressable style={styles.actionButtonSmall}>
-              <Ionicons name="time-outline" size={24} color="#007AFF" />
-              <Text style={styles.actionText}>History</Text>
-            </Pressable>
-          </Link>
+          <Link href="/diettracker" asChild>
+          <Pressable style={styles.actionButtonSmall}>
+            <Ionicons name="nutrition-outline" size={24} color="#007AFF" />
+            <Text style={styles.actionText}>Diet</Text>
+          </Pressable>
+        </Link>
           <Link href="/sleeptracking" asChild>
           <Pressable style={styles.actionButtonSmall}>
             <Ionicons name="bed-outline" size={24} color="#007AFF" />
