@@ -2,115 +2,134 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  ScrollView,
-  StyleSheet,
-  Pressable,
   Switch,
   TextInput,
+  Pressable,
+  ScrollView,
+  StyleSheet,
 } from "react-native";
-import Slider from "@react-native-community/slider";
 import { Picker } from "@react-native-picker/picker";
-import {
-  Moon,
-  Clock,
-  BellOff,
-  FileText,
-  BedDouble,
-} from "lucide-react-native";
+import Slider from "@react-native-community/slider";
+import { Ionicons } from "@expo/vector-icons";
 import BottomNavigation from "../app/BottomNavigation";
+import { auth, db } from "../firebaseconfig";
+import { doc, setDoc, Timestamp } from "firebase/firestore";
 
 export default function SleepTracking() {
-  const [sleepQuality, setSleepQuality] = useState("Normale");
-  const [sleepDuration, setSleepDuration] = useState(6);
-  const [frequentWakeUps, setFrequentWakeUps] = useState(false);
+  const [quality, setQuality] = useState("Normale");
+  const [hours, setHours] = useState(6);
+  const [frequentWakeups, setFrequentWakeups] = useState(false);
   const [nightmares, setNightmares] = useState(false);
   const [apnea, setApnea] = useState(false);
   const [notes, setNotes] = useState("");
 
-  const handleSubmit = () => {
-    alert("Tracking salvato! (Firebase connection to be added)");
+  const handleSave = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      alert("Utente non autenticato");
+      return;
+    }
+
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const ref = doc(db, "users", user.uid, "sleep", today);
+
+    const sleepData = {
+      quality,
+      hours,
+      frequentWakeups,
+      nightmares,
+      apnea,
+      notes,
+      createdAt: Timestamp.now(),
+    };
+
+    try {
+      await setDoc(ref, sleepData);
+      alert("Dati salvati con successo!");
+    } catch (err) {
+      console.error("Errore salvataggio:", err);
+      alert("Errore durante il salvataggio.");
+    }
   };
 
   return (
-    <View style={styles.wrapper}>
-      <ScrollView style={styles.container}>
+    <View style={{ flex: 1, backgroundColor: "#F2F2F7" }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
+        {/* Qualità del sonno */}
         <View style={styles.card}>
-          <View style={styles.row}>
-            <Moon size={24} color="#333" />
-            <Text style={styles.label}>Qualità del sonno</Text>
-          </View>
-          <View style={styles.pickerWrapper}>
-            <Picker
-              selectedValue={sleepQuality}
-              onValueChange={(value) => setSleepQuality(value)}
-              style={styles.picker}
-            >
-              {["Ottimo", "Buono", "Normale", "Scarso", "Insonnia"].map((option) => (
-                <Picker.Item label={option} value={option} key={option} />
-              ))}
-            </Picker>
-          </View>
+          <Text style={styles.label}>
+            <Ionicons name="moon-outline" size={20} color="#333" /> Qualità del sonno
+          </Text>
+          <Picker
+            selectedValue={quality}
+            onValueChange={setQuality}
+            style={styles.picker}
+          >
+            <Picker.Item label="Buono" value="Buono" />
+            <Picker.Item label="Normale" value="Normale" />
+            <Picker.Item label="Scarso" value="Scarso" />
+            <Picker.Item label="Insonnia" value="Insonnia" />
+          </Picker>
         </View>
 
+        {/* Durata del sonno */}
         <View style={styles.card}>
-          <View style={styles.row}>
-            <Clock size={24} color="#333" />
-            <Text style={styles.label}>Durata del sonno (ore)</Text>
-          </View>
+          <Text style={styles.label}>
+            <Ionicons name="time-outline" size={20} color="#333" /> Durata del sonno (ore)
+          </Text>
           <Slider
+            style={{ width: "100%" }}
             minimumValue={0}
             maximumValue={12}
-            step={0.5}
-            value={sleepDuration}
-            onValueChange={(value) => setSleepDuration(value)}
-            style={{ marginTop: 10 }}
+            step={1}
+            value={hours}
+            onValueChange={setHours}
           />
-          <Text style={styles.sliderValue}>{sleepDuration} ore</Text>
+          <Text style={styles.sliderValue}>{hours} ore</Text>
         </View>
 
+        {/* Switch vari */}
         {[{
           label: "Svegli frequenti",
-          value: frequentWakeUps,
-          setValue: setFrequentWakeUps,
+          value: frequentWakeups,
+          setter: setFrequentWakeups
         }, {
           label: "Incubi",
           value: nightmares,
-          setValue: setNightmares,
+          setter: setNightmares
         }, {
           label: "Apnea notturna",
           value: apnea,
-          setValue: setApnea,
+          setter: setApnea
         }].map((item, index) => (
-          <View style={styles.card} key={index}>
-            <View style={styles.row}>
-              <BellOff size={24} color="#333" />
-              <Text style={styles.label}>{item.label}</Text>
-              <Switch
-                value={item.value}
-                onValueChange={item.setValue}
-                style={{ marginLeft: "auto" }}
-              />
-            </View>
+          <View key={index} style={styles.switchRow}>
+            <Text style={styles.switchLabel}>
+              <Ionicons name="remove-circle-outline" size={20} color="#333" /> {item.label}
+            </Text>
+            <Switch
+              value={item.value}
+              onValueChange={item.setter}
+            />
           </View>
         ))}
 
+        {/* Note aggiuntive */}
         <View style={styles.card}>
-          <View style={styles.row}>
-            <FileText size={24} color="#333" />
-            <Text style={styles.label}>Note aggiuntive</Text>
-          </View>
+          <Text style={styles.label}>
+            <Ionicons name="document-text-outline" size={20} color="#333" /> Note aggiuntive
+          </Text>
           <TextInput
+            multiline
             placeholder="Scrivi qui..."
+            style={styles.textArea}
             value={notes}
             onChangeText={setNotes}
-            multiline
-            numberOfLines={4}
-            style={styles.input}
           />
         </View>
 
-        <Pressable style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitText}>Salva</Text>
+        {/* Pulsante Salva */}
+        <Pressable onPress={handleSave} style={styles.saveButton}>
+          <Text style={styles.saveText}>Salva</Text>
         </Pressable>
       </ScrollView>
 
@@ -120,67 +139,62 @@ export default function SleepTracking() {
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    backgroundColor: "#F4F6F8",
-  },
-  container: {
-    padding: 20,
-  },
   card: {
-    backgroundColor: "#fff",
-    padding: 16,
+    backgroundColor: "#FFF",
     borderRadius: 16,
-    marginBottom: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
+    padding: 16,
+    marginBottom: 20,
     elevation: 2,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
   },
   label: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#2C3E50",
-  },
-  pickerWrapper: {
-    marginTop: 10,
-    backgroundColor: "#F0F0F0",
-    borderRadius: 10,
+    marginBottom: 8,
+    color: "#1C1C1E",
   },
   picker: {
-    height: 40,
-    padding: 0,
-    margin: 0,
-  },
-  input: {
-    backgroundColor: "#F0F0F0",
-    borderRadius: 10,
+    backgroundColor: "#F4F4F6",
+    borderRadius: 12,
     padding: 10,
-    marginTop: 10,
-    textAlignVertical: "top",
   },
   sliderValue: {
-    marginTop: 10,
     textAlign: "center",
     fontSize: 16,
-    color: "#555",
+    fontWeight: "500",
+    marginTop: 10,
   },
-  submitButton: {
+  switchRow: {
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    elevation: 1,
+  },
+  switchLabel: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#1C1C1E",
+  },
+  textArea: {
+    borderWidth: 1,
+    borderColor: "#DDD",
+    borderRadius: 10,
+    minHeight: 80,
+    padding: 10,
+    fontSize: 15,
+    backgroundColor: "#FAFAFA",
+  },
+  saveButton: {
     backgroundColor: "#007AFF",
-    padding: 15,
+    padding: 16,
     borderRadius: 12,
     alignItems: "center",
-    marginTop: 20,
-    marginBottom: 80,
   },
-  submitText: {
-    color: "#fff",
+  saveText: {
+    color: "#FFF",
     fontSize: 16,
     fontWeight: "600",
   },

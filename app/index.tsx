@@ -194,12 +194,12 @@ export default function Index() {
               <Text style={styles.actionText}>History</Text>
             </Pressable>
           </Link>
-          <Link href="/profile" asChild>
-            <Pressable style={styles.actionButtonSmall}>
-              <Ionicons name="person-outline" size={24} color="#007AFF" />
-              <Text style={styles.actionText}>Profile</Text>
-            </Pressable>
-          </Link>
+          <Link href="/sleeptracking" asChild>
+          <Pressable style={styles.actionButtonSmall}>
+            <Ionicons name="bed-outline" size={24} color="#007AFF" />
+            <Text style={styles.actionText}>Sleep</Text>
+          </Pressable>
+        </Link>
         </View>
       </Animatable.View>
       </ScrollView>
