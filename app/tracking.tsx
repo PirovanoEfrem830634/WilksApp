@@ -9,7 +9,19 @@ import {
   StyleSheet,
 } from "react-native";
 import Slider from '@react-native-community/slider';
-import { Activity, Eye, Wind, ChevronsDown, DivideCircle, Mic, Home, User, HeartPulse, Brain, AlertTriangle, TrendingUp, Smile, BedDouble } from "lucide-react-native";
+import { Picker } from '@react-native-picker/picker';
+import {
+  Activity,
+  Eye,
+  Wind,
+  ChevronsDown,
+  DivideCircle,
+  Mic,
+  AlertTriangle,
+  TrendingUp,
+  Smile,
+  BedDouble,
+} from "lucide-react-native";
 import { useRouter } from "expo-router";
 import BottomNavigation from "../app/BottomNavigation";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
@@ -76,6 +88,32 @@ export default function SymptomTracking() {
     }
   };
 
+  const dropdownStringFields: {
+    key: keyof Pick<FormDataType, 'andamentoSintomi' | 'umore' | 'sonno'>,
+    label: string,
+    icon: JSX.Element,
+    options: string[]
+  }[] = [
+    {
+      key: "andamentoSintomi",
+      label: "Symptom Progression",
+      icon: <TrendingUp size={20} color="#3b3b3b" />,
+      options: ["Stabile", "Peggiorato", "Migliorato"],
+    },
+    {
+      key: "umore",
+      label: "Mood",
+      icon: <Smile size={20} color="#3b3b3b" />,
+      options: ["Happy", "Neutral", "Sad", "Anxious"],
+    },
+    {
+      key: "sonno",
+      label: "Sleep Quality",
+      icon: <BedDouble size={20} color="#3b3b3b" />,
+      options: ["Buono", "Normale", "Scarso", "Insonnia"],
+    }
+  ];
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView}>
@@ -122,50 +160,27 @@ export default function SymptomTracking() {
           </View>
         ))}
 
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardIconText}>
-              <TrendingUp size={24} color="#333" />
-              <Text style={styles.cardText}>Symptom Progression</Text>
+        {dropdownStringFields.map((dropdown) => (
+          <View key={dropdown.key} style={styles.cardPicker}>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardIconText}>
+                {dropdown.icon}
+                <Text style={styles.cardText}>{dropdown.label}</Text>
+              </View>
+            </View>
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={formData[dropdown.key]}
+                onValueChange={(value) => handleInputChange(dropdown.key, value)}
+                style={styles.picker}
+              >
+                {dropdown.options.map((option) => (
+                  <Picker.Item label={option} value={option} key={option} />
+                ))}
+              </Picker>
             </View>
           </View>
-          <TextInput
-            style={styles.input}
-            placeholder="Describe progression"
-            value={formData.andamentoSintomi}
-            onChangeText={(text) => handleInputChange("andamentoSintomi", text)}
-          />
-        </View>
-
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardIconText}>
-              <Smile size={24} color="#333" />
-              <Text style={styles.cardText}>Mood</Text>
-            </View>
-          </View>
-          <TextInput
-            style={styles.input}
-            placeholder="Describe your mood"
-            value={formData.umore}
-            onChangeText={(text) => handleInputChange("umore", text)}
-          />
-        </View>
-
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardIconText}>
-              <BedDouble size={24} color="#333" />
-              <Text style={styles.cardText}>Sleep Quality</Text>
-            </View>
-          </View>
-          <TextInput
-            style={styles.input}
-            placeholder="How was your sleep?"
-            value={formData.sonno}
-            onChangeText={(text) => handleInputChange("sonno", text)}
-          />
-        </View>
+        ))}
 
         <View style={styles.card}>
           <Text style={styles.cardText}>Muscle Fatigue Level</Text>
@@ -185,7 +200,6 @@ export default function SymptomTracking() {
         </Pressable>
       </ScrollView>
 
-      {/* Bottom Navigation */}
       <BottomNavigation />
     </View>
   );
@@ -276,5 +290,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#007AFF",
     marginTop: 4,
+  },
+  cardPicker: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  pickerWrapper: {
+    marginTop: 10,
+    backgroundColor: "#F8F8F8",
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  picker: {
+    width: "100%",
   },
 });
