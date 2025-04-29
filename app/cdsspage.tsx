@@ -156,14 +156,21 @@ const CDSSPage = () => {
 
         <Pressable
           onPress={() => {
-            const tips = getPersonalizedAdvice({
-              sleep: last.sleep,
-              symptoms: last.symptoms,
-              medications: last.medications,
-            });
-            setAdvice(tips);
-            setShowAdvice(true);
-          }}
+            if (showAdvice) {
+              // Se sono già visibili, nascondili
+              setShowAdvice(false);
+              setAdvice([]);
+            } else {
+              // Altrimenti, calcola e mostra i consigli
+              const tips = getPersonalizedAdvice({
+                sleep: last.sleep,
+                symptoms: last.symptoms,
+                medications: last.medications,
+              });
+              setAdvice(tips);
+              setShowAdvice(true);
+            }
+          }}          
           style={styles.adviceButton}
         >
           <Text style={styles.adviceButtonText}>💡 Dammi dei consigli personalizzati</Text>
