@@ -8,13 +8,15 @@ import {
   LayoutAnimation,
   UIManager,
   Platform,
+  TextInput,
 } from "react-native";
-import { getDocs, collection } from "firebase/firestore";
+import { getDocs, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebaseconfig";
 import { getAuth } from "firebase/auth";
 import { ChevronDown, ChevronUp, RefreshCw } from "lucide-react-native";
 import { MotiView } from "moti";
 import Toast from "react-native-toast-message";
+import BottomNavigation from "../app/BottomNavigation";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -33,6 +35,12 @@ const MonitoraggioClinicoSangue = () => {
   const [bloodTests, setBloodTests] = useState<BloodTest[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Form state
+  const [antiAChR, setAntiAChR] = useState("Negativo");
+  const [antiMuSK, setAntiMuSK] = useState("Negativo");
+  const [antiLRP4, setAntiLRP4] = useState("Negativo");
+  const [notes, setNotes] = useState("");
 
   const fetchBloodTests = async () => {
     try {
@@ -75,11 +83,71 @@ const MonitoraggioClinicoSangue = () => {
     setOpen(prev => !prev);
   };
 
+  const handleSubmit = async () => {
+    try {
+      const uid = getAuth().currentUser?.uid;
+      if (!uid) throw new Error("Utente non autenticato");
+
+      await addDoc(collection(db, `users/${uid}/blood_tests`), {
+        antiAChR,
+        antiMuSK,
+        antiLRP4,
+        notes,
+        createdAt: serverTimestamp(),
+      });
+
+      setAntiAChR("Negativo");
+      setAntiMuSK("Negativo");
+      setAntiLRP4("Negativo");
+      setNotes("");
+
+      Toast.show({
+        type: "success",
+        text1: "🧬 Esame inserito",
+        position: "top",
+      });
+
+      fetchBloodTests();
+    } catch (err: any) {
+      Toast.show({
+        type: "error",
+        text1: "❌ Errore salvataggio",
+        text2: err.message,
+      });
+    }
+  };
+
   const last = bloodTests[0];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 20 }}>
+  <View style={styles.container}>
+    <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
       <Text style={styles.title}>🧬 Monitoraggio Esami del Sangue</Text>
+
+      <View style={styles.cardBody}>
+        <Text style={styles.cardTitle}>➕ Nuovo esame</Text>
+
+        <Text>anti-AChR</Text>
+        <TextInput value={antiAChR} onChangeText={setAntiAChR} style={styles.input} />
+
+        <Text>anti-MuSK</Text>
+        <TextInput value={antiMuSK} onChangeText={setAntiMuSK} style={styles.input} />
+
+        <Text>anti-LRP4</Text>
+        <TextInput value={antiLRP4} onChangeText={setAntiLRP4} style={styles.input} />
+
+        <Text>Note (facoltative)</Text>
+        <TextInput
+          value={notes}
+          onChangeText={setNotes}
+          style={[styles.input, { height: 60 }]}
+          multiline
+        />
+
+        <Pressable onPress={handleSubmit} style={styles.reloadButton}>
+          <Text style={styles.reloadText}>Salva esame</Text>
+        </Pressable>
+      </View>
 
       <Pressable onPress={toggleSection} style={styles.cardHeader}>
         <Text style={styles.cardTitle}>Ultimo esame registrato</Text>
@@ -113,7 +181,10 @@ const MonitoraggioClinicoSangue = () => {
 
       <Toast />
     </ScrollView>
-  );
+
+    <BottomNavigation />
+  </View>
+);
 };
 
 const styles = StyleSheet.create({
@@ -131,8 +202,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    marginTop: 20,
   },
-  cardTitle: { fontSize: 18, fontWeight: "600", color: "#1e40af" },
+  cardTitle: { fontSize: 18, fontWeight: "600", color: "#1e40af", marginBottom: 8 },
   cardBody: {
     backgroundColor: "#fff",
     marginTop: 8,
@@ -143,6 +215,15 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    marginBottom: 20,
+  },
+  input: {
+    backgroundColor: "#f3f4f6",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
   },
   reloadButton: {
     backgroundColor: "#2563eb",
@@ -150,7 +231,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 12,
     alignSelf: "center",
-    marginTop: 30,
+    marginTop: 16,
   },
   reloadText: { color: "#fff", fontWeight: "600" },
 });
