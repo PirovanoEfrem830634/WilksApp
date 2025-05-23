@@ -201,6 +201,14 @@ export default function Index() {
           </Pressable>
         </Link>
         </View>
+        <View style={styles.row}>
+          <Link href="/monitoraggioclinico" asChild>
+          <Pressable style={styles.actionButtonSmall}>
+            <Ionicons name="scan-outline" size={24} color="#007AFF" />
+            <Text style={styles.actionText}>Monitoring</Text>
+          </Pressable>
+        </Link>
+        </View>
       </Animatable.View>
       </ScrollView>
 
