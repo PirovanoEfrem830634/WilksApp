@@ -37,9 +37,9 @@ const MonitoraggioClinicoSangue = () => {
   const [loading, setLoading] = useState(false);
 
   // Form state
-  const [antiAChR, setAntiAChR] = useState("Negativo");
-  const [antiMuSK, setAntiMuSK] = useState("Negativo");
-  const [antiLRP4, setAntiLRP4] = useState("Negativo");
+  const [antiAChR, setAntiAChR] = useState("");
+  const [antiMuSK, setAntiMuSK] = useState("");
+  const [antiLRP4, setAntiLRP4] = useState("");
   const [notes, setNotes] = useState("");
 
   const fetchBloodTests = async () => {
@@ -96,9 +96,9 @@ const MonitoraggioClinicoSangue = () => {
         createdAt: serverTimestamp(),
       });
 
-      setAntiAChR("Negativo");
-      setAntiMuSK("Negativo");
-      setAntiLRP4("Negativo");
+      setAntiAChR("");
+      setAntiMuSK("");
+      setAntiLRP4("");
       setNotes("");
 
       Toast.show({
