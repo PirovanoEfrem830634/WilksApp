@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import BottomNavigation from "../app/BottomNavigation";
 import { auth, db } from "../firebaseconfig";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
+import Toast from 'react-native-toast-message';
 
 export default function SleepTracking() {
   const [quality, setQuality] = useState("Normale");
@@ -23,34 +24,48 @@ export default function SleepTracking() {
   const [apnea, setApnea] = useState(false);
   const [notes, setNotes] = useState("");
 
-  const handleSave = async () => {
-    const user = auth.currentUser;
-    if (!user) {
-      alert("Utente non autenticato");
-      return;
-    }
+const handleSave = async () => {
+  const user = auth.currentUser;
+  if (!user) {
+    Toast.show({
+      type: "error",
+      text1: "❌ Utente non autenticato",
+      position: "top",
+    });
+    return;
+  }
 
-    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-    const ref = doc(db, "users", user.uid, "sleep", today);
+  const today = new Date().toISOString().split("T")[0];
+  const ref = doc(db, "users", user.uid, "sleep", today);
 
-    const sleepData = {
-      quality,
-      hours,
-      frequentWakeups,
-      nightmares,
-      apnea,
-      notes,
-      createdAt: Timestamp.now(),
-    };
-
-    try {
-      await setDoc(ref, sleepData);
-      alert("Dati salvati con successo!");
-    } catch (err) {
-      console.error("Errore salvataggio:", err);
-      alert("Errore durante il salvataggio.");
-    }
+  const sleepData = {
+    quality,
+    hours,
+    frequentWakeups,
+    nightmares,
+    apnea,
+    notes,
+    createdAt: Timestamp.now(),
   };
+
+  try {
+  await setDoc(ref, sleepData);
+  Toast.show({
+    type: "success",
+    text1: "💤 Dati salvati con successo",
+    position: "top",
+  });
+} catch (err) {
+  const error = err as Error;
+  console.error("Errore salvataggio:", error);
+  Toast.show({
+    type: "error",
+    text1: "❌ Errore durante il salvataggio",
+    text2: error.message,
+    position: "top",
+  });
+}
+};
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F2F2F7" }}>
@@ -132,7 +147,7 @@ export default function SleepTracking() {
           <Text style={styles.saveText}>Salva</Text>
         </Pressable>
       </ScrollView>
-
+      <Toast />
       <BottomNavigation />
     </View>
   );

@@ -157,6 +157,7 @@ export default function Index() {
             <Text style={{ color: "#888" }}>No data available</Text>
           )}
         </Animatable.View>
+        
 
         <Animatable.Text animation="fadeIn" delay={650} style={styles.sectionTitle}>Quick Actions</Animatable.Text>
 
