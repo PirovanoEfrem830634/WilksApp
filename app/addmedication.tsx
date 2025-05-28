@@ -15,6 +15,7 @@ import { Clock3, Bell, CalendarPlus } from "lucide-react-native";
 import { auth, db } from "../firebaseconfig";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { useRouter } from "expo-router";
+import BottomNavigation from "../app/BottomNavigation";
 
 const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -198,6 +199,7 @@ export default function AddMedication() {
           <Text style={styles.submitButtonText}>Save Medication</Text>
         </TouchableOpacity>
       </ScrollView>
+      <BottomNavigation />
     </View>
   );
 }

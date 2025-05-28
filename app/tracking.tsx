@@ -26,6 +26,7 @@ import { useRouter } from "expo-router";
 import BottomNavigation from "../app/BottomNavigation";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { auth, db } from "../firebaseconfig";
+import * as Animatable from 'react-native-animatable';
 
 // Type per i dati del form
 type FormDataType = {
@@ -145,19 +146,27 @@ export default function SymptomTracking() {
           label: "Anxiety",
           key: "ansia",
           icon: <AlertTriangle size={24} color="#333" />
-        }].map((item) => (
-          <View key={item.key} style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={styles.cardIconText}>
-                {item.icon}
-                <Text style={styles.cardText}>{item.label}</Text>
+        }].map((item, index) => (
+          <Animatable.View
+            key={item.key}
+            animation="fadeInUp"
+            delay={index * 100}
+            duration={600}
+            useNativeDriver
+          >
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardIconText}>
+                  {item.icon}
+                  <Text style={styles.cardText}>{item.label}</Text>
+                </View>
+                <Switch
+                  value={formData[item.key as keyof FormDataType] as boolean}
+                  onValueChange={(value) => handleInputChange(item.key as keyof FormDataType, value)}
+                />
               </View>
-              <Switch
-                value={formData[item.key as keyof FormDataType] as boolean}
-                onValueChange={(value) => handleInputChange(item.key as keyof FormDataType, value)}
-              />
             </View>
-          </View>
+          </Animatable.View>
         ))}
 
         {dropdownStringFields.map((dropdown) => (
