@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Pressable, Text, StyleSheet } from "react-native";
-import { Home, Activity, User, Info } from "lucide-react-native"; // Aggiunto `Info`
+import { Home, Activity, User, HeartPulse } from "lucide-react-native"; // Aggiunto `Info`
 import { useRouter } from "expo-router";
 
 export default function BottomNavigation() {
@@ -15,7 +15,12 @@ export default function BottomNavigation() {
 
       <Pressable onPress={() => router.push("/trackinghistory")} style={styles.navButton}>
         <Activity size={24} color="#007AFF" />
-        <Text style={styles.navText}>Tracking History</Text>
+        <Text style={styles.navText}>History</Text>
+      </Pressable>
+
+      <Pressable onPress={() => router.push("/cdsspage")} style={styles.navButton}>
+        <HeartPulse size={24} color="#007AFF" />
+        <Text style={styles.navText}>CDSS</Text>
       </Pressable>
 
       <Pressable onPress={() => router.push("/profile")} style={styles.navButton}>

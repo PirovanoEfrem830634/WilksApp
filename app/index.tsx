@@ -183,12 +183,12 @@ export default function Index() {
           </Link>
         </View>
         <View style={styles.row}>
-          <Link href="/cdsspage" asChild>
-            <Pressable style={styles.actionButtonSmall}>
-              <Ionicons name="heart-circle-outline" size={24} color="#007AFF" />
-              <Text style={styles.actionText}>CDSS</Text>
-            </Pressable>
-          </Link>
+        <Link href="/monitoraggioclinico" asChild>
+          <Pressable style={styles.actionButtonSmall}>
+            <Ionicons name="scan-outline" size={24} color="#007AFF" />
+            <Text style={styles.actionText}>Monitoring</Text>
+          </Pressable>
+        </Link>
           <Link href="/diettracker" asChild>
           <Pressable style={styles.actionButtonSmall}>
             <Ionicons name="nutrition-outline" size={24} color="#007AFF" />
@@ -199,14 +199,6 @@ export default function Index() {
           <Pressable style={styles.actionButtonSmall}>
             <Ionicons name="bed-outline" size={24} color="#007AFF" />
             <Text style={styles.actionText}>Sleep</Text>
-          </Pressable>
-        </Link>
-        </View>
-        <View style={styles.row}>
-          <Link href="/monitoraggioclinico" asChild>
-          <Pressable style={styles.actionButtonSmall}>
-            <Ionicons name="scan-outline" size={24} color="#007AFF" />
-            <Text style={styles.actionText}>Monitoring</Text>
           </Pressable>
         </Link>
         </View>

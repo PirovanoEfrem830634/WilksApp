@@ -320,4 +320,43 @@ const styles = StyleSheet.create({
   picker: {
     width: "100%",
   },
+  grid: {
+  flexDirection: "row",
+  flexWrap: "wrap",
+  justifyContent: "space-between",
+  },
+  symptomCard: {
+    width: "48%",
+    aspectRatio: 1,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 15,
+    padding: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  selectedCard: {
+    borderColor: "#007AFF",
+    shadowColor: "#007AFF",
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  symptomEmoji: {
+    fontSize: 28,
+    marginBottom: 8,
+  },
+  symptomLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
+    color: "#1C1C1E",
+  },
 });
