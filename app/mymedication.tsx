@@ -12,8 +12,9 @@ import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { auth, db } from "../firebaseconfig";
 import { Trash2 } from "lucide-react-native";
 import BottomNavigation from "../app/BottomNavigation";
+import * as Animatable from 'react-native-animatable';
 
-// Dummy type (in seguito lo connetteremo a Firebase o AsyncStorage)
+
 type Medication = {
   id: string;
   name: string;
@@ -94,9 +95,7 @@ export default function MyMedications() {
       >
         <Text style={styles.addButtonText}>+ Add Medication</Text>
       </TouchableOpacity>
-
-      {/* Bottom Navigation */}
-                <BottomNavigation />
+      <BottomNavigation />
     </View>
   );
 }
