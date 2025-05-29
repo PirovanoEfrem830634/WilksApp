@@ -18,6 +18,7 @@ import { MotiView } from "moti";
 import Toast from "react-native-toast-message";
 import { evaluateCDSS, getPersonalizedAdvice } from "../utils/cdssLogic";
 import { useFocusEffect } from "@react-navigation/native";
+import { TouchableOpacity } from 'react-native';
 
 
 // Abilita LayoutAnimation su Android
@@ -76,6 +77,8 @@ const CDSSPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [alerts, setAlerts] = useState<string[]>([]);
+  const [showAlerts, setShowAlerts] = useState(true);
+
 
   const reloadData = async () => {
     try {
@@ -188,9 +191,14 @@ const CDSSPage = () => {
         )}
 
 
-        {alerts.length > 0 && (
+        {alerts.length > 0 && showAlerts && (
           <View style={styles.alertBox}>
-            <Text style={styles.alertTitle}>⚠️ Alert ⚠️</Text>
+            <View style={styles.alertHeader}>
+              <Text style={styles.alertTitle}>⚠️ Alert CDSS</Text>
+              <TouchableOpacity onPress={() => setShowAlerts(false)}>
+                <Text style={styles.closeButton}>✕</Text>
+              </TouchableOpacity>
+            </View>
             {alerts.map((alert, index) => (
               <View key={index} style={styles.alertCard}>
                 <Text style={styles.alertText}>{alert}</Text>
@@ -198,6 +206,7 @@ const CDSSPage = () => {
             ))}
           </View>
         )}
+
 
         <Pressable onPress={reloadData} style={styles.reloadButton} disabled={loading}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -366,7 +375,21 @@ const styles = StyleSheet.create({
   adviceText: {
     color: "#064e3b",
     fontSize: 16,
-  },  
+  },
+  alertHeader: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: 8,
+  },
+  closeButton: {
+  fontSize: 18,
+  fontWeight: '600',
+  color: '#8E8E93', // grigio stile iOS
+  paddingHorizontal: 8,
+  paddingVertical: 2,
+  },
+
 });
 
 export default CDSSPage;
