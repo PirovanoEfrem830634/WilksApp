@@ -194,7 +194,7 @@ const CDSSPage = () => {
         {alerts.length > 0 && showAlerts && (
           <View style={styles.alertBox}>
             <View style={styles.alertHeader}>
-              <Text style={styles.alertTitle}>⚠️ Alert CDSS</Text>
+              <Text style={styles.alertTitle}>⚠️ Alert CDSS ⚠️</Text>
               <TouchableOpacity onPress={() => setShowAlerts(false)}>
                 <Text style={styles.closeButton}>✕</Text>
               </TouchableOpacity>
