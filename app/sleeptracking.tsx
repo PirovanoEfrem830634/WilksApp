@@ -15,6 +15,8 @@ import BottomNavigation from "../app/BottomNavigation";
 import { auth, db } from "../firebaseconfig";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import Toast from 'react-native-toast-message';
+import { TouchableOpacity} from "react-native";
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function SleepTracking() {
   const [quality, setQuality] = useState("Normale");
@@ -23,6 +25,18 @@ export default function SleepTracking() {
   const [nightmares, setNightmares] = useState(false);
   const [apnea, setApnea] = useState(false);
   const [notes, setNotes] = useState("");
+
+useFocusEffect(
+  React.useCallback(() => {
+    // Reset valori ogni volta che entri nella schermata
+    setFrequentWakeups(false);
+    setNightmares(false);
+    setApnea(false);
+    setQuality("Normale");
+    setHours(6);
+    setNotes("");
+  }, [])
+);
 
 const handleSave = async () => {
   const user = auth.currentUser;
@@ -91,44 +105,64 @@ const handleSave = async () => {
 
         {/* Durata del sonno */}
         <View style={styles.card}>
-          <Text style={styles.label}>
-            <Ionicons name="time-outline" size={20} color="#333" /> Durata del sonno (ore)
+  <Text style={styles.label}>🕓 Durata del sonno (ore)</Text>
+  <View style={styles.pillContainer}>
+      {[3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((val) => (
+        <Pressable
+          key={val}
+          onPress={() => setHours(val)}
+          style={[
+            styles.pill,
+            hours === val && styles.pillSelected
+          ]}
+        >
+          <Text style={[
+            styles.pillText,
+            hours === val && styles.pillTextSelected
+          ]}>
+            {val}h
           </Text>
-          <Slider
-            style={{ width: "100%" }}
-            minimumValue={0}
-            maximumValue={12}
-            step={1}
-            value={hours}
-            onValueChange={setHours}
-          />
-          <Text style={styles.sliderValue}>{hours} ore</Text>
-        </View>
+        </Pressable>
+      ))}
+    </View>
+  </View>
+
 
         {/* Switch vari */}
-        {[{
-          label: "Svegli frequenti",
+        {[
+        {
+          label: "😵‍💫 Sveglie frequenti",
           value: frequentWakeups,
-          setter: setFrequentWakeups
-        }, {
-          label: "Incubi",
+          setter: setFrequentWakeups,
+        },
+        {
+          label: "😨 Incubi",
           value: nightmares,
-          setter: setNightmares
-        }, {
-          label: "Apnea notturna",
+          setter: setNightmares,
+        },
+        {
+          label: "😮‍💨 Apnea notturna",
           value: apnea,
-          setter: setApnea
-        }].map((item, index) => (
-          <View key={index} style={styles.switchRow}>
-            <Text style={styles.switchLabel}>
-              <Ionicons name="remove-circle-outline" size={20} color="#333" /> {item.label}
-            </Text>
-            <Switch
-              value={item.value}
-              onValueChange={item.setter}
-            />
-          </View>
-        ))}
+          setter: setApnea,
+        },
+      ].map((item, index) => (
+        <TouchableOpacity
+          key={index}
+          onPress={() => item.setter(!item.value)}
+          style={[
+            styles.toggleCard,
+            item.value && styles.toggleCardActive,
+          ]}
+        >
+          <Text style={[
+            styles.toggleCardText,
+            item.value && styles.toggleCardTextActive
+          ]}>
+          {item.label}
+</Text>
+
+        </TouchableOpacity>
+      ))}
 
         {/* Note aggiuntive */}
         <View style={styles.card}>
@@ -223,4 +257,70 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  toggleCard: {
+  backgroundColor: "#FFFFFF",
+  borderRadius: 24,
+  paddingVertical: 16,
+  paddingHorizontal: 20,
+  marginBottom: 16,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.05,
+  shadowRadius: 4,
+  elevation: 2,
+  },
+  toggleCardActive: {
+    shadowColor: "#007AFF",
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: "#007AFF",
+    textShadowColor: "#007AFF"
+  },
+  toggleCardText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1C1C1E",
+  },
+  toggleCardTextActive: {
+  color: "#007AFF",
+  },
+  slider: {
+  width: "100%",
+  height: 40,
+  },
+  pillContainer: {
+  flexDirection: "row",
+  flexWrap: "wrap",
+  gap: 8,
+  marginTop: 12,
+},
+
+pill: {
+  paddingVertical: 8,
+  paddingHorizontal: 14,
+  borderRadius: 20,
+  backgroundColor: "#F2F2F7",
+  borderWidth: 1,
+  borderColor: "#E0E0E0",
+  },
+
+  pillSelected: {
+    backgroundColor: "#007AFF",
+    borderColor: "#007AFF",
+  },
+
+  pillText: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#1C1C1E",
+  },
+
+  pillTextSelected: {
+    color: "#FFFFFF",
+  },
+
 });
