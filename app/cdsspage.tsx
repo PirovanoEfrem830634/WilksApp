@@ -190,7 +190,7 @@ const CDSSPage = () => {
 
         {alerts.length > 0 && (
           <View style={styles.alertBox}>
-            <Text style={styles.alertTitle}>⚠️ Alert CDSS</Text>
+            <Text style={styles.alertTitle}>⚠️ Alert ⚠️</Text>
             {alerts.map((alert, index) => (
               <View key={index} style={styles.alertCard}>
                 <Text style={styles.alertText}>{alert}</Text>
@@ -317,6 +317,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#92400e",
     marginBottom: 8,
+    textAlign: "center",
   },
   alertCard: {
     backgroundColor: "#fffbeb",

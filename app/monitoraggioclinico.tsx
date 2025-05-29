@@ -122,7 +122,7 @@ const MonitoraggioClinicoSangue = () => {
   return (
   <View style={styles.container}>
     <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
-      <Text style={styles.title}>🧬 Monitoraggio Esami del Sangue</Text>
+      <Text style={styles.title}>🧬 Monitoraggio <br /> Esami del Sangue</Text>
 
       <View style={styles.cardBody}>
         <Text style={styles.cardTitle}>➕ Nuovo esame</Text>

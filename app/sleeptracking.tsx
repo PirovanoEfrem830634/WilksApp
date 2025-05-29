@@ -69,7 +69,9 @@ const handleSave = async () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F2F2F7" }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 }}>
+        <Text style={styles.title}>🛌 Sleep Tracking</Text>
+        <Text style={styles.subtitle}>Monitora la qualità del sonno</Text>
         {/* Qualità del sonno */}
         <View style={styles.card}>
           <Text style={styles.label}>
@@ -154,6 +156,8 @@ const handleSave = async () => {
 }
 
 const styles = StyleSheet.create({
+  title: { fontSize: 22, fontWeight: "bold", textAlign: "center", color: "#1f2937" },
+  subtitle: { fontSize: 16, textAlign: "center", color: "#6b7280", marginBottom: 20 },
   card: {
     backgroundColor: "#FFF",
     borderRadius: 16,
