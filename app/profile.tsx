@@ -83,31 +83,46 @@ export default function Profile() {
       </Animatable.View>
 
       {/* Info card */}
-      <Animatable.View animation="fadeInUp" delay={300} style={styles.infoCard}>
-        <Text style={styles.infoText}>
-          <Ionicons name="calendar-outline" size={16} color="#5DADE2" /> Date of birth: <Text style={styles.infoValue}>{userData?.age || "Not provided"}</Text>
-        </Text>
-        <Text style={styles.infoText}>
-          <Ionicons name="location-outline" size={16} color="#5DADE2" /> City: <Text style={styles.infoValue}>{userData?.city || "Not provided"}</Text>
-        </Text>
-        <Text style={styles.infoText}>
-          <Ionicons name="call-outline" size={16} color="#5DADE2" /> Phone: <Text style={styles.infoValue}>{userData?.phone || "Not provided"}</Text>
-        </Text>
-        <Text style={styles.infoText}>
-          <Ionicons name="body-outline" size={16} color="#5DADE2" /> Height: <Text style={styles.infoValue}>{userData?.height || "Not provided"}</Text>
-        </Text>
-        <Text style={styles.infoText}>
-          <Ionicons name="scale-outline" size={16} color="#5DADE2" /> Weight: <Text style={styles.infoValue}>{userData?.weight || "Not provided"}</Text>
-        </Text>
-      </Animatable.View>
+      <View style={styles.cardGroup}>
+      {[
+        { emoji: "📅", label: "Date of birth", value: userData?.age || "Not provided" },
+        { emoji: "📍", label: "City", value: userData?.city || "Not provided" },
+        { emoji: "📞", label: "Phone", value: userData?.phone || "Not provided" },
+        { emoji: "📏", label: "Height", value: userData?.height || "Not provided" },
+        { emoji: "⚖️", label: "Weight", value: userData?.weight || "Not provided" },
+      ].map((item, index) => (
+        <Animatable.View
+          key={item.label}
+          animation="fadeInUp"
+          delay={300 + index * 100}
+          style={styles.miniCard}
+        >
+          <Text style={styles.emojiIcon}>{item.emoji}</Text>
+          <View>
+            <Text style={styles.infoLabel}>{item.label}</Text>
+            <Text style={styles.infoValue}>{item.value}</Text>
+          </View>
+        </Animatable.View>
+      ))}
+    </View>
 
-      <Animatable.View animation="fadeInUp" delay={500}>
-        <Pressable style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </Pressable>
-      </Animatable.View>
+    <Animatable.View animation="fadeInUp" delay={700} style={styles.buttonColumn}>
+      <Pressable
+        style={[styles.fullButton, styles.editButton]}
+        onPress={() => router.push("/edit-profile")}
+      >
+        <Text style={styles.fullButtonText}>Edit Profile</Text>
+      </Pressable>
+
+      <Pressable
+        style={[styles.fullButton, styles.logoutButton]}
+        onPress={handleLogout}
+      >
+        <Text style={styles.fullButtonText}>Logout</Text>
+      </Pressable>
     </Animatable.View>
 
+  </Animatable.View>
     <BottomNavigation />
   </View>
 );
@@ -164,18 +179,6 @@ const styles = StyleSheet.create({
   infoValue: {
     fontWeight: "600",
   },
-  logoutButton: {
-    backgroundColor: "#E74C3C",
-    paddingVertical: 14,
-    paddingHorizontal: 35,
-    borderRadius: 12,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 4,
-  },
   logoutText: {
     fontSize: 18,
     fontWeight: "bold",
@@ -215,5 +218,76 @@ const styles = StyleSheet.create({
   alignItems: "center",
   justifyContent: "center",
   zIndex: 3,
-},
+  },
+  cardGroup: {
+    width: "90%",
+    gap: 12,
+    marginBottom: 24,
+  },
+  miniCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 14,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  editProfileButton: {
+  backgroundColor: "#5DADE2",
+  paddingVertical: 14,
+  paddingHorizontal: 30,
+  borderRadius: 12,
+  alignItems: "center",
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  elevation: 3,
+  },
+  editProfileText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+  },
+  buttonColumn: {
+    width: "100%",
+    paddingHorizontal: 20,
+    gap: 14,
+    marginBottom: 40,
+  },
+  fullButton: {
+    backgroundColor: "#007AFF", 
+    paddingVertical: 14,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  fullButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  editButton: {
+    backgroundColor: "#007AFF", 
+  },
+  logoutButton: {
+    backgroundColor: "#E74C3C", 
+  },
+  emojiIcon: {
+    fontSize: 20,
+    marginRight: 10,
+  },
 });
