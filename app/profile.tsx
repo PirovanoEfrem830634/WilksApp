@@ -73,13 +73,6 @@ export default function Profile() {
       <Animatable.View animation="fadeInDown" delay={100} style={styles.profileHeader}>
         <Text style={styles.name}>{userData?.firstName} {userData?.lastName}</Text>
         <Text style={styles.email}>{userData?.email}</Text>
-
-        {/* Badge Profilo Completo */}
-        {userData?.age && userData?.city && userData?.phone && userData?.height && userData?.weight && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>Profilo Completo</Text>
-          </View>
-        )}
       </Animatable.View>
 
       {/* Info card */}
