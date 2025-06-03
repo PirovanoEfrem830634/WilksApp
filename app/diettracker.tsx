@@ -124,7 +124,7 @@ export default function DietTracker() {
                       setInput("");
                     }}
                   >
-                    <Text style={styles.cancelText}>Annulla</Text>
+                    <Text style={styles.cancelText}>Cancel</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.inlineButton, styles.saveButton]}
@@ -135,7 +135,7 @@ export default function DietTracker() {
                       setInput("");
                     }}
                   >
-                    <Text style={styles.saveText}>Salva</Text>
+                    <Text style={styles.saveText}>Save</Text>
                   </TouchableOpacity>
                 </View>
               </>
@@ -149,7 +149,7 @@ export default function DietTracker() {
                     setInput(diet[meal] || "");
                   }}
                 >
-                  <Text style={styles.editText}>Modifica</Text>
+                  <Text style={styles.editText}>Edit</Text>
                 </TouchableOpacity>
               </>
             )}
