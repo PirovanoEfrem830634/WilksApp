@@ -122,10 +122,10 @@ const MonitoraggioClinicoSangue = () => {
   return (
   <View style={styles.container}>
     <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
-      <Text style={styles.title}>🧬 Monitoraggio <br /> Esami del Sangue</Text>
+      <Text style={styles.title}>🧬 Blood Test Monitoring</Text>
 
       <View style={styles.cardBody}>
-        <Text style={styles.cardTitle}>➕ Nuovo esame</Text>
+        <Text style={styles.cardTitle}>➕ New Exam</Text>
 
         <Text>anti-AChR</Text>
         <TextInput value={antiAChR} onChangeText={setAntiAChR} style={styles.input} />
@@ -136,7 +136,7 @@ const MonitoraggioClinicoSangue = () => {
         <Text>anti-LRP4</Text>
         <TextInput value={antiLRP4} onChangeText={setAntiLRP4} style={styles.input} />
 
-        <Text>Note (facoltative)</Text>
+        <Text>Notes (optional)</Text>
         <TextInput
           value={notes}
           onChangeText={setNotes}
@@ -145,12 +145,12 @@ const MonitoraggioClinicoSangue = () => {
         />
 
         <Pressable onPress={handleSubmit} style={styles.reloadButton}>
-          <Text style={styles.reloadText}>Salva esame</Text>
+          <Text style={styles.reloadText}>Save Exam</Text>
         </Pressable>
       </View>
 
       <Pressable onPress={toggleSection} style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>Ultimo esame registrato</Text>
+        <Text style={styles.cardTitle}>Last exam recorded</Text>
         {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
       </Pressable>
 
@@ -160,10 +160,10 @@ const MonitoraggioClinicoSangue = () => {
           <Text>🧪 anti-AChR: {last.antiAChR}</Text>
           <Text>🧪 anti-MuSK: {last.antiMuSK}</Text>
           <Text>🧪 anti-LRP4: {last.antiLRP4}</Text>
-          <Text>📝 Note: {last.notes || "—"}</Text>
+          <Text>📝 Notes: {last.notes || "—"}</Text>
         </View>
       ) : (
-        <Text style={{ marginTop: 12 }}>Nessun dato disponibile.</Text>
+        <Text style={{ marginTop: 12 }}>No data available.</Text>
       )}
 
       <Pressable onPress={fetchBloodTests} style={styles.reloadButton} disabled={loading}>
@@ -175,7 +175,7 @@ const MonitoraggioClinicoSangue = () => {
           >
             <RefreshCw size={20} color="#fff" />
           </MotiView>
-          <Text style={styles.reloadText}>Ricarica</Text>
+          <Text style={styles.reloadText}>Reload</Text>
         </View>
       </Pressable>
 
