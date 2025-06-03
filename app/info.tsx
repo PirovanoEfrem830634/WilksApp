@@ -1,17 +1,30 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, Pressable, LayoutAnimation, Platform, UIManager, Animated, TextInput } from "react-native";
-import { Activity, Eye, Wind, ChevronsDown, DivideCircle, Mic, ChevronDown, ChevronUp, Home, User, Search } from "lucide-react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Pressable,
+  LayoutAnimation,
+  Platform,
+  UIManager,
+  Animated,
+  TextInput,
+} from "react-native";
+import { ChevronDown, ChevronUp, Search } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import BottomNavigation from "../app/BottomNavigation";
+import * as Animatable from "react-native-animatable";
 
-if (Platform.OS === 'android') {
+
+if (Platform.OS === "android") {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
 }
 
 const symptoms = [
   {
     key: "debolezzaMuscolare",
-    icon: <Activity size={28} color="#2C3E50" />,
+    emoji: "💪",
     title: "Muscle Weakness",
     description:
       "Muscle weakness in Myasthenia Gravis results from impaired nerve-muscle communication. It worsens with use and improves with rest.",
@@ -23,7 +36,7 @@ const symptoms = [
   },
   {
     key: "disfagia",
-    icon: <ChevronsDown size={28} color="#2C3E50" />,
+    emoji: "🥄",
     title: "Swallowing Difficulty",
     description:
       "Swallowing issues (dysphagia) can impact nutrition and pose a risk of aspiration.",
@@ -35,7 +48,7 @@ const symptoms = [
   },
   {
     key: "disartria",
-    icon: <Mic size={28} color="#2C3E50" />,
+    emoji: "🗣️",
     title: "Speech Difficulty",
     description:
       "Speech may become slurred or nasal during periods of fatigue.",
@@ -47,7 +60,7 @@ const symptoms = [
   },
   {
     key: "ptosi",
-    icon: <Eye size={28} color="#2C3E50" />,
+    emoji: "👁️",
     title: "Ptosis (Drooping Eyelids)",
     description:
       "Ptosis is often one of the earliest signs of Myasthenia Gravis, especially noticeable in the evening.",
@@ -59,7 +72,7 @@ const symptoms = [
   },
   {
     key: "diplopia",
-    icon: <DivideCircle size={28} color="#2C3E50" />,
+    emoji: "👓",
     title: "Double Vision",
     description:
       "Double vision (diplopia) may come and go depending on muscle fatigue.",
@@ -71,7 +84,7 @@ const symptoms = [
   },
   {
     key: "difficoltaRespiratorie",
-    icon: <Wind size={28} color="#2C3E50" />,
+    emoji: "🌬️",
     title: "Breathing Difficulties",
     description:
       "Respiratory weakness can become serious and requires immediate attention if it worsens.",
@@ -86,7 +99,6 @@ const symptoms = [
 export default function SymptomInfo() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const toggleCard = (key: string) => {
@@ -107,11 +119,17 @@ export default function SymptomInfo() {
   );
 
   return (
-    <View style={{ flex: 1 }}>
-      <ScrollView style={styles.container} contentInsetAdjustmentBehavior="never">
-        <Animated.View style={[styles.headerContainer, { opacity: fadeAnim }]}> 
-          <Text style={styles.pageTitle}>Understand Your Symptoms</Text>
-          <Text style={styles.subtitle}>Tap on each item to learn what it means and what you can do.</Text>
+    <View style={styles.wrapper}>
+      <Animatable.View animation="fadeInUp" duration={500} style={styles.scrollWrapper}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Animated.View style={[styles.headerContainer, { opacity: fadeAnim }]}>
+          <Text style={styles.pageTitle}>🧠 Symptoms Infos</Text>
+          <Text style={styles.subtitle}>
+            Tap on each item to learn what you can do.
+          </Text>
         </Animated.View>
 
         <View style={styles.searchContainer}>
@@ -135,7 +153,7 @@ export default function SymptomInfo() {
               >
                 <View style={styles.cardHeader}>
                   <View style={styles.iconTitleContainer}>
-                    {symptom.icon}
+                    <Text style={styles.emoji}>{symptom.emoji}</Text>
                     <Text style={styles.cardTitle}>{symptom.title}</Text>
                   </View>
                   {isExpanded ? (
@@ -149,7 +167,9 @@ export default function SymptomInfo() {
                   <View style={styles.actionContainer}>
                     <Text style={styles.actionTitle}>What You Can Do:</Text>
                     {symptom.actions.map((item, idx) => (
-                      <Text key={idx} style={styles.actionItem}>• {item}</Text>
+                      <Text key={idx} style={styles.actionItem}>
+                        • {item}
+                      </Text>
                     ))}
                   </View>
                 )}
@@ -158,26 +178,27 @@ export default function SymptomInfo() {
           );
         })}
       </ScrollView>
-
-      {/* Bottom Navigation */}
+      </Animatable.View>
       <BottomNavigation />
-
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     flex: 1,
-    padding: 20,
     backgroundColor: "#F9FAFB",
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 100,
   },
   headerContainer: {
     marginBottom: 20,
     alignItems: "center",
   },
   pageTitle: {
-    fontSize: 25,
+    fontSize: 24,
     fontWeight: "700",
     color: "#2C3E50",
     marginBottom: 6,
@@ -193,7 +214,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
-    borderRadius: 10,
+    borderRadius: 12,
     borderColor: "#ccc",
     borderWidth: 1,
     paddingHorizontal: 12,
@@ -207,31 +228,34 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 16,
     marginBottom: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   cardExpanded: {
-    backgroundColor: "#EDF6FF",
+    backgroundColor: "#EAF4FC",
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 8,
   },
   iconTitleContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
   },
+  emoji: {
+    fontSize: 22,
+  },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "600",
     color: "#2C3E50",
   },
@@ -244,7 +268,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   actionTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
     color: "#2C3E50",
     marginTop: 5,
@@ -256,21 +280,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     marginBottom: 4,
   },
-  bottomBar: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    backgroundColor: "#FFF",
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: "#DDD",
-  },
-  navButton: {
-    alignItems: "center",
-  },
-  navText: {
-    fontSize: 12,
-    color: "#007AFF",
-    marginTop: 4,
+  scrollWrapper: {
+  flex: 1,
   },
 });

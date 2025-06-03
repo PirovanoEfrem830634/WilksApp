@@ -20,7 +20,7 @@ export default function BottomNavigation() {
 
       <Pressable onPress={() => router.push("/cdsspage")} style={styles.navButton}>
         <Brain size={24} color="#007AFF" />
-        <Text style={styles.navText}>Ai Assistant</Text>
+        <Text style={styles.navText}>AI Insights</Text>
       </Pressable>
 
       <Pressable onPress={() => router.push("/profile")} style={styles.navButton}>
