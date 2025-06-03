@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     marginHorizontal: 20,
-    marginBottom: 60,
+    marginBottom: 50,
   },
   globalSaveText: {
     color: "white",
