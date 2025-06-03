@@ -82,55 +82,82 @@ export default function DietTracker() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Daily Diet Tracker</Text>
+      {meals.every((meal) => diet[meal]) && (
+      <View style={styles.summaryBadge}>
+        <Text style={styles.summaryText}>✅ Dieta completata per oggi!</Text>
+      </View>
+    )}
+      <Text style={styles.title}>🍽️ Daily Diet Tracker</Text>
+      <Text style={styles.subtitle}>Quickly log what you've eaten today</Text>
 
-      <ScrollView contentContainerStyle={styles.mealContainer}>
-        {meals.map((meal) => (
+    <ScrollView contentContainerStyle={styles.mealContainer}>
+      {meals.map((meal) => {
+        const icons: Record<string, string> = {
+          breakfast: "🥐",
+          lunch: "🍝",
+          dinner: "🍲",
+          snack: "🍎",
+        };
+
+        const isEditing = editingMeal === meal;
+
+        return (
           <View key={meal} style={styles.mealCard}>
             <View style={styles.mealHeader}>
-              <MaterialCommunityIcons
-                name="silverware-fork-knife"
-                size={18}
-                color="#007AFF"
-              />
-              <Text style={styles.mealTitle}>{meal.toUpperCase()}</Text>
+              <Text style={styles.emojiIcon}>{icons[meal]}</Text>
+              <Text style={styles.mealTitle}>{meal.charAt(0).toUpperCase() + meal.slice(1)}</Text>
             </View>
-            <Text style={styles.mealText}>{diet[meal] || "Not set"}</Text>
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => {
-                setEditingMeal(meal);
-                setInput(diet[meal] || "");
-              }}
-            >
-              <Text style={styles.editText}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
-      </ScrollView>
 
-      {editingMeal && (
-        <View style={styles.editBox}>
-          <Text style={styles.editTitle}>Edit {editingMeal}</Text>
-          <TextInput
-            value={input}
-            onChangeText={setInput}
-            style={styles.input}
-            placeholder="Enter meal content"
-          />
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={() => {
-              const updatedDiet = { ...diet, [editingMeal]: input };
-              setDiet(updatedDiet);
-              setEditingMeal(null);
-              setInput("");
-            }}
-          >
-            <Text style={styles.saveText}>Save</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+            {isEditing ? (
+              <>
+                <TextInput
+                  value={input}
+                  onChangeText={setInput}
+                  placeholder="Enter meal content"
+                  style={styles.inlineInput}
+                />
+                <View style={styles.inlineActions}>
+                  <TouchableOpacity
+                    style={[styles.inlineButton, styles.cancelButton]}
+                    onPress={() => {
+                      setEditingMeal(null);
+                      setInput("");
+                    }}
+                  >
+                    <Text style={styles.cancelText}>Annulla</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.inlineButton, styles.saveButton]}
+                    onPress={() => {
+                      const updatedDiet = { ...diet, [meal]: input };
+                      setDiet(updatedDiet);
+                      setEditingMeal(null);
+                      setInput("");
+                    }}
+                  >
+                    <Text style={styles.saveText}>Salva</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <>
+                <Text style={styles.mealText}>{diet[meal] || "Not set"}</Text>
+                <TouchableOpacity
+                  style={styles.editButton}
+                  onPress={() => {
+                    setEditingMeal(meal);
+                    setInput(diet[meal] || "");
+                  }}
+                >
+                  <Text style={styles.editText}>Modifica</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        );
+      })}
+    </ScrollView>
+
 
       <TouchableOpacity style={styles.globalSaveButton} onPress={handleSave}>
         <Text style={styles.globalSaveText}>Save All</Text>
@@ -165,29 +192,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F9FAFB",
-    paddingTop: 50,
+    paddingTop: 30,
   },
   title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginHorizontal: 20,
-    marginBottom: 10,
-    color: "#1C1C1E",
+  fontSize: 24,
+  fontWeight: "700",
+  textAlign: "center",
+  color: "#1C1C1E",
+  },
+  subtitle: { 
+    fontSize: 16, 
+    textAlign: "center", 
+    color: "#6b7280", 
+    marginBottom: 20 
   },
   mealContainer: {
     padding: 20,
     paddingBottom: 100,
-  },
-  mealCard: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 4,
-    elevation: 2,
   },
   mealHeader: {
     flexDirection: "row",
@@ -243,23 +264,6 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 12,
   },
-  saveButton: {
-  backgroundColor: "#007AFF",
-  paddingVertical: 14,
-  paddingHorizontal: 24,
-  borderRadius: 20,
-  alignItems: "center",
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.2,
-  shadowRadius: 4,
-  elevation: 3,
-  },
-  saveText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
   globalSaveButton: {
     backgroundColor: "#007AFF",
     paddingVertical: 14,
@@ -267,7 +271,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     marginHorizontal: 20,
-    marginBottom: 80,
+    marginBottom: 60,
   },
   globalSaveText: {
     color: "white",
@@ -287,5 +291,87 @@ const styles = StyleSheet.create({
   toastText: {
     color: "#fff",
     fontWeight: "600",
+  },
+  emojiIcon: {
+  fontSize: 18,
+  marginRight: 6,
+  },
+  summaryBadge: {
+  marginHorizontal: 20,
+  marginBottom: 10,
+  backgroundColor: "#D4EDDA",
+  borderRadius: 12,
+  paddingVertical: 10,
+  alignItems: "center",
+  },
+  summaryText: {
+    color: "#1E8449",
+    fontWeight: "600",
+  },
+  inlineInput: {
+  borderWidth: 1,
+  borderColor: "#ccc",
+  borderRadius: 10,
+  padding: 10,
+  marginTop: 6,
+  marginBottom: 8,
+  },
+  inlineSave: {
+  alignSelf: "flex-end",
+  backgroundColor: "#007AFF",
+  paddingHorizontal: 14,
+  paddingVertical: 8,
+  borderRadius: 8,
+  },
+  inlineSaveText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  mealCard: {
+  backgroundColor: "#fff",
+  borderRadius: 16,
+  padding: 16,
+  marginBottom: 12,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.05,
+  shadowRadius: 3,
+  elevation: 1,
+  borderWidth: 0.5,
+  borderColor: "#ECECEC",
+  },
+inlineActions: {
+  flexDirection: "row",
+  justifyContent: "flex-end",
+  gap: 12,
+  marginTop: 12,
+},
+inlineButton: {
+  paddingHorizontal: 20,
+  paddingVertical: 10,
+  borderRadius: 100,
+  minWidth: 90,
+  alignItems: "center",
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.05,
+  shadowRadius: 2,
+  elevation: 1,
+  },
+  cancelButton: {
+    backgroundColor: "#F0F0F0",
+  },
+  cancelText: {
+    color: "#333",
+    fontWeight: "600",
+    fontSize: 15,
+  },
+  saveButton: {
+    backgroundColor: "#007AFF",
+  },
+  saveText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 15,
   },
 });
