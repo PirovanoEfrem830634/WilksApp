@@ -58,8 +58,8 @@ export default function SymptomCalendar() {
     return (
       <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
         <ScrollView contentContainerStyle={{ padding: 20 }}>
-          <Text style={styles.header}>📅 Calendario Sintomi</Text>
-          <Text style={styles.subtitle}>Tocca una data per esplorare i sintomi registrati</Text>
+          <Text style={styles.header}>📅 Symptoms Calendar</Text>
+          <Text style={styles.subtitle}>Tap a date to explore recorded symptoms</Text>
 
           {/* Calendario con stile Apple-like */}
           <Calendar 
@@ -158,10 +158,11 @@ export default function SymptomCalendar() {
 
 const styles = StyleSheet.create({
   header: {
-    fontSize: 22,
-    fontWeight: "600",
-    marginBottom: 10,
-    textAlign: "center", 
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#2C3E50",
+    textAlign: "center",
+    marginBottom: 4,
   },
   item: {
     backgroundColor: "#fff",
