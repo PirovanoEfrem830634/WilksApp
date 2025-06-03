@@ -15,7 +15,6 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { auth, db } from "../firebaseconfig";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import BottomNavigation from "../app/BottomNavigation";
 
 const meals = ["breakfast", "lunch", "dinner", "snack"];
