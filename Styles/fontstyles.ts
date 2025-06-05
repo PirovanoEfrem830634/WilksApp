@@ -1,29 +1,32 @@
 const FontStyles = {
   size: {
-    xs: 12,
-    sm: 14,       // per descrizioni, label
-    base: 16,     // corpo testo principale
-    md: 18,       // sottotitoli o info evidenziate
-    lg: 20,       // titoli secondari
-    xl: 24,       // titoli principali
+    xs: 12,    // opzionale
+    sm: 14,    // etichette, metadati
+    base: 16,  // corpo testo
+    md: 18,    // titoli di sezione
+    lg: 20,    // dati principali, spotlight
+    xl: 24,    // titoli grandi
   },
+
   weight: {
-    regular: "SFProDisplay-Regular",    // testuale generico
-    semibold: "SFProDisplay-Semibold",  // etichette e dati evidenziati
-    bold: "SFProDisplay-Bold",          // titoli principali
+    regular: "SFProDisplay-Regular",
+    semibold: "SFProDisplay-Semibold",
+    bold: "SFProDisplay-Bold",
+    black: "SFProDisplay-Black",
   },
+
   variants: {
-    label: {
+    smallLabel: {
       fontFamily: "SFProDisplay-Regular",
       fontSize: 14,
     },
-    labelBold: {
+    smallLabelBold: {
       fontFamily: "SFProDisplay-Bold",
       fontSize: 14,
     },
-    info: {
+    sectionTitle: {
       fontFamily: "SFProDisplay-Semibold",
-      fontSize: 14,
+      fontSize: 16,
     },
     body: {
       fontFamily: "SFProDisplay-Regular",
@@ -33,11 +36,15 @@ const FontStyles = {
       fontFamily: "SFProDisplay-Semibold",
       fontSize: 16,
     },
-    title: {
+    dataValue: {
       fontFamily: "SFProDisplay-Bold",
       fontSize: 20,
     },
-  }
+    mainTitle: {
+      fontFamily: "SFProDisplay-Bold",
+      fontSize: 24,
+    },
+  },
 };
 
 export default FontStyles;

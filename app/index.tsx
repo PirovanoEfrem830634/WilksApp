@@ -135,8 +135,8 @@ export default function Index() {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Animatable.View animation="fadeInDown" delay={100} style={styles.header}>
           <Image source={require("../assets/images/BannerWilks.jpg")} style={styles.banner} />
-          <Text style={styles.headerTitle}>Welcome to Wilks</Text>
-          <Text style={styles.subtitle}>Your journey starts here</Text>
+          <Text style={FontStyles.variants.mainTitle}>Welcome to Wilks</Text>
+          <Text style={FontStyles.variants.body}>Your journey starts here</Text>
         </Animatable.View>
 
         <Animatable.View animation="fadeInUp" duration={800} easing="ease-out-cubic" delay={300} style={styles.infoCard}>
