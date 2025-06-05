@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import BottomNavigation from "../app/BottomNavigation";
 import { auth, db } from "../firebaseconfig";
 import { collection, getDocs } from "firebase/firestore";
+import FontStyles from "../Styles/fontstyles";
 
 interface SymptomData {
   affaticamentoMuscolare?: number;
