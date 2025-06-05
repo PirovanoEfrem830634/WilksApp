@@ -15,6 +15,9 @@ import { auth, db } from "../firebaseconfig";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { useRouter } from "expo-router";
 import BottomNavigation from "../app/BottomNavigation";
+import * as Animatable from 'react-native-animatable';
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 export default function EditProfile() {
   const router = useRouter();
@@ -116,8 +119,12 @@ export default function EditProfile() {
 
   return (
   <View style={styles.wrapper}>
+    <Animatable.View animation="fadeInUp" duration={500} style={{ flex: 1 }}>
     <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-      <Text style={styles.title}>✏️ Edit Profile</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>✏️ Edit Profile</Text>
+        <Text style={styles.subtitle}>Update your personal information below</Text>
+      </View>
 
       {fields.map((field) => (
         <View key={field.key} style={styles.inputGroup}>
@@ -154,7 +161,7 @@ export default function EditProfile() {
         <Text style={styles.toastText}>✅ Profile updated successfully</Text>
       </Animated.View>
     </ScrollView>
-
+    </Animatable.View>
     <BottomNavigation />
   </View>
 );
@@ -167,12 +174,21 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 120,
   },
+  header: {
+  marginBottom: 10,
+  alignItems: "center",
+  },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 20,
+    marginBottom: 5,
     color: "#1C1C1E",
     textAlign: "center",
+  },
+  subtitle: {
+  fontSize: 15,
+  color: "#6B7280",
+  textAlign: "center",
   },
   inputGroup: {
     marginBottom: 16,
