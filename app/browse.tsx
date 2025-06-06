@@ -16,7 +16,7 @@ const sections: {
   color: string;
   href: string;
 }[] = [
-  { label: "Track", icon: "analytics", color: Colors.blue, href: "/tracking" },
+  { label: "Track", icon: "analytics", color: Colors.blue, href: "/trackingnew" },
   { label: "Tracking History", icon: "calendar", color: Colors.gray3, href: "/trackinghistory" },
   { label: "Medications", icon: "medkit", color: Colors.turquoise, href: "/mymedication" },
   { label: "Symptoms Infos", icon: "information-circle", color: Colors.purple, href: "/info" },
