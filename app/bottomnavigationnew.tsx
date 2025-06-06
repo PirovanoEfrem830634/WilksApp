@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { usePathname, Link } from "expo-router";
+import Colors from "../Styles/color";
 
 export default function BottomNavigation() {
   const pathname = usePathname();
@@ -46,7 +47,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingVertical: 10,
     borderTopWidth: 0.5,
-    borderTopColor: "#E5E5EA",
+    borderTopColor: Colors.light2,
     position: "absolute",
     bottom: 0,
     width: "100%",
@@ -59,11 +60,11 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 10,
     marginTop: 2,
-    color: "#8E8E93",
+    color: Colors.secondary,
     fontFamily: "SFProDisplay-Regular",
   },
   tabLabelActive: {
-    color: "#3A82F7",
+    color: Colors.blue,
     fontFamily: "SFProDisplay-Semibold",
   },
 });
