@@ -19,6 +19,7 @@ import FontStyles from "../Styles/fontstyles";
 import Colors from "../Styles/color";
 import { PressableScale } from "react-native-pressable-scale";
 import { LinearGradient } from 'expo-linear-gradient';
+import { Modal, TouchableOpacity } from "react-native";
 
 type FormDataType = {
   debolezzaMuscolare: boolean;
@@ -50,6 +51,8 @@ export default function SymptomTracking() {
   });
 
   const router = useRouter();
+
+  const [showPicker, setShowPicker] = useState<null | string>(null);
 
   const handleToggle = (key: keyof FormDataType) => {
     setFormData((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -101,33 +104,6 @@ const symptomFields: {
     { key: "ansia", label: "Anxiety", icon: <AlertCircle size={18} color={Colors.blue} /> },
   ];
 
-    
-    const dropdownFields: {
-    key: keyof Pick<FormDataType, "andamentoSintomi" | "umore" | "sonno">;
-    label: string;
-    icon: JSX.Element;
-    options: string[];
-    }[] = [
-    {
-        key: "andamentoSintomi",
-        label: "Symptom Progression",
-        icon: <TrendingUp size={18} color={Colors.blue} />,
-        options: ["Stabile", "Peggiorato", "Migliorato"],
-    },
-    {
-        key: "umore",
-        label: "Mood",
-        icon: <Smile size={18} color={Colors.blue} />,
-        options: ["Happy", "Neutral", "Sad", "Anxious"],
-    },
-    {
-        key: "sonno",
-        label: "Sleep Quality",
-        icon: <Moon size={18} color={Colors.blue} />,
-        options: ["Buono", "Normale", "Scarso", "Insonnia"],
-    },
-    ];
-
   return (
     <View style={styles.container}>
       <Animatable.View animation="fadeInUp" duration={600} style={{ flex: 1 }}>
@@ -142,9 +118,92 @@ const symptomFields: {
             <Activity size={48} color={Colors.blue}  />
         </View>
         <Text style={FontStyles.variants.mainTitle}>Symptom Tracking</Text>
-        <Text style={FontStyles.variants.sectionTitle}>Today’s Symptoms Overview</Text>
+        <Text style={FontStyles.variants.sectionTitle}>Track your symptoms</Text>
       </View>
         <ScrollView contentContainerStyle={styles.scrollView}>
+            <Modal visible={showPicker === "umore"} animationType="slide" transparent>
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                {["Happy", "Neutral", "Sad", "Anxious"].map((option) => (
+                    <TouchableOpacity
+                    key={option}
+                    style={styles.optionItem}
+                    onPress={() => {
+                        handleInputChange("umore", option);
+                        setShowPicker(null);
+                    }}
+                    >
+                    <Text style={styles.optionText}>{option}</Text>
+                    </TouchableOpacity>
+                ))}
+                <TouchableOpacity
+                style={styles.cancelItem}
+                onPress={() => {
+                    handleInputChange("umore", "");
+                    setShowPicker(null);           
+                }}
+                >
+                <Text style={styles.cancelText}>Cancel</Text>
+                </TouchableOpacity>
+                </View>
+            </View>
+            </Modal>
+
+            <Modal visible={showPicker === "sonno"} animationType="slide" transparent>
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                {["Buono", "Normale", "Scarso", "Insonnia"].map((option) => (
+                    <TouchableOpacity
+                    key={option}
+                    style={styles.optionItem}
+                    onPress={() => {
+                        handleInputChange("sonno", option);
+                        setShowPicker(null);
+                    }}
+                    >
+                    <Text style={styles.optionText}>{option}</Text>
+                    </TouchableOpacity>
+                ))}
+                <TouchableOpacity
+                    style={styles.cancelItem}
+                    onPress={() => {
+                    handleInputChange("sonno", "");
+                    setShowPicker(null);
+                    }}
+                >
+                    <Text style={styles.cancelText}>Cancel</Text>
+                </TouchableOpacity>
+                </View>
+            </View>
+            </Modal>
+
+            <Modal visible={showPicker === "andamentoSintomi"} animationType="slide" transparent>
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                {["Stabile", "Peggiorato", "Migliorato"].map((option) => (
+                    <TouchableOpacity
+                    key={option}
+                    style={styles.optionItem}
+                    onPress={() => {
+                        handleInputChange("andamentoSintomi", option);
+                        setShowPicker(null);
+                    }}
+                    >
+                    <Text style={styles.optionText}>{option}</Text>
+                    </TouchableOpacity>
+                ))}
+                <TouchableOpacity
+                    style={styles.cancelItem}
+                    onPress={() => {
+                    handleInputChange("andamentoSintomi", "");
+                    setShowPicker(null);
+                    }}
+                >
+                    <Text style={styles.cancelText}>Cancel</Text>
+                </TouchableOpacity>
+                </View>
+            </View>
+            </Modal>
           {symptomFields.map((item) => (
             <PressableScale
             key={item.key}
@@ -166,25 +225,65 @@ const symptomFields: {
             </PressableScale>
             ))}
 
-          {dropdownFields.map((dropdown) => (
-            <View key={dropdown.key} style={styles.card}>
-              <View style={styles.cardHeader}>
-                {dropdown.icon}
-                <Text style={styles.cardLabel}>{dropdown.label}</Text>
-              </View>
-              <View style={styles.pickerWrapper}>
-                <Picker
-                  selectedValue={formData[dropdown.key]}
-                  onValueChange={(value) => handleInputChange(dropdown.key, value)}
-                  style={styles.picker}
+            <PressableScale
+            onPress={() => setShowPicker("umore")}
+            style={[
+                styles.card,
+                formData.umore ? styles.cardSelected : null,
+            ]}
+            weight="light"
+            activeScale={0.96}
+            >
+            <View style={styles.cardHeader}>
+                <Smile size={18} color={Colors.blue} />
+                <Text style={styles.cardLabel}>Mood</Text>
+                <View style={{ flex: 1 }} />
+                <Text
+                style={[
+                    styles.cardRightValue,
+                    formData.umore ? { color: "#007AFF" } : null,
+                ]}
                 >
-                  {dropdown.options.map((option) => (
-                    <Picker.Item label={option} value={option} key={option} />
-                  ))}
-                </Picker>
-              </View>
+                {formData.umore ? formData.umore : "Select"}
+                </Text>
             </View>
-          ))}
+            </PressableScale>
+
+            <PressableScale
+            onPress={() => setShowPicker("sonno")}
+            style={[styles.card, formData.sonno ? styles.cardSelected : null]}
+            weight="light"
+            activeScale={0.96}
+            >
+            <View style={styles.cardHeader}>
+                <Moon size={18} color={Colors.blue} />
+                <Text style={styles.cardLabel}>Sleep Quality</Text>
+                <View style={{ flex: 1 }} />
+                <Text
+                style={[styles.cardRightValue, formData.sonno ? { color: "#007AFF" } : null]}
+                >
+                {formData.sonno ? formData.sonno : "Select"}
+                </Text>
+            </View>
+            </PressableScale>
+
+            <PressableScale
+            onPress={() => setShowPicker("andamentoSintomi")}
+            style={[styles.card, formData.andamentoSintomi ? styles.cardSelected : null]}
+            weight="light"
+            activeScale={0.96}
+            >
+            <View style={styles.cardHeader}>
+                <TrendingUp size={18} color={Colors.blue} />
+                <Text style={styles.cardLabel}>Symptom Progression</Text>
+                <View style={{ flex: 1 }} />
+                <Text
+                style={[styles.cardRightValue, formData.andamentoSintomi ? { color: "#007AFF" } : null]}
+                >
+                {formData.andamentoSintomi ? formData.andamentoSintomi : "Select"}
+                </Text>
+            </View>
+            </PressableScale>
 
           <View style={styles.card}>
             <View style={styles.cardHeader}>
@@ -315,4 +414,43 @@ const styles = StyleSheet.create({
   borderRadius: 20,
   padding: 4,
 },
+modalOverlay: {
+  flex: 1,
+  backgroundColor: "rgba(0,0,0,0.3)",
+  justifyContent: "flex-end",
+},
+modalContent: {
+  backgroundColor: Colors.white,
+  paddingVertical: 20,
+  paddingHorizontal: 16,
+  borderTopLeftRadius: 20,
+  borderTopRightRadius: 20,
+},
+optionItem: {
+  paddingVertical: 14,
+  borderBottomColor: Colors.light2,
+  borderBottomWidth: 1,
+},
+optionText: {
+  fontSize: 16,
+  fontWeight: "500",
+  color: Colors.gray1,
+  textAlign: "center",
+},
+cancelItem: {
+  marginTop: 10,
+  paddingVertical: 14,
+},
+cancelText: {
+  fontSize: 16,
+  fontWeight: "600",
+  color: Colors.red,
+  textAlign: "center",
+},
+cardRightValue: {
+  fontSize: 14,
+  color: "#C7C7CC",
+  fontWeight: "500",
+},
+
 });
