@@ -18,7 +18,7 @@ const sections: {
 }[] = [
   { label: "Track", icon: "analytics", color: Colors.blue, href: "/trackingnew" },
   { label: "Tracking History", icon: "calendar", color: Colors.gray3, href: "/trackinghistory" },
-  { label: "Medications", icon: "medkit", color: Colors.turquoise, href: "/mymedication" },
+  { label: "Medications", icon: "medkit", color: Colors.turquoise, href: "/mymedicationnew" },
   { label: "Symptoms Infos", icon: "information-circle", color: Colors.purple, href: "/info" },
   { label: "Blood Monitoring", icon: "water", color: Colors.red, href: "/monitoraggioclinico" },
   { label: "Diet", icon: "nutrition", color: Colors.orange, href: "/diettracker" },

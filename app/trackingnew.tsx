@@ -35,6 +35,8 @@ type FormDataType = {
   sonno: string;
 };
 
+
+
 export default function SymptomTracking() {
   const [formData, setFormData] = useState<FormDataType>({
     debolezzaMuscolare: false,
@@ -372,7 +374,7 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   submitButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: Colors.blue,
     padding: 15,
     borderRadius: 15,
     alignItems: "center",
