@@ -110,7 +110,7 @@ const symptomFields: {
     <View style={styles.container}>
       <Animatable.View animation="fadeInUp" duration={600} style={{ flex: 1 }}>
         <LinearGradient
-        colors={["#D1E9FF", "#F2F2F7"]}
+        colors={["#D1E9FF", Colors.light1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.gradientBackground}

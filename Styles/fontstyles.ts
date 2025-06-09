@@ -1,3 +1,5 @@
+import Colors from "../Styles/color";
+
 const FontStyles = {
   size: {
     xs: 12,    // opzionale
@@ -44,6 +46,11 @@ const FontStyles = {
       fontFamily: "SFProDisplay-Bold",
       fontSize: 24,
     },
+    cardDescription: {
+    fontFamily: "SFProDisplay-Regular",
+    fontSize: 15,
+    color: Colors.gray3,
+  },
   },
 };
 

@@ -97,7 +97,7 @@ export default function MyMedications() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={["#C2F0FF", "#F2F2F7"]}
+        colors={["#C2F0FF", Colors.light1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.gradientBackground}
