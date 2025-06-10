@@ -21,7 +21,7 @@ const sections: {
   { label: "Medications", icon: "medkit", color: Colors.turquoise, href: "/mymedicationnew" },
   { label: "Symptoms Infos", icon: "information-circle", color: Colors.purple, href: "/infonew" },
   { label: "Blood Monitoring", icon: "water", color: Colors.red, href: "/monitoraggioclinico" },
-  { label: "Diet", icon: "nutrition", color: Colors.orange, href: "/diettracker" },
+  { label: "Diet", icon: "nutrition", color: Colors.orange, href: "/diettrackernew" },
   { label: "Sleep", icon: "bed", color: Colors.green, href: "/sleeptracking" },
 ];
 
