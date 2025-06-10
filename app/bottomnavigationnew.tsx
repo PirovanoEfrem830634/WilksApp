@@ -12,7 +12,7 @@ export default function BottomNavigation() {
   icon: React.ComponentProps<typeof Ionicons>["name"];
   path: string;
     }[] = [
-  { name: "Home", icon: "home", path: "/index" },
+  { name: "Home", icon: "home", path: "/homenew" },
   { name: "AI Assistant", icon: "chatbubble-ellipses", path: "/cdsspage" },
   { name: "Browse", icon: "apps", path: "/browse" },
     ];
