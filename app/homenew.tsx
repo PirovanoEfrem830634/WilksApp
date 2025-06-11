@@ -23,7 +23,17 @@ export default function SummaryScreen() {
     mood: null,
     fatigue: null,
     dietStatus: null,
+    realSleepHours: null,
   });
+
+  const formatSleepDuration = (hoursFloat: number) => {
+  const hours = Math.floor(hoursFloat);
+  const minutes = Math.round((hoursFloat - hours) * 60);
+  return `${hours} hr ${minutes} min`;
+  };
+
+  const hoursFloat = parseFloat(summary?.sleep || "0");
+  const formattedSleep = formatSleepDuration(hoursFloat);
   
   const navigation = useNavigation() as any;
 
@@ -33,6 +43,7 @@ export default function SummaryScreen() {
   mood: string | null;
   fatigue: number | null;
   dietStatus: string | null;
+  realSleepHours: number | null;
 }
 
   useEffect(() => {
@@ -85,6 +96,26 @@ export default function SummaryScreen() {
           .sort((a, b) => (a.id > b.id ? -1 : 1))[0];
       }
 
+      // 4. Sleep
+      const sleepRef = collection(db, "users", uid, "sleep");
+      const sleepSnap = await getDocs(sleepRef);
+      const latestSleep = sleepSnap.docs
+        .map((doc) => ({
+          id: doc.id,
+          ...(doc.data() as { createdAt?: any; hours?: number })
+        }))
+        .sort((a, b) => {
+          const aDate = a.createdAt?.seconds
+            ? new Date(a.createdAt.seconds * 1000)
+            : new Date(a.id);
+          const bDate = b.createdAt?.seconds
+            ? new Date(b.createdAt.seconds * 1000)
+            : new Date(b.id);
+          return bDate.getTime() - aDate.getTime();
+        })[0];
+
+      const realSleepHours = latestSleep?.hours ?? null;
+
       // 3. Diet (check if today exists)
       const dietRef = collection(db, "users", uid, "diet");
       const dietSnap = await getDocs(dietRef);
@@ -98,9 +129,9 @@ export default function SummaryScreen() {
         mood: (latest as any)?.umore || null,
         fatigue: (latest as any)?.affaticamentoMuscolare ?? null,
         dietStatus,
+        realSleepHours,
       });
     };
-
     fetchSummary();
   }, []);
 
@@ -162,7 +193,9 @@ export default function SummaryScreen() {
             </View>
 
             <Text style={[FontStyles.variants.dataValue, styles.cardValue]}>
-              7 hr 30 min
+              {summary.realSleepHours !== null
+                ? formatSleepDuration(summary.realSleepHours)
+                : "Not set"}
             </Text>
             <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
               Time Asleep

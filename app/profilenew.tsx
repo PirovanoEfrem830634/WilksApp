@@ -138,19 +138,23 @@ export default function Profile() {
         </View>
 
     <Animatable.View animation="fadeInUp" delay={700} style={styles.buttonColumn}>
-      <Pressable
-        style={[styles.fullButton, styles.editButton]}
-        onPress={() => router.push("/editprofilenew")}
-      >
-        <Text style={styles.fullButtonText}>Edit Profile</Text>
-      </Pressable>
+    <PressableScale
+    onPress={() => router.push("/editprofilenew")}
+    weight="light"
+    activeScale={0.96}
+    style={[styles.fullButton, styles.editButton]}
+    >
+    <Text style={styles.fullButtonText}>Edit Profile</Text>
+    </PressableScale>
 
-      <Pressable
-        style={[styles.fullButton, styles.logoutButton]}
-        onPress={handleLogout}
-      >
-        <Text style={styles.fullButtonText}>Logout</Text>
-      </Pressable>
+    <PressableScale
+    onPress={handleLogout}
+    weight="light"
+    activeScale={0.96}
+    style={[styles.fullButton, styles.logoutButton]}
+    >
+    <Text style={styles.fullButtonText}>Logout</Text>
+    </PressableScale>
     </Animatable.View>
 
   </Animatable.View>

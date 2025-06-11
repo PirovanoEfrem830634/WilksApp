@@ -151,6 +151,9 @@ export default function AddMedication() {
         <View key={index} style={styles.orarioCard}>
             <Ionicons name="time" size={20} color={Colors.turquoise} />
             <Text style={FontStyles.variants.body}>{time}</Text>
+            <TouchableOpacity onPress={() => setTimes(prev => prev.filter((_, i) => i !== index))}>
+            <Ionicons name="close" size={20} color={Colors.light3} />
+            </TouchableOpacity>
         </View>
         ))}
 
@@ -283,13 +286,14 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   orarioCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
-    gap: 10,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  backgroundColor: Colors.white,
+  borderRadius: 12,
+  padding: 12,
+  marginBottom: 8,
+  gap: 10,
   },
   orarioText: {
     fontSize: 16,

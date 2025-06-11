@@ -29,7 +29,7 @@ if (Platform.OS === "android") {
 const symptoms = [
   {
     key: "debolezzaMuscolare",
-    icon: "barbell-outline",
+    icon: "barbell",
     title: "Muscle Weakness",
     description:
       "Muscle weakness in Myasthenia Gravis results from impaired nerve-muscle communication. It worsens with use and improves with rest.",
@@ -41,7 +41,7 @@ const symptoms = [
   },
   {
     key: "disfagia",
-    icon: "restaurant-outline",
+    icon: "restaurant",
     title: "Swallowing Difficulty",
     description:
       "Swallowing issues (dysphagia) can impact nutrition and pose a risk of aspiration.",
@@ -53,7 +53,7 @@ const symptoms = [
   },
   {
     key: "disartria",
-    icon: "mic-outline",
+    icon: "mic",
     title: "Speech Difficulty",
     description:
       "Speech may become slurred or nasal during periods of fatigue.",
@@ -65,7 +65,7 @@ const symptoms = [
   },
   {
     key: "ptosi",
-    icon: "eye-outline",
+    icon: "eye",
     title: "Ptosis (Drooping Eyelids)",
     description:
       "Ptosis is often one of the earliest signs of Myasthenia Gravis, especially noticeable in the evening.",
@@ -77,7 +77,7 @@ const symptoms = [
   },
   {
     key: "diplopia",
-    icon: "glasses-outline",
+    icon: "glasses",
     title: "Double Vision",
     description:
       "Double vision (diplopia) may come and go depending on muscle fatigue.",
@@ -89,7 +89,7 @@ const symptoms = [
   },
   {
     key: "difficoltaRespiratorie",
-    icon: "cloud-outline",
+    icon: "cloud",
     title: "Breathing Difficulties",
     description:
       "Respiratory weakness can become serious and requires immediate attention if it worsens.",

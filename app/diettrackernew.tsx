@@ -87,11 +87,6 @@ export default function DietTracker() {
 
   return (
     <View style={styles.container}>
-      {meals.every((meal) => diet[meal]) && (
-      <View style={styles.summaryBadge}>
-        <Text style={styles.summaryText}>✅ Dieta completata per oggi!</Text>
-      </View>
-    )}
       <LinearGradient
         colors={["#FFD6BE", Colors.light1]}
         start={{ x: 0.5, y: 0 }}

@@ -35,10 +35,12 @@ const filteredSections = sections.filter((section) =>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.headerRow}>
         <Text style={FontStyles.variants.mainTitle}>Browse</Text>
+        <Link href="/profilenew" asChild>
         <Image
             source={require("../assets/images/avatar-ios.jpg")}
             style={styles.avatar}
         />
+        </Link>
         </View>
         <View style={styles.searchContainer}>
         <Ionicons name="search" size={18} color={Colors.gray3} style={styles.searchIcon} />

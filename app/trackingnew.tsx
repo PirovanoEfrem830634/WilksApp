@@ -154,7 +154,7 @@ const symptomFields: {
             <Modal visible={showPicker === "sonno"} animationType="slide" transparent>
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
-                {["Buono", "Normale", "Scarso", "Insonnia"].map((option) => (
+                {["Good", "Normal", "Poor", "Insomnia"].map((option) => (
                     <TouchableOpacity
                     key={option}
                     style={styles.optionItem}
@@ -182,7 +182,7 @@ const symptomFields: {
             <Modal visible={showPicker === "andamentoSintomi"} animationType="slide" transparent>
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
-                {["Stabile", "Peggiorato", "Migliorato"].map((option) => (
+                {["Stable", "Worsened", "Improved"].map((option) => (
                     <TouchableOpacity
                     key={option}
                     style={styles.optionItem}
