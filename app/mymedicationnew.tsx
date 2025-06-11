@@ -119,7 +119,7 @@ export default function MyMedications() {
 
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => router.push("/addmedication")}
+        onPress={() => router.push("/addmedicationnew")}
       >
         <Text style={styles.addButtonText}>+ Add Medication</Text>
       </TouchableOpacity>

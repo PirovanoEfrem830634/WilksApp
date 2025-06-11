@@ -46,22 +46,22 @@ type SectionState = {
 
 const sectionMeta: Record<keyof FirestoreData, { label: string; icon: string; color: string }> = {
   sleep: {
-    label: "Sonno",
+    label: "Sleep Quality",
     icon: "bed",
     color: Colors.green,
   },
   diet: {
-    label: "Dieta",
+    label: "Diet",
     icon: "nutrition",
     color: Colors.orange,
   },
   medications: {
-    label: "Farmaci",
+    label: "Medication",
     icon: "medkit",
     color: Colors.blue,
   },
   symptoms: {
-    label: "Sintomi",
+    label: "Symptoms",
     icon: "pulse",
     color: Colors.red,
   },
@@ -200,14 +200,14 @@ const CDSSPage = () => {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <LinearGradient
-        colors={["#A1C4FD", Colors.light1]}
+        colors={["#FFE0B2", Colors.light1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.gradientBackground}
         />
 
         <View style={styles.mainHeader}>
-        <Ionicons name="hardware-chip" size={48} color={Colors.blue} />
+        <Ionicons name="hardware-chip" size={48} color={Colors.yellow} />
         <Text style={FontStyles.variants.mainTitle}>Clinical Decision Support</Text>
         <Text style={FontStyles.variants.sectionTitle}>Personalized analysis based on your data</Text>
         </View>
@@ -289,11 +289,11 @@ const CDSSPage = () => {
             </View>
             <View style={styles.dataRow}>
             <Ionicons name="time" size={18} style={styles.iconLeft} color = {Colors.green}/>
-            <Text>Ore dormite: {last.sleep.hours}</Text>
+            <Text>Hours sleep: {last.sleep.hours}</Text>
             </View>
             <View style={styles.dataRow}>
             <Ionicons name="stats-chart" size={18} style={styles.iconLeft} color = {Colors.green}/>
-            <Text>Qualità: {last.sleep.quality}</Text>
+            <Text>Quality: {last.sleep.quality}</Text>
             </View>
             <View style={styles.dataRow}>
             <Ionicons name="cloud" size={18} style={styles.iconLeft} color = {Colors.green}/>
@@ -301,18 +301,18 @@ const CDSSPage = () => {
             </View>
             <View style={styles.dataRow}>
             <Ionicons name="repeat" size={18} style={styles.iconLeft} color = {Colors.green}/>
-            <Text>Risvegli frequenti: {last.sleep.frequentWakeups ? "Sì" : "No"}</Text>
+            <Text>Frequent awakenings: {last.sleep.frequentWakeups ? "Sì" : "No"}</Text>
             </View>
             <View style={styles.dataRow}>
             <Ionicons name="moon" size={18} style={styles.iconLeft} color = {Colors.green}/>
-            <Text>Incubi: {last.sleep.nightmares ? "Sì" : "No"}</Text>
+            <Text>Nightmares: {last.sleep.nightmares ? "Sì" : "No"}</Text>
             </View>
             <View style={styles.dataRow}>
             <Ionicons name="document-text" size={18} style={styles.iconLeft} color = {Colors.green}/>
-            <Text>Note: {last.sleep.notes || "—"}</Text>
+            <Text>Notes: {last.sleep.notes || "—"}</Text>
             </View>
         </>
-        ) : <Text>Nessun dato disponibile.</Text>)}
+        ) : <Text>No data available.</Text>)}
 
         {renderSection("diet", last.diet ? (
         <>
@@ -322,109 +322,109 @@ const CDSSPage = () => {
             </View>
             <View style={styles.dataRow}>
             <Ionicons name="cafe" size={18} style={styles.iconLeft} color = {Colors.orange}/>
-            <Text>Colazione: {last.diet.breakfast}</Text>
+            <Text>Breakfast: {last.diet.breakfast}</Text>
             </View>
             <View style={styles.dataRow}>
             <Ionicons name="restaurant" size={18} style={styles.iconLeft} color = {Colors.orange}/>
-            <Text>Pranzo: {last.diet.lunch}</Text>
+            <Text>Lunch: {last.diet.lunch}</Text>
             </View>
             <View style={styles.dataRow}>
             <Ionicons name="pizza" size={18} style={styles.iconLeft} color = {Colors.orange}/>
-            <Text>Cena: {last.diet.dinner}</Text>
+            <Text>Dinner: {last.diet.dinner}</Text>
             </View>
             <View style={styles.dataRow}>
             <Ionicons name="ice-cream" size={18} style={styles.iconLeft} color = {Colors.orange}/>
             <Text>Snack: {last.diet.snack}</Text>
             </View>
         </>
-        ) : <Text>Nessun dato disponibile.</Text>)}
+        ) : <Text>No data available.</Text>)}
 
         {renderSection("medications", last.medications ? (
         <>
             <View style={styles.dataRow}>
-            <Ionicons name="calendar-outline" size={18} style={styles.iconLeft} />
+            <Ionicons name="calendar" size={18} style={styles.iconLeft} color = {Colors.blue}/>
             <Text>{new Date(last.medications.createdAt.seconds * 1000).toLocaleDateString()}</Text>
             </View>
             <View style={styles.dataRow}>
-            <Ionicons name="medkit-outline" size={18} style={styles.iconLeft} />
-            <Text>Nome: {last.medications.name}</Text>
+            <Ionicons name="medkit" size={18} style={styles.iconLeft} color = {Colors.blue}/>
+            <Text>Name: {last.medications.name}</Text>
             </View>
             <View style={styles.dataRow}>
-            <Ionicons name="flask-outline" size={18} style={styles.iconLeft} />
+            <Ionicons name="flask" size={18} style={styles.iconLeft} color = {Colors.blue}/>
             <Text>Dose: {last.medications.dose}</Text>
             </View>
             <View style={styles.dataRow}>
-            <Ionicons name="calendar-clear-outline" size={18} style={styles.iconLeft} />
-            <Text>Giorni: {last.medications.days?.join(", ")}</Text>
+            <Ionicons name="calendar-clear" size={18} style={styles.iconLeft} color = {Colors.blue}/>
+            <Text>Days: {last.medications.days?.join(", ")}</Text>
             </View>
             <View style={styles.dataRow}>
-            <Ionicons name="alarm-outline" size={18} style={styles.iconLeft} />
-            <Text>Orari: {last.medications.times?.join(", ")}</Text>
+            <Ionicons name="alarm" size={18} style={styles.iconLeft} color = {Colors.blue}/>
+            <Text>Hours: {last.medications.times?.join(", ")}</Text>
             </View>
             <View style={styles.dataRow}>
-            <Ionicons name="notifications-outline" size={18} style={styles.iconLeft} />
-            <Text>Notifiche: {last.medications.notifications ? "Attive" : "Disattivate"}</Text>
+            <Ionicons name="notifications" size={18} style={styles.iconLeft} color = {Colors.blue}/>
+            <Text>Notifications: {last.medications.notifications ? "Attive" : "Disattivate"}</Text>
             </View>
             <View style={styles.dataRow}>
-            <Ionicons name="document-text-outline" size={18} style={styles.iconLeft} />
-            <Text>Note: {last.medications.notes || "—"}</Text>
+            <Ionicons name="document-text" size={18} style={styles.iconLeft} color = {Colors.blue}/>
+            <Text>Notes: {last.medications.notes || "—"}</Text>
             </View>
         </>
-        ) : <Text>Nessun dato disponibile.</Text>)}
+        ) : <Text>No data available.</Text>)}
 
 
         {renderSection("symptoms", last.symptoms ? (
         <>
             <View style={styles.dataRow}>
-            <Ionicons name="calendar-outline" size={18} style={styles.iconLeft} />
+            <Ionicons name="calendar" size={18} style={styles.iconLeft} color = {Colors.red}/>
             <Text>{last.symptoms.id}</Text>
             </View>
             <View style={styles.dataRow}>
-            <Activity size={18} style={styles.iconLeft} />
-            <Text>Debolezza muscolare: {last.symptoms.debolezzaMuscolare ? "Sì" : "No"}</Text>
+            <Activity size={18} style={styles.iconLeft} color = {Colors.red}/>
+            <Text>Muscle weakness: {last.symptoms.debolezzaMuscolare ? "Yes" : "No"}</Text>
             </View>
             <View style={styles.dataRow}>
-            <BatteryLow size={18} style={styles.iconLeft} />
-            <Text>Affaticamento: {last.symptoms.affaticamentoMuscolare}</Text>
+            <BatteryLow size={18} style={styles.iconLeft} color = {Colors.red}/>
+            <Text>Fatigue: {last.symptoms.affaticamentoMuscolare}</Text>
             </View>
             <View style={styles.dataRow}>
-            <Ionicons name="cloud-outline" size={18} style={styles.iconLeft} />
-            <Text>Difficoltà respiratorie: {last.symptoms.difficoltaRespiratorie ? "Sì" : "No"}</Text>
+            <Ionicons name="cloud" size={18} style={styles.iconLeft} color = {Colors.red}/>
+            <Text>Respiratory difficulties: {last.symptoms.difficoltaRespiratorie ? "Yes" : "No"}</Text>
             </View>
             <View style={styles.dataRow}>
-            <AlertCircle size={18} style={styles.iconLeft} />
-            <Text>Ansia: {last.symptoms.ansia ? "Sì" : "No"}</Text>
+            <AlertCircle size={18} style={styles.iconLeft} color = {Colors.red}/>
+            <Text>Anxiety: {last.symptoms.ansia ? "Yes" : "No"}</Text>
             </View>
             <View style={styles.dataRow}>
-            <Smile size={18} style={styles.iconLeft} />
-            <Text>Umore: {last.symptoms.umore || "—"}</Text>
+            <Smile size={18} style={styles.iconLeft} color = {Colors.red}/>
+            <Text>Humor: {last.symptoms.umore || "—"}</Text>
             </View>
             <View style={styles.dataRow}>
-            <Ionicons name="mic-outline" size={18} style={styles.iconLeft} />
-            <Text>Disartria: {last.symptoms.disartria ? "Sì" : "No"}</Text>
+            <Ionicons name="mic" size={18} style={styles.iconLeft} color = {Colors.red}/>
+            <Text>Dysarthria: {last.symptoms.disartria ? "Yes" : "No"}</Text>
             </View>
             <View style={styles.dataRow}>
-            <Ionicons name="restaurant-outline" size={18} style={styles.iconLeft} />
-            <Text>Disfagia: {last.symptoms.disfagia ? "Sì" : "No"}</Text>
+            <Ionicons name="restaurant" size={18} style={styles.iconLeft} color = {Colors.red}/>
+            <Text>Dysphagia: {last.symptoms.disfagia ? "Yes" : "No"}</Text>
             </View>
             <View style={styles.dataRow}>
-            <Ionicons name="eye-outline" size={18} style={styles.iconLeft} />
-            <Text>Diplopia: {last.symptoms.diplopia ? "Sì" : "No"}</Text>
+            <Ionicons name="eye" size={18} style={styles.iconLeft} color = {Colors.red}/>
+            <Text>Diplopia: {last.symptoms.diplopia ? "Yes" : "No"}</Text>
             </View>
             <View style={styles.dataRow}>
-            <Ionicons name="eye-off-outline" size={18} style={styles.iconLeft} />
-            <Text>Ptosi: {last.symptoms.ptosi ? "Sì" : "No"}</Text>
+            <Ionicons name="eye-off" size={18} style={styles.iconLeft} color = {Colors.red}/>
+            <Text>Ptosis: {last.symptoms.ptosi ? "Yes" : "No"}</Text>
             </View>
             <View style={styles.dataRow}>
-            <TrendingUp size={18} style={styles.iconLeft} />
-            <Text>Andamento: {last.symptoms.andamentoSintomi || "—"}</Text>
+            <TrendingUp size={18} style={styles.iconLeft} color = {Colors.red}/>
+            <Text>Trend: {last.symptoms.andamentoSintomi || "—"}</Text>
             </View>
             <View style={styles.dataRow}>
-            <Bed size={18} style={styles.iconLeft} />
-            <Text>Sonno: {last.symptoms.sonno || "—"}</Text>
+            <Bed size={18} style={styles.iconLeft} color = {Colors.red}/>
+            <Text>Sleep: {last.symptoms.sonno || "—"}</Text>
             </View>
         </>
-        ) : <Text>Nessun dato disponibile.</Text>)}
+        ) : <Text>No data available.</Text>)}
 
       </ScrollView>
 
