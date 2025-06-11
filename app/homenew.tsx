@@ -146,7 +146,7 @@ export default function SummaryScreen() {
 
         <Animatable.View animation="fadeInUp" delay={200}>
             <PressableScale
-              onPress={() => navigation.navigate("sleeptracking")}
+              onPress={() => navigation.navigate("sleeptrackingnew")}
               activeScale={0.96}
               weight="light"
               style={styles.card}

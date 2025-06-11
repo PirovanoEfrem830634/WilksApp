@@ -265,7 +265,7 @@ const [editingField, setEditingField] = useState<null | string>(null);
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f0f5ff" },
+  container: { flex: 1, backgroundColor: Colors.light1 },
   title: { fontSize: 22, fontWeight: "bold", textAlign: "center", color: "#1f2937", marginBottom: 20 },
   cardHeader: {
     backgroundColor: "#fff",

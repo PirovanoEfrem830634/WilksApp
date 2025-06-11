@@ -140,7 +140,7 @@ export default function Profile() {
     <Animatable.View animation="fadeInUp" delay={700} style={styles.buttonColumn}>
       <Pressable
         style={[styles.fullButton, styles.editButton]}
-        onPress={() => router.push("/edit-profile")}
+        onPress={() => router.push("/editprofilenew")}
       >
         <Text style={styles.fullButtonText}>Edit Profile</Text>
       </Pressable>

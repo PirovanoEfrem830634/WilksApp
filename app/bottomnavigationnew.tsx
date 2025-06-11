@@ -13,7 +13,7 @@ export default function BottomNavigation() {
   path: string;
     }[] = [
   { name: "Home", icon: "home", path: "/homenew" },
-  { name: "AI Assistant", icon: "chatbubble-ellipses", path: "/cdsspage" },
+  { name: "AI Assistant", icon: "chatbubble-ellipses", path: "/cdsspagenew" },
   { name: "Browse", icon: "apps", path: "/browse" },
     ];
 
