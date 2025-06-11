@@ -14,10 +14,15 @@ import {
 import { auth, db } from "../firebaseconfig";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { useRouter } from "expo-router";
-import BottomNavigation from "../app/BottomNavigation";
+import BottomNavigation from "../app/bottomnavigationnew";
 import * as Animatable from 'react-native-animatable';
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import Colors from "../Styles/color";
+import FontStyles from "../Styles/fontstyles";
+import { TouchableOpacity } from "react-native";
+import { PressableScale } from "react-native-pressable-scale";
 
 export default function EditProfile() {
   const router = useRouter();
@@ -107,15 +112,20 @@ export default function EditProfile() {
     return <ActivityIndicator size="large" style={{ flex: 1 }} color="#007AFF" />;
   }
 
-  const fields: { label: string; key: keyof typeof formData; keyboard: KeyboardTypeOptions }[] = [
-    { label: "👤 First Name *", key: "firstName", keyboard: "default" },
-    { label: "🧑 Last Name *", key: "lastName", keyboard: "default" },
-    { label: "📅 Age *", key: "age", keyboard: "numeric" },
-    { label: "📍 City", key: "city", keyboard: "default" },
-    { label: "📞 Phone", key: "phone", keyboard: "phone-pad" },
-    { label: "📏 Height", key: "height", keyboard: "numeric" },
-    { label: "⚖️ Weight", key: "weight", keyboard: "numeric" },
-  ];
+  const fields: {
+  label: string;
+  key: keyof typeof formData;
+  keyboard: KeyboardTypeOptions;
+  icon: keyof typeof Ionicons.glyphMap;
+}[] = [
+  { icon: "person-outline", label: "First Name *", key: "firstName", keyboard: "default" },
+  { icon: "person", label: "Last Name *", key: "lastName", keyboard: "default" },
+  { icon: "calendar-outline", label: "Age *", key: "age", keyboard: "numeric" },
+  { icon: "location-outline", label: "City", key: "city", keyboard: "default" },
+  { icon: "call-outline", label: "Phone", key: "phone", keyboard: "phone-pad" },
+  { icon: "resize-outline", label: "Height", key: "height", keyboard: "numeric" },
+  { icon: "barbell-outline", label: "Weight", key: "weight", keyboard: "numeric" },
+];
 
   return (
   <View style={styles.wrapper}>
@@ -128,7 +138,10 @@ export default function EditProfile() {
 
       {fields.map((field) => (
         <View key={field.key} style={styles.inputGroup}>
-          <Text style={styles.label}>{field.label}</Text>
+          <View style={styles.inputLabelRow}>
+            <Ionicons name={field.icon as any} size={18} color={Colors.gray3} style={styles.iconLeft} />
+            <Text style={FontStyles.variants.smallLabelBold}>{field.label}</Text>
+          </View>
           <TextInput
             value={formData[field.key]}
             onChangeText={(text) => handleChange(field.key, text)}
@@ -242,10 +255,17 @@ const styles = StyleSheet.create({
   flex: 1,
   backgroundColor: "#F9FAFB",
 },
-
 scrollContent: {
   padding: 20,
-  paddingBottom: 120, // spazio per la BottomNavigation
+  paddingBottom: 120,
 },
-
+  iconLeft: {
+  marginRight: 12,
+},
+inputLabelRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 8,
+  marginBottom: 6,
+},
 });

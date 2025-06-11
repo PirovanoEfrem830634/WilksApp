@@ -14,10 +14,15 @@ import {
 import { auth, db } from "../firebaseconfig";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { useRouter } from "expo-router";
-import BottomNavigation from "../app/BottomNavigation";
+import BottomNavigation from "../app/bottomnavigationnew";
 import * as Animatable from 'react-native-animatable';
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import Colors from "../Styles/color";
+import FontStyles from "../Styles/fontstyles";
+import { TouchableOpacity } from "react-native";
+import { PressableScale } from "react-native-pressable-scale";
 
 export default function EditProfile() {
   const router = useRouter();
@@ -107,36 +112,51 @@ export default function EditProfile() {
     return <ActivityIndicator size="large" style={{ flex: 1 }} color="#007AFF" />;
   }
 
-  const fields: { label: string; key: keyof typeof formData; keyboard: KeyboardTypeOptions }[] = [
-    { label: "👤 First Name *", key: "firstName", keyboard: "default" },
-    { label: "🧑 Last Name *", key: "lastName", keyboard: "default" },
-    { label: "📅 Age *", key: "age", keyboard: "numeric" },
-    { label: "📍 City", key: "city", keyboard: "default" },
-    { label: "📞 Phone", key: "phone", keyboard: "phone-pad" },
-    { label: "📏 Height", key: "height", keyboard: "numeric" },
-    { label: "⚖️ Weight", key: "weight", keyboard: "numeric" },
-  ];
+  const fields: {
+  label: string;
+  key: keyof typeof formData;
+  keyboard: KeyboardTypeOptions;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+}[] = [
+  { icon: "person", label: "First Name *", key: "firstName", keyboard: "default", color: Colors.blue },
+  { icon: "person", label: "Last Name *", key: "lastName", keyboard: "default", color: Colors.purple },
+  { icon: "calendar", label: "Age *", key: "age", keyboard: "numeric", color: Colors.orange },
+  { icon: "location", label: "City", key: "city", keyboard: "default", color: Colors.green },
+  { icon: "call", label: "Phone", key: "phone", keyboard: "phone-pad", color: Colors.red },
+  { icon: "resize", label: "Height", key: "height", keyboard: "numeric", color: Colors.turquoise },
+  { icon: "barbell", label: "Weight", key: "weight", keyboard: "numeric", color: Colors.yellow },
+];
 
   return (
   <View style={styles.wrapper}>
     <Animatable.View animation="fadeInUp" duration={500} style={{ flex: 1 }}>
     <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <Text style={styles.title}>✏️ Edit Profile</Text>
-        <Text style={styles.subtitle}>Update your personal information below</Text>
-      </View>
+      <View style={styles.headerRow}>
+        <Text style={FontStyles.variants.mainTitle}>Edit Profile</Text>
+        </View>
 
       {fields.map((field) => (
         <View key={field.key} style={styles.inputGroup}>
-          <Text style={styles.label}>{field.label}</Text>
-          <TextInput
+            <View style={styles.inputLabelRow}>
+            <Ionicons
+                name={field.icon}
+                size={18}
+                color={field.color}
+                style={styles.iconLeft}
+            />
+            <Text style={[FontStyles.variants.smallLabelBold, { color: field.color }]}>
+                {field.label}
+            </Text>
+            </View>
+            <TextInput
             value={formData[field.key]}
             onChangeText={(text) => handleChange(field.key, text)}
-            style={styles.input}
             keyboardType={field.keyboard}
-          />
+            style={styles.input}
+            />
         </View>
-      ))}
+        ))}
 
       <Pressable style={styles.saveButton} onPress={handleSave}>
         <Text style={styles.saveText}>Save Changes</Text>
@@ -158,7 +178,7 @@ export default function EditProfile() {
           },
         ]}
       >
-        <Text style={styles.toastText}>✅ Profile updated successfully</Text>
+        <Text style={styles.toastText}>Profile updated successfully</Text>
       </Animated.View>
     </ScrollView>
     </Animatable.View>
@@ -244,6 +264,22 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
   padding: 20,
-  paddingBottom: 120, 
+  paddingBottom: 120,
+  },
+  iconLeft: {
+  marginRight: 12,
+  },
+  inputLabelRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 8,
+  marginBottom: 6,
+  },
+  headerRow: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginTop: 20,
+  marginBottom: 12,
   },
 });
