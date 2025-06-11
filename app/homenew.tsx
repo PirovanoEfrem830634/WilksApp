@@ -109,7 +109,7 @@ export default function SummaryScreen() {
     <ScrollView style={styles.container}>
   <View style={styles.headerRow}>
     <Text style={FontStyles.variants.mainTitle}>Summary</Text>
-    <Link href="/profile" asChild>
+    <Link href="/profilenew" asChild>
     <Pressable>
     <Image source={require("../assets/images/avatar-ios.jpg")} style={styles.avatar} />
     </Pressable>

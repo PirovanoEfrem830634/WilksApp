@@ -184,7 +184,7 @@ export default function Index() {
           </Link>
         </View>
         <View style={styles.row}>
-        <Link href="/monitoraggioclinico" asChild>
+        <Link href="/homenew" asChild>
           <Pressable style={styles.actionButtonSmall}>
             <Ionicons name="scan-outline" size={24} color="#007AFF" />
             <Text style={styles.actionText}>Monitoring</Text>

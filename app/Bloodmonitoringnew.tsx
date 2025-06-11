@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     borderColor: "#d1d5db",
   },
   reloadButton: {
-  backgroundColor: "#007AFF",
+  backgroundColor: Colors.blue,
   paddingVertical: 14,
   paddingHorizontal: 24,
   borderRadius: 20,
