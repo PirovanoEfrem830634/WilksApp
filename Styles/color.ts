@@ -17,6 +17,7 @@ const Colors = {
   blue: "#3A82F7",
   turquoise: "#81CFFA",
   red: "#EB4B62",
+  pink: "#F64E9E",
   green: "#67CE67",
   yellow: "#F1A33B",
   purple: "#B25FEA",
