@@ -17,19 +17,19 @@ export default function SymptomCalendar() {
   const [markedDates, setMarkedDates] = useState({});
   const [selectedSymptom, setSelectedSymptom] = useState<{ date: string; item: { name: string; description: string } } | null>(null);
 
-  const symptomCategories: Record<string, { label: string; color: string }> = {
-  debolezzaMuscolare: { label: "Muscolare", color: "#007AFF" },
-  affaticamentoMuscolare: { label: "Muscolare", color: "#007AFF" },
-  ptosi: { label: "Visivo", color: "#AF52DE" },
-  diplopia: { label: "Visivo", color: "#AF52DE" },
-  difficoltaRespiratorie: { label: "Respiratorio", color: "#FF3B30" },
-  ansia: { label: "Psicologico", color: "#FF9500" },
-  umore: { label: "Psicologico", color: "#FF9500" },
-  disfagia: { label: "Neuromuscolare", color: "#5AC8FA" },
-  disartria: { label: "Neuromuscolare", color: "#5AC8FA" },
-  andamentoSintomi: { label: "Generale", color: "#34C759" },
-  sonno: { label: "Generale", color: "#34C759" },
-} ;
+  const symptomIcons: Record<string, { label: string; icon: string; color: string }> = {
+  debolezzaMuscolare: { label: "Muscle weakness", icon: 'fitness', color: Colors.pink },
+  affaticamentoMuscolare: { label: "Muscle fatigue", icon: 'barbell', color: Colors.pink },
+  ptosi: { label: "Ptosi", icon: 'eye', color: Colors.pink },
+  diplopia: { label: "Diplopia", icon: 'eye-off', color: Colors.pink },
+  difficoltaRespiratorie: { label: "Respiratory difficulty", icon: 'cloudy-night', color: Colors.pink },
+  ansia: { label: "Anxiety", icon: 'alert-circle', color: Colors.pink },
+  umore: { label: "Mood", icon: 'happy', color: Colors.pink },
+  disfagia: { label: "Dysphagia", icon: 'restaurant', color: Colors.pink },
+  disartria: { label: "Dysarthria", icon: 'mic', color: Colors.pink },
+  sonno: { label: "Sleep", icon: 'bed', color: Colors.pink },
+  andamentoSintomi: { label: "Symptoms Trend", icon: 'pulse', color: Colors.pink },
+};
 
   const fetchSymptoms = async () => {
     const uid = auth.currentUser?.uid;
@@ -54,9 +54,9 @@ export default function SymptomCalendar() {
           return false;
         })
         .map(([key, value]) => {
-        const category = symptomCategories[key];
+        const category = symptomIcons[key];
         if (!category) return null;
-        return `${category.label}: ${value}`;
+        return `${key}: ${value}`;
         })
         .join("\n");
 
@@ -137,12 +137,24 @@ export default function SymptomCalendar() {
 
           {/* Box dettagli giorno selezionato */}
           {selectedSymptom && (
-            <Animatable.View animation="fadeInUp" duration={500} style={styles.detailCard}>
+          <Animatable.View animation="fadeInUp" duration={500} style={styles.detailCard}>
             <Text style={styles.detailDate}>{selectedSymptom.date}</Text>
-            <Text style={styles.detailTitle}>{selectedSymptom.item.name}</Text>
-            <Text style={styles.detailDescription}>{selectedSymptom.item.description}</Text>
-            </Animatable.View>
-          )}
+            {selectedSymptom.item.description.split('\n').map((line, idx) => {
+              const [key, value] = line.split(': ');
+              const meta = symptomIcons[key];
+              return (
+                <View key={idx} style={styles.symptomRow}>
+                  {meta ? (
+                    <Ionicons name={meta.icon as any} size={20} color={meta.color} style={styles.symptomIcon} />
+                  ) : null}
+                  <Text style={styles.symptomText}>
+                    {key}: {value}
+                  </Text>
+                </View>
+              );
+            })}
+          </Animatable.View>
+        )}
         </ScrollView>
         <BottomNavigation />
       </View>
@@ -188,7 +200,27 @@ export default function SymptomCalendar() {
         <View style={styles.webDetailBox}>
           <Text style={styles.dateTitle}>{selectedSymptom.date}</Text>
           <Text style={styles.title}>{selectedSymptom.item.name}</Text>
-          <Text>{selectedSymptom.item.description}</Text>
+          {selectedSymptom.item.description
+          .split("\n")
+          .map((line, idx) => {
+            const [key, value] = line.split(": ");
+            const meta = symptomIcons[key.trim()];
+            if (!meta) return null;
+
+            return (
+              <View key={idx} style={styles.symptomRow}>
+                <Ionicons
+                  name={meta.icon as any}
+                  size={18}
+                  color={meta.color}
+                  style={styles.symptomIcon}
+                />
+                <Text style={styles.symptomText}>
+                  {meta.label}: {value}
+                </Text>
+              </View>
+            );
+          })}
         </View>
       )}
 
@@ -331,5 +363,19 @@ const styles = StyleSheet.create({
   color: "#3A3A3C",
   lineHeight: 22,
   },
+
+  symptomRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginBottom: 8,
+  },
+  symptomIcon: {
+  marginRight: 10,
+  },
+  symptomText: {
+  fontSize: 15,
+  color: '#3A3A3C',
+  },
+
 
 });
