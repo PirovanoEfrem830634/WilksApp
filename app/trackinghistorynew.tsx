@@ -67,7 +67,7 @@ export default function SymptomCalendar() {
         }
       ];
 
-      marks[date] = { marked: true, dotColor: "#007AFF" }; 
+      marks[date] = { marked: true, dotColor: Colors.pink }; 
     });
 
     setItems(loadedItems);
@@ -109,8 +109,8 @@ export default function SymptomCalendar() {
               [selectedSymptom?.date || ""]: {
                 selected: true,
                 marked: true,
-                dotColor: "#007AFF",
-                selectedColor: "#EAF1FF"
+                dotColor: Colors.pink,
+                selectedColor: "#FFA3C5"
               }
             }}
             onDayPress={(day: DateData) => {
@@ -119,18 +119,21 @@ export default function SymptomCalendar() {
               if (item) {
                 setSelectedSymptom({ date: selected, item });
               } else {
-                setSelectedSymptom({ date: selected, item: { name: "Nessun dato registrato", description: "" } });
+                setSelectedSymptom({ date: selected, item: { name: "No Data Available", description: "" } });
               }
             }}
             theme={{
-              selectedDayBackgroundColor: '#EAF1FF',
-              selectedDayTextColor: '#007AFF',
-              todayTextColor: '#FF9500',
-              arrowColor: '#007AFF',
-              textSectionTitleColor: '#8E8E93',
+              selectedDayBackgroundColor: Colors.pink,     
+              selectedDayTextColor: '#FFFFFF',               
+              todayTextColor: Colors.pink,                   
+              arrowColor: Colors.pink,                       
+              textSectionTitleColor: '#C86A8C',              
               textDayFontWeight: '600',
               textMonthFontWeight: 'bold',
-              textDayHeaderFontWeight: '600'
+              textDayHeaderFontWeight: '600',
+              textDisabledColor: '#D1D1D6',                  
+              dotColor: Colors.pink,                         
+              selectedDotColor: Colors.pink,                    
             }}
             style={styles.calendarContainer}
           />
@@ -139,16 +142,24 @@ export default function SymptomCalendar() {
           {selectedSymptom && (
           <Animatable.View animation="fadeInUp" duration={500} style={styles.detailCard}>
             <Text style={styles.detailDate}>{selectedSymptom.date}</Text>
-            {selectedSymptom.item.description.split('\n').map((line, idx) => {
-              const [key, value] = line.split(': ');
-              const meta = symptomIcons[key];
+            {selectedSymptom.item.description
+            .split("\n")
+            .filter(line => line.includes(":"))
+            .map((line, idx) => {
+              const [key, value] = line.split(": ");
+              const meta = symptomIcons[key?.trim()];
+              if (!meta) return null;
+
               return (
                 <View key={idx} style={styles.symptomRow}>
-                  {meta ? (
-                    <Ionicons name={meta.icon as any} size={20} color={meta.color} style={styles.symptomIcon} />
-                  ) : null}
+                  <Ionicons
+                    name={meta.icon as any}
+                    size={18}
+                    color={meta.color}
+                    style={styles.symptomIcon}
+                  />
                   <Text style={styles.symptomText}>
-                    {key}: {value}
+                    {meta.label}: {value === "true" ? "Yes" : value === "false" ? "No" : value}
                   </Text>
                 </View>
               );
@@ -170,8 +181,8 @@ export default function SymptomCalendar() {
           [selectedSymptom?.date || ""]: {
             selected: true,
             marked: true,
-            dotColor: "#007AFF",
-            selectedColor: "#EAF1FF"
+            dotColor: Colors.pink,
+            selectedColor: "#FFA3C5"
           }
         }}
         onDayPress={(day: DateData) => {
@@ -180,18 +191,21 @@ export default function SymptomCalendar() {
           if (item) {
             setSelectedSymptom({ date: selected, item });
           } else {
-            setSelectedSymptom({ date: selected, item: { name: "Nessun dato registrato", description: "" } });
+            setSelectedSymptom({ date: selected, item: { name: "No Data Available", description: "" } });
           }
         }}
         theme={{
-          selectedDayBackgroundColor: '#EAF1FF',
-          selectedDayTextColor: '#007AFF',
-          todayTextColor: '#FF9500',
-          arrowColor: '#007AFF',
-          textSectionTitleColor: '#8E8E93',
+          selectedDayBackgroundColor: Colors.pink,       
+          selectedDayTextColor: '#FFFFFF',               
+          todayTextColor: Colors.pink,                  
+          arrowColor: Colors.pink,                       
+          textSectionTitleColor: '#C86A8C',              
           textDayFontWeight: '600',
           textMonthFontWeight: 'bold',
-          textDayHeaderFontWeight: '600'
+          textDayHeaderFontWeight: '600',
+          textDisabledColor: '#D1D1D6',                  
+          dotColor: Colors.pink,                         
+          selectedDotColor: Colors.pink,                   
         }}
         style={{ borderRadius: 16, margin: 16, elevation: 2 }}
       />
@@ -268,11 +282,10 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginHorizontal: 16,
     padding: 16,
-    backgroundColor: "#FFFFFF", // Sfondo bianco
+    backgroundColor: "#FFFFFF", 
     borderRadius: 16,
-
     borderLeftWidth: 5,
-    borderLeftColor: "#007AFF", // Bordo azzurro Apple
+    borderLeftColor: Colors.pink,
 
     // Effetto rialzato
     shadowColor: "#000",
@@ -293,19 +306,13 @@ const styles = StyleSheet.create({
   marginBottom: 20,
   marginHorizontal: 8,
   padding: 8,
-
-  // iOS shadow
   shadowColor: '#000',
   shadowOffset: { width: 0, height: 4 },
   shadowOpacity: 0.08,
   shadowRadius: 8,
-
-  // Android elevation
   elevation: 4,
-
-  // Bordo tenue (tipo Apple card)
   borderWidth: 1,
-  borderColor: '#E5E5EA',
+  borderColor: Colors.light1,
   },
   subtitle: { fontSize: 16, textAlign: "center", color: "#6b7280", marginBottom: 20 },
 
