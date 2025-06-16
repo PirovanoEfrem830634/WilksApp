@@ -116,7 +116,7 @@ export default function SummaryScreen() {
 
       const realSleepHours = latestSleep?.hours ?? null;
 
-      // 3. Diet (check if today exists)
+      // 3. Diet
       const dietRef = collection(db, "users", uid, "diet");
       const dietSnap = await getDocs(dietRef);
       const dietToday = dietSnap.docs.find(doc => doc.id === todayStr);
