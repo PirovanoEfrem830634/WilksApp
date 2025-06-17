@@ -291,12 +291,14 @@ const symptomFields: {
 
           <PressableScale onPress={() => setShowPicker("fatigue")} style={styles.card}>
             <View style={styles.cardHeader}>
-              <Activity size={18} color={Colors.blue} />
+            <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+              <Activity size={18} color={Colors.blue} style={{ marginRight: 9 }}/>
               <Text style={styles.cardLabel}>Muscle Fatigue</Text>
             </View>
-            <Text style={styles.cardValue}>
+            <Text style={styles.cardRightValue}>
               {formData.affaticamentoMuscolare !== undefined ? `${formData.affaticamentoMuscolare} / 10` : 'Select'}
             </Text>
+          </View>
           </PressableScale>
 
           <Modal visible={showPicker === "fatigue"} animationType="slide" transparent>
