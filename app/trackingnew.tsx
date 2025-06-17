@@ -70,29 +70,35 @@ export default function SymptomTracking() {
   };
 
   const saveSymptoms = async () => {
-    const user = auth.currentUser;
-    if (!user) {
-      alert("Utente non loggato");
-      return;
-    }
+  const user = auth.currentUser;
+  console.log("🔍 USER:", user?.uid);
 
-    const uid = user.uid;
-    const today = new Date().toISOString().split("T")[0];
-    const symptomsDocRef = doc(db, "users", uid, "symptoms", today);
+  if (!user) {
+    Alert.alert("Errore", "Utente non loggato.");
+    return;
+  }
 
-    const dataToSave = {
-      ...formData,
-      dataInserimento: Timestamp.now(),
-    };
+  const uid = user.uid;
+  const today = new Date().toISOString().split("T")[0];
+  const symptomsDocRef = doc(db, "users", uid, "symptoms", today);
 
-    try {
-      await setDoc(symptomsDocRef, dataToSave);
-      Alert.alert("Success", "Symptoms saved successfully!");
-    } catch (error) {
-      console.error("Errore salvataggio sintomi:", error);
-      alert("Errore nel salvataggio.");
-    }
+  const dataToSave = {
+    ...formData,
+    dataInserimento: Timestamp.now(),
   };
+
+  console.log("📝 Tentativo salvataggio dati:", dataToSave);
+  console.log("📄 Path Firestore:", `users/${uid}/symptoms/${today}`);
+
+  try {
+    await setDoc(symptomsDocRef, dataToSave);
+    Alert.alert("✅ Success", "Symptoms saved successfully!");
+  } catch (error: any) {
+    console.error("❌ Errore salvataggio sintomi:", error);
+    Alert.alert("Errore", error.message || "Errore nel salvataggio.");
+  }
+};
+
 
 const symptomFields: {
     key: keyof FormDataType;

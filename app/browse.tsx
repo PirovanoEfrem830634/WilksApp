@@ -23,6 +23,7 @@ const sections: {
   { label: "Blood Monitoring", icon: "water", color: Colors.red, href: "/Bloodmonitoringnew" },
   { label: "Diet", icon: "nutrition", color: Colors.orange, href: "/diettrackernew" },
   { label: "Sleep", icon: "bed", color: Colors.green, href: "/sleeptrackingnew" },
+  { label: "Weekly Dashboard", icon: "bar-chart", color: Colors.mint, href: "/weeklydashboard" },
 ];
 
 export default function Browse() {
