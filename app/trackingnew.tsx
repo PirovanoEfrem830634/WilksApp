@@ -55,6 +55,8 @@ export default function SymptomTracking() {
   const router = useRouter();
 
   const [showPicker, setShowPicker] = useState<null | string>(null);
+  const [showFatiguePicker, setShowFatiguePicker] = useState(false);
+
 
   const handleToggle = (key: keyof FormDataType) => {
     setFormData((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -287,23 +289,46 @@ const symptomFields: {
             </View>
             </PressableScale>
 
-          <View style={styles.card}>
+          <PressableScale onPress={() => setShowPicker("fatigue")} style={styles.card}>
             <View style={styles.cardHeader}>
               <Activity size={18} color={Colors.blue} />
               <Text style={styles.cardLabel}>Muscle Fatigue</Text>
             </View>
-            <Slider
-              style={{ width: "100%" }}
-              minimumValue={0}
-              maximumValue={10}
-              step={1}
-              value={formData.affaticamentoMuscolare}
-              onValueChange={(value) =>
-                handleInputChange("affaticamentoMuscolare" as keyof FormDataType, value)
-              }
-            />
-            <Text style={styles.cardValue}>{formData.affaticamentoMuscolare} / 10</Text>
+            <Text style={styles.cardValue}>
+              {formData.affaticamentoMuscolare !== undefined ? `${formData.affaticamentoMuscolare} / 10` : 'Select'}
+            </Text>
+          </PressableScale>
+
+          <Modal visible={showPicker === "fatigue"} animationType="slide" transparent>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={[styles.label, { textAlign: "center", marginBottom: 10 }]}>
+                Select Muscle Fatigue
+              </Text>
+
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={formData.affaticamentoMuscolare}
+                  onValueChange={(value) =>
+                    handleInputChange("affaticamentoMuscolare" as keyof FormDataType, value)
+                  }
+                  style={styles.picker}
+                >
+                  {[...Array(11).keys()].map((val) => (
+                    <Picker.Item key={val} label={`${val}`} value={val} />
+                  ))}
+                </Picker>
+              </View>
+
+              <TouchableOpacity
+                onPress={() => setShowPicker(null)}
+                style={styles.saveButton}
+              >
+                <Text style={styles.saveText}>Save</Text>
+              </TouchableOpacity>
+            </View>
           </View>
+        </Modal>
 
           <Pressable onPress={saveSymptoms} style={styles.submitButton}>
             <Text style={styles.submitButtonText}>Submit</Text>
@@ -365,13 +390,15 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   pickerWrapper: {
-    backgroundColor: "#F2F2F7",
-    borderRadius: 12,
-    overflow: "hidden",
+      backgroundColor: "#F2F2F7",
+      borderRadius: 12,
+      overflow: "hidden",
+      marginBottom: 12,
   },
   picker: {
-    width: "100%",
-    color: "#000",
+    backgroundColor: "#F4F4F6",
+    borderRadius: 12,
+    padding: 10,
   },
   submitButton: {
     backgroundColor: Colors.blue,
@@ -453,6 +480,47 @@ cardRightValue: {
   fontSize: 14,
   color: "#C7C7CC",
   fontWeight: "500",
+},
+
+pickerContainer: {
+  backgroundColor: "#fff",
+  borderRadius: 16,
+  marginTop: 12,
+  padding: 16,
+  elevation: 2,
+},
+
+pickerLabel: {
+  fontSize: 16,
+  fontWeight: "500",
+  color: Colors.gray3,
+  marginBottom: 8,
+},
+
+saveButton: {
+  marginTop: 12,
+  backgroundColor: Colors.blue,
+  paddingVertical: 10,
+  borderRadius: 12,
+  alignItems: "center",
+},
+
+saveButtonText: {
+  color: "#fff",
+  fontWeight: "600",
+  fontSize: 16,
+},
+
+saveText: {
+  color: "#fff",
+  fontSize: 16,
+  fontWeight: "600",
+},
+
+label: {
+  fontSize: 16,
+  fontWeight: "600",
+  color: Colors.gray3,
 },
 
 });
