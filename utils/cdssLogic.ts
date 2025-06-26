@@ -1,18 +1,18 @@
 // cdssLogic.ts
 
-// Tipi
+// Types
 type SleepEntry = {
   hours?: number;
   frequentWakeups?: boolean;
 };
 
 type SymptomEntry = {
-  difficoltaRespiratorie?: boolean;
-  affaticamentoMuscolare?: number;
+  difficoltaRespiratorie?: boolean; // Respiratory difficulties
+  affaticamentoMuscolare?: number;  // Muscle fatigue level (1–10)
 };
 
 type MedicationEntry = {
-  notifications?: boolean;
+  notifications?: boolean; // Whether medication reminders are active
 };
 
 type CDSSInput = {
@@ -21,53 +21,53 @@ type CDSSInput = {
   medications?: MedicationEntry;
 };
 
-// Funzioni di fuzzyficazione
-function fuzzifySleep(hours: number): "molto_basso" | "basso" | "normale" {
-  if (hours < 4) return "molto_basso";
-  if (hours < 6) return "basso";
-  return "normale";
+// Fuzzification functions
+function fuzzifySleep(hours: number): "very_low" | "low" | "normal" {
+  if (hours < 4) return "very_low";
+  if (hours < 6) return "low";
+  return "normal";
 }
 
-function fuzzifyFatigue(value: number): "basso" | "moderato" | "alto" {
-  if (value <= 3) return "basso";
-  if (value <= 6) return "moderato";
-  return "alto";
+function fuzzifyFatigue(value: number): "low" | "moderate" | "high" {
+  if (value <= 3) return "low";
+  if (value <= 6) return "moderate";
+  return "high";
 }
 
-// Logica CDSS fuzzy – alert clinici
+// Fuzzy CDSS logic – clinical alerts
 export function evaluateCDSS({ sleep, symptoms, medications }: CDSSInput): string[] {
   const alerts: string[] = [];
 
   const hours = sleep?.hours ?? 0;
-  const affaticamento = symptoms?.affaticamentoMuscolare ?? 0;
+  const fatigue = symptoms?.affaticamentoMuscolare ?? 0;
 
   const sleepLevel = fuzzifySleep(hours);
-  const fatigueLevel = fuzzifyFatigue(affaticamento);
+  const fatigueLevel = fuzzifyFatigue(fatigue);
 
-  // 🔴 1. Allerta respiratoria
+  // 🔴 1. Respiratory alert
   if (symptoms?.difficoltaRespiratorie) {
-    alerts.push("🫁 Difficoltà respiratorie rilevate – valutare supporto clinico urgente.");
+    alerts.push("🫁 Respiratory difficulties detected – assess for urgent clinical support.");
   }
 
-  // 🟠 2. Insonnia fuzzy
-  if ((sleepLevel === "molto_basso" || sleepLevel === "basso") && sleep?.frequentWakeups) {
-    alerts.push("😴 Sonno insufficiente con risvegli frequenti – rischio di insonnia.");
+  // 🟠 2. Fuzzy insomnia
+  if ((sleepLevel === "very_low" || sleepLevel === "low") && sleep?.frequentWakeups) {
+    alerts.push("😴 Insufficient sleep with frequent wakeups – risk of insomnia.");
   }
 
-  // 🔴 3. Affaticamento severo
-  if (fatigueLevel === "alto") {
-    alerts.push("💪 Affaticamento muscolare grave – considerare aggiustamento del piano terapeutico.");
+  // 🔴 3. Severe fatigue
+  if (fatigueLevel === "high") {
+    alerts.push("💪 Severe muscle fatigue – consider adjusting the treatment plan.");
   }
 
-  // 🟡 4. Notifiche disattivate
+  // 🟡 4. Notifications off
   if (medications?.notifications === false) {
-    alerts.push("🔔 Notifiche dei farmaci disattivate – rischio di non aderenza alla terapia.");
+    alerts.push("🔔 Medication reminders are disabled – risk of poor treatment adherence.");
   }
 
   return alerts;
 }
 
-// Logica CDSS fuzzy – consigli personalizzati
+// Fuzzy CDSS logic – personalized recommendations
 export function getPersonalizedAdvice({
   sleep,
   symptoms,
@@ -80,42 +80,42 @@ export function getPersonalizedAdvice({
   const tips: string[] = [];
 
   const hours = sleep?.hours ?? 0;
-  const affaticamento = symptoms?.affaticamentoMuscolare ?? 0;
+  const fatigue = symptoms?.affaticamentoMuscolare ?? 0;
 
   const sleepLevel = fuzzifySleep(hours);
-  const fatigueLevel = fuzzifyFatigue(affaticamento);
+  const fatigueLevel = fuzzifyFatigue(fatigue);
 
-  // 1. Sonno
-  if (sleepLevel === "molto_basso") {
-    tips.push("⏰ Dormi meno di 4h? Prova a impostare una routine serale costante.");
-  } else if (sleepLevel === "basso") {
-    tips.push("😴 Cerca di dormire almeno 7-8 ore per migliorare i livelli di energia e i sintomi.");
+  // 1. Sleep
+  if (sleepLevel === "very_low") {
+    tips.push("⏰ Sleeping less than 4 hours? Try establishing a consistent evening routine.");
+  } else if (sleepLevel === "low") {
+    tips.push("😴 Aim for 7–8 hours of sleep to improve energy and symptoms.");
   }
 
   if (sleep?.frequentWakeups) {
-    tips.push("🌙 Risvegli notturni frequenti? Prova a evitare schermi luminosi prima di dormire.");
+    tips.push("🌙 Frequent night awakenings? Try avoiding bright screens before bedtime.");
   }
 
-  // 2. Adesione ai farmaci
+  // 2. Medication adherence
   if (medications?.notifications === false) {
-    tips.push("🔔 Attiva le notifiche per ricordarti di assumere i farmaci con regolarità.");
+    tips.push("🔔 Enable medication reminders to help maintain regular intake.");
   }
 
-  // 3. Affaticamento muscolare
-  if (fatigueLevel === "moderato") {
-    tips.push("💪 Un'attività fisica leggera può aiutare a mantenere il tono muscolare.");
-  } else if (fatigueLevel === "alto") {
-    tips.push("🧘‍♀️ Riposa adeguatamente e valuta con il medico un aggiustamento terapeutico.");
+  // 3. Muscle fatigue
+  if (fatigueLevel === "moderate") {
+    tips.push("💪 Light physical activity may help maintain muscle tone.");
+  } else if (fatigueLevel === "high") {
+    tips.push("🧘‍♀️ Rest adequately and discuss treatment adjustments with your doctor.");
   }
 
-  // 4. Sintomi respiratori
+  // 4. Respiratory symptoms
   if (symptoms?.difficoltaRespiratorie) {
-    tips.push("🫁 Se hai difficoltà respiratorie, evita ambienti fumosi e consulta il medico.");
+    tips.push("🫁 If you're experiencing breathing difficulties, avoid smoky environments and consult your doctor.");
   }
 
-  // Nessun consiglio necessario
+  // No advice necessary
   if (tips.length === 0) {
-    tips.push("✅ Nessun consiglio particolare al momento. Continua così!");
+    tips.push("✅ No specific advice for now. Keep it up!");
   }
 
   return tips;
