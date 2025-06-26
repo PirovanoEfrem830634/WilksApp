@@ -24,6 +24,7 @@ const sections: {
   { label: "Diet", icon: "nutrition", color: Colors.orange, href: "/diettrackernew" },
   { label: "Sleep", icon: "bed", color: Colors.green, href: "/sleeptrackingnew" },
   { label: "Weekly Dashboard", icon: "bar-chart", color: Colors.mint, href: "/weeklydashboard" },
+  { label: "Download PDF", icon: "earth", color: Colors.red, href: "/monthlyreport" },
 ];
 
 export default function Browse() {
