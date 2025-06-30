@@ -1,5 +1,3 @@
-// File: /mgadl.tsx
-
 import React, { useState } from "react";
 import {
   View,
@@ -8,7 +6,6 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
-  Modal,
 } from "react-native";
 import { auth, db } from "../firebaseconfig";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
@@ -18,21 +15,21 @@ import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import { PressableScale } from "react-native-pressable-scale";
+import { Ionicons } from "@expo/vector-icons";
 
 const questions = [
-  "Talking",
-  "Chewing",
-  "Swallowing",
-  "Breathing",
-  "Impairment of ability to brush teeth or comb hair",
-  "Impairment of ability to rise from a chair",
-  "Double vision",
-  "Eyelid droop"
+  { label: "Talking", icon: "mic" },
+  { label: "Chewing", icon: "restaurant" },
+  { label: "Swallowing", icon: "water" },
+  { label: "Breathing", icon: "cloud" },
+  { label: "Impairment of ability to brush teeth or comb hair", icon: "body" },
+  { label: "Impairment of ability to rise from a chair", icon: "walk" },
+  { label: "Double vision", icon: "eye" },
+  { label: "Eyelid droop", icon: "eye-off" },
 ];
 
 export default function MGADLSurvey() {
   const [answers, setAnswers] = useState<number[]>(Array(8).fill(0));
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const saveSurvey = async () => {
     const user = auth.currentUser;
@@ -70,6 +67,7 @@ export default function MGADLSurvey() {
         />
 
         <View style={styles.mainHeader}>
+          <Ionicons name="pulse" size={48} color={Colors.blue} style={{ marginBottom: 10 }} />
           <Text style={FontStyles.variants.mainTitle}>MG-ADL Survey</Text>
           <Text style={FontStyles.variants.sectionTitle}>
             Indicate the severity for each item
@@ -79,7 +77,10 @@ export default function MGADLSurvey() {
         <ScrollView contentContainerStyle={styles.scrollView}>
           {questions.map((question, index) => (
             <View key={index} style={styles.card}>
-              <Text style={styles.questionText}>{question}</Text>
+              <View style={styles.questionRow}>
+                <Ionicons name={question.icon as any} size={18} color={Colors.blue} style={{ marginRight: 8 }} />
+                <Text style={styles.questionText}>{question.label}</Text>
+              </View>
               <View style={styles.optionRow}>
                 {[0, 1, 2, 3].map((val) => (
                   <PressableScale
@@ -147,11 +148,16 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
+  questionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
   questionText: {
     fontSize: 16,
     fontWeight: "600",
     color: Colors.gray1,
-    marginBottom: 10,
+    flexShrink: 1,
   },
   optionRow: {
     flexDirection: "row",
