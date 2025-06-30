@@ -1,0 +1,212 @@
+import React, { useEffect, useState } from "react";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
+import * as Animatable from "react-native-animatable";
+import { auth, db } from "../firebaseconfig";
+import { getDoc, doc } from "firebase/firestore";
+import BottomNavigation from "../app/bottomnavigationnew";
+import { PressableScale } from "react-native-pressable-scale";
+import { Ionicons } from "@expo/vector-icons";
+import Colors from "../Styles/color";
+import FontStyles from "../Styles/fontstyles";
+import { useNavigation } from "@react-navigation/native";
+import moment from "moment";
+
+const surveys = [
+  {
+    key: "mg_adl",
+    label: "MG-ADL",
+    icon: "pulse",
+    color: Colors.blue,
+    href: "mgadl",
+  },
+  {
+    key: "mg_qol15",
+    label: "MG-QoL15",
+    icon: "heart",
+    color: Colors.purple,
+    href: "mgqol15",
+  },
+  {
+    key: "mgfa",
+    label: "MGFA Classification",
+    icon: "medkit",
+    color: Colors.turquoise,
+    href: "mgfa",
+  },
+];
+
+export default function ClinicalSurveysScreen() {
+  const [statuses, setStatuses] = useState<{ [key: string]: { status: string; date?: string } }>({});
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      const uid = auth.currentUser?.uid;
+      if (!uid) return;
+
+      const result: any = {};
+      for (const survey of surveys) {
+        const ref = doc(db, `users/${uid}/clinical_surveys/${survey.key}`);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          const data = snap.data();
+          const last = data.lastCompiledAt?.seconds * 1000;
+          if (last && Date.now() - last < 7 * 24 * 60 * 60 * 1000) {
+            const date = moment(last).format("DD/MM/YYYY");
+            result[survey.key] = { status: "completed", date };
+          } else {
+            result[survey.key] = { status: "todo" };
+          }
+        } else {
+          result[survey.key] = { status: "todo" };
+        }
+      }
+      setStatuses(result);
+    };
+
+    fetchStatuses();
+  }, []);
+
+  const completedCount = Object.values(statuses).filter(s => s.status === "completed").length;
+
+  return (
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
+        <View style={styles.headerCentered}>
+          <Ionicons name="clipboard" size={42} color={Colors.blue} style={{ marginBottom: 10 }} />
+          <Text style={FontStyles.variants.mainTitle}>Clinical Evaluations</Text>
+          <Text style={styles.description}>Complete the clinical surveys regularly to track your condition and help your medical team.</Text>
+        </View>
+
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBarBackground}>
+            <View style={[styles.progressBarFill, { width: `${(completedCount / surveys.length) * 100}%` }]} />
+          </View>
+          <Text style={styles.progressText}>{completedCount}/{surveys.length} Completed</Text>
+        </View>
+
+        {surveys.map((survey, index) => {
+          const status = statuses[survey.key]?.status;
+          const date = statuses[survey.key]?.date;
+          return (
+            <Animatable.View
+              animation="fadeInUp"
+              delay={index * 100}
+              key={survey.key}
+            >
+              <PressableScale
+                onPress={() => navigation.navigate(survey.href as never)}
+                activeScale={0.96}
+                weight="light"
+                style={styles.card}
+              >
+                <View style={styles.cardHeader}>
+                  <View style={styles.cardRow}>
+                    <Ionicons
+                      name={survey.icon as any}
+                      size={20}
+                      color={survey.color}
+                    />
+                    <Text
+                      style={[FontStyles.variants.sectionTitle, { color: survey.color }]}
+                    >
+                      {survey.label}
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={18}
+                    color={Colors.light3}
+                  />
+                </View>
+                <View style={styles.statusRow}>
+                  <Ionicons
+                    name={status === "completed" ? "checkmark-circle" : "reload-circle"}
+                    size={18}
+                    color={status === "completed" ? Colors.green : Colors.gray3}
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
+                    {status === "completed" ? `Completed (${date})` : "To complete"}
+                  </Text>
+                </View>
+              </PressableScale>
+            </Animatable.View>
+          );
+        })}
+      </ScrollView>
+      <BottomNavigation />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.light1,
+  },
+  headerCentered: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 50,
+    marginBottom: 20,
+  },
+  description: {
+    fontSize: 14,
+    color: Colors.gray3,
+    marginTop: 6,
+    textAlign: "center",
+  },
+  progressContainer: {
+    marginBottom: 20,
+    alignItems: "center",
+  },
+  progressBarBackground: {
+    width: "100%",
+    height: 10,
+    backgroundColor: Colors.light3,
+    borderRadius: 10,
+    overflow: "hidden",
+    marginBottom: 6,
+  },
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: Colors.green,
+  },
+  progressText: {
+    fontSize: 12,
+    color: Colors.gray3,
+  },
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  cardRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
+  },
+  cardSub: {
+    fontSize: 14,
+    color: "#888",
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+  },
+});

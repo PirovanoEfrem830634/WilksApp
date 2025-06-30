@@ -57,13 +57,13 @@ export default function Browse() {
 
       Toast.show({
         type: "success",
-        text1: "PDF generated!",
-        text2: "Your monthly summary is ready.",
+        text1: "PDF generato!",
+        text2: "Il riepilogo mensile è pronto.",
         position: "top",
       });
     } catch (err: any) {
-      console.error("Error PDF:", err);
-      alert("Error generating PDF.");
+      console.error("Errore PDF:", err);
+      alert("Errore durante la generazione del PDF.");
     } finally {
       setGenerating(false);
     }
@@ -75,6 +75,7 @@ export default function Browse() {
     color: string;
     href?: string;
     onPress?: () => void;
+    disabled?: boolean;
   }[] = [
     { label: "Track", icon: "analytics", color: Colors.blue, href: "/trackingnew" },
     { label: "Tracking History", icon: "calendar", color: Colors.pink, href: "/trackinghistorynew" },
@@ -84,7 +85,7 @@ export default function Browse() {
     { label: "Diet", icon: "nutrition", color: Colors.orange, href: "/diettrackernew" },
     { label: "Sleep", icon: "bed", color: Colors.green, href: "/sleeptrackingnew" },
     { label: "Weekly Dashboard", icon: "bar-chart", color: Colors.mint, href: "/weeklydashboard" },
-    { label: "Monthly Recap PDF", icon: "document-text", color: Colors.yellow, onPress: generateAndDownloadPDF, },
+    { label: "Monthly Recap PDF", icon: "document-text", color: Colors.yellow, onPress: generateAndDownloadPDF, disabled: generating, },
   ];
 
   const filteredSections = sections.filter((section) =>
@@ -130,14 +131,14 @@ export default function Browse() {
           ) : (
             <PressableScale
               key={index}
-              style={styles.card}
+              style={[styles.card, item.disabled && { opacity: 0.5 }]}
               weight="light"
               activeScale={0.96}
-              onPress={item.onPress}
+              onPress={item.disabled ? undefined : item.onPress}
             >
               <Ionicons name={item.icon} size={20} color={item.color} style={styles.icon} />
               {item.label === "Monthly Recap PDF" && generating ? (
-                <Text style={[FontStyles.variants.body, { opacity: 0.6 }]}>Generating PDF...</Text>
+                <Text style={[FontStyles.variants.body, { opacity: 0.6 }]}>Generazione in corso...</Text>
               ) : (
                 <Text style={FontStyles.variants.body}>{item.label}</Text>
               )}
