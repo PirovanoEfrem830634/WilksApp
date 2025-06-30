@@ -8,36 +8,36 @@ import { PressableScale } from "react-native-pressable-scale";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import { useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import moment from "moment";
-
-const surveys = [
-  {
-    key: "mg_adl",
-    label: "MG-ADL",
-    icon: "pulse",
-    color: Colors.blue,
-    href: "mgadl",
-  },
-  {
-    key: "mg_qol15",
-    label: "MG-QoL15",
-    icon: "heart",
-    color: Colors.purple,
-    href: "mgqol15",
-  },
-  {
-    key: "mgfa",
-    label: "MGFA Classification",
-    icon: "medkit",
-    color: Colors.turquoise,
-    href: "mgfa",
-  },
-];
 
 export default function ClinicalSurveysScreen() {
   const [statuses, setStatuses] = useState<{ [key: string]: { status: string; date?: string } }>({});
-  const navigation = useNavigation();
+  const router = useRouter();
+
+  const surveys = [
+    {
+      key: "mg_adl",
+      label: "MG-ADL",
+      icon: "pulse",
+      color: Colors.blue,
+      href: "/mgadlsurveyscreen",
+    },
+    {
+      key: "mg_qol15",
+      label: "MG-QoL15",
+      icon: "heart",
+      color: Colors.purple,
+      href: "/mgqol15",
+    },
+    {
+      key: "mgfa",
+      label: "MGFA Classification",
+      icon: "medkit",
+      color: Colors.turquoise,
+      href: "/mgfa",
+    },
+  ];
 
   useEffect(() => {
     const fetchStatuses = async () => {
@@ -95,7 +95,7 @@ export default function ClinicalSurveysScreen() {
               key={survey.key}
             >
               <PressableScale
-                onPress={() => navigation.navigate(survey.href as never)}
+                onPress={() => router.push(survey.href)}
                 activeScale={0.96}
                 weight="light"
                 style={styles.card}
@@ -123,7 +123,7 @@ export default function ClinicalSurveysScreen() {
                   <Ionicons
                     name={status === "completed" ? "checkmark-circle" : "reload-circle"}
                     size={18}
-                    color={status === "completed" ? Colors.green : Colors.gray3}
+                    color={status === "completed" ? Colors.green : Colors.red}
                     style={{ marginRight: 6 }}
                   />
                   <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
