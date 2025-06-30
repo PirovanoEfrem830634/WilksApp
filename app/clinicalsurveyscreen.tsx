@@ -10,6 +10,8 @@ import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import { useRouter } from "expo-router";
 import moment from "moment";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 export default function ClinicalSurveysScreen() {
   const [statuses, setStatuses] = useState<{ [key: string]: { status: string; date?: string } }>({});
@@ -35,11 +37,12 @@ export default function ClinicalSurveysScreen() {
       label: "MGFA Classification",
       icon: "medkit",
       color: Colors.turquoise,
-      href: "/mgfa",
+      href: "/mgfaclassification",
     },
   ];
 
-  useEffect(() => {
+useFocusEffect(
+  useCallback(() => {
     const fetchStatuses = async () => {
       const uid = auth.currentUser?.uid;
       if (!uid) return;
@@ -65,7 +68,8 @@ export default function ClinicalSurveysScreen() {
     };
 
     fetchStatuses();
-  }, []);
+  }, [])
+);
 
   const completedCount = Object.values(statuses).filter(s => s.status === "completed").length;
 
