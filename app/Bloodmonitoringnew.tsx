@@ -23,6 +23,7 @@ import { PressableScale } from "react-native-pressable-scale";
 import { Ionicons } from "@expo/vector-icons";
 import { Modal, TouchableOpacity } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
+import PressableScaleWithRef from "../components/PressableScaleWithRef";
 
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -144,7 +145,7 @@ const [editingField, setEditingField] = useState<null | string>(null);
         { key: "antiLRP4", label: "anti-LRP4", icon: "flask" },
         { key: "notes", label: "Notes (optional)", icon: "document-text" },
         ].map((item) => (
-        <PressableScale
+        <PressableScaleWithRef
             key={item.key}
             onPress={() => setEditingField(item.key)}
             activeScale={0.96}
@@ -163,14 +164,14 @@ const [editingField, setEditingField] = useState<null | string>(null);
             {examData[item.key as keyof typeof examData] || "Tap to enter"}
         </Text>
         </View>
-        </PressableScale>
+        </PressableScaleWithRef>
         ))}
 
-        <Pressable onPress={handleSubmit} style={styles.reloadButton}>
+        <PressableScaleWithRef onPress={handleSubmit} style={styles.reloadButton}>
           <Text style={styles.reloadText}>Save Exam</Text>
-        </Pressable>
+        </PressableScaleWithRef>
 
-        <PressableScale
+        <PressableScaleWithRef
         onPress={toggleSection}
         activeScale={0.96}
         weight="light"
@@ -186,7 +187,7 @@ const [editingField, setEditingField] = useState<null | string>(null);
             color={Colors.light3}
         />
         </View>
-        </PressableScale>
+        </PressableScaleWithRef>
 
       {open && last && (
         <View style={[styles.card, { marginTop: 8 }]}>
@@ -218,7 +219,7 @@ const [editingField, setEditingField] = useState<null | string>(null);
         )}
 
 
-      <Pressable onPress={fetchBloodTests} style={styles.reloadButton} disabled={loading}>
+      <PressableScaleWithRef onPress={fetchBloodTests} style={styles.reloadButton} disabled={loading}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <MotiView
             animate={{ rotate: loading ? "360deg" : "0deg" }}
@@ -229,7 +230,7 @@ const [editingField, setEditingField] = useState<null | string>(null);
           </MotiView>
           <Text style={styles.reloadText}>Reload</Text>
         </View>
-      </Pressable>
+      </PressableScaleWithRef>
 
       <Toast />
 
@@ -248,12 +249,12 @@ const [editingField, setEditingField] = useState<null | string>(null);
                 setExamData((prev) => ({ ...prev, [editingField!]: text }))
                 }
             />
-            <Pressable
+            <PressableScaleWithRef
                 style={styles.saveButton}
                 onPress={() => setEditingField(null)}
             >
                 <Text style={styles.saveText}>Save</Text>
-            </Pressable>
+            </PressableScaleWithRef>
             </View>
         </View>
         </Modal>
