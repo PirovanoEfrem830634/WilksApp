@@ -26,23 +26,24 @@ import { Activity, AlertCircle, Eye, Mic, Droplet, Wind, TrendingUp, Smile, Moon
 
 
 export default function SleepTracking() {
-  const [quality, setQuality] = useState("Normale");
+  const [quality, setQuality] = useState("");
   const [frequentWakeups, setFrequentWakeups] = useState(false);
   const [nightmares, setNightmares] = useState(false);
   const [apnea, setApnea] = useState(false);
   const [notes, setNotes] = useState("");
   const [showPicker, setShowPicker] = useState<null | string>(null);
   const [noteModalVisible, setNoteModalVisible] = useState(false);
-  const [hours, setHours] = useState(6);
+  const [hours, setHours] = useState<string>("");
 
 
 useFocusEffect(
   React.useCallback(() => {
+    console.log("🎯 SleepTracking mounted or refocused");
     setFrequentWakeups(false);
     setNightmares(false);
     setApnea(false);
-    setQuality("Normale");
-    setHours(6);
+    setQuality("");
+    setHours("");
     setNotes("");
   }, [])
 );
@@ -63,7 +64,7 @@ const handleSave = async () => {
 
   const sleepData = {
     quality,
-    hours,
+    hours: parseInt(hours) || 0,
     frequentWakeups,
     nightmares,
     apnea,
@@ -140,7 +141,7 @@ const handleSave = async () => {
             <Ionicons name="time" size={20} color={Colors.green} />
             <Text style={styles.cardLabel}>Sleep Duration</Text>
             <View style={{ flex: 1 }} />
-            <Text style={styles.cardRightValue}>{hours} h</Text>
+            <Text style={styles.cardRightValue}>{hours !== null ? `${hours} h` : "Select"}</Text>
             <Ionicons name="chevron-forward-outline" size={16} color={Colors.light3} style={{ marginLeft: 6 }} />
         </View>
     </PressableScale>
@@ -247,12 +248,13 @@ const handleSave = async () => {
                 selectedValue={hours}
                 onValueChange={(value) => setHours(value)}
                 style={styles.picker}
-                >
+              >
+                <Picker.Item label="Select duration" value="" />
                 {[...Array(10)].map((_, i) => {
-                    const val = i + 3;
-                    return <Picker.Item key={val} label={`${val} hours`} value={val} />;
+                  const val = (i + 3).toString(); // es. "3", "4", ..., "12"
+                  return <Picker.Item key={val} label={`${val} hours`} value={val} />;
                 })}
-                </Picker>
+              </Picker>
             </View>
 
             <TouchableOpacity
