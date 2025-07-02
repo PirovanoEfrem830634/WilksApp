@@ -13,13 +13,12 @@ import { useRouter } from "expo-router";
 import BottomNavigation from "../app/bottomnavigationnew";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { auth, db } from "../firebaseconfig";
-import * as Animatable from "react-native-animatable";
 import { Activity, AlertCircle, Eye, Mic, Droplet, Wind, TrendingUp, Smile, Moon, Check, X } from "lucide-react-native";
 import FontStyles from "../Styles/fontstyles";
 import Colors from "../Styles/color";
 import { PressableScale } from "react-native-pressable-scale";
 import { LinearGradient } from 'expo-linear-gradient';
-import { Modal, TouchableOpacity } from "react-native";
+import { Modal } from "react-native";
 
 type FormDataType = {
   debolezzaMuscolare: boolean;
@@ -116,7 +115,6 @@ const symptomFields: {
 
   return (
     <View style={styles.container}>
-      <Animatable.View animation="fadeInUp" duration={600} style={{ flex: 1 }}>
         <LinearGradient
         colors={["#D1E9FF", Colors.light1]}
         start={{ x: 0.5, y: 0 }}
@@ -135,7 +133,7 @@ const symptomFields: {
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
                 {["Happy", "Neutral", "Sad", "Anxious"].map((option) => (
-                    <TouchableOpacity
+                    <PressableScale
                     key={option}
                     style={styles.optionItem}
                     onPress={() => {
@@ -144,9 +142,9 @@ const symptomFields: {
                     }}
                     >
                     <Text style={styles.optionText}>{option}</Text>
-                    </TouchableOpacity>
+                    </PressableScale>
                 ))}
-                <TouchableOpacity
+                <PressableScale
                 style={styles.cancelItem}
                 onPress={() => {
                     handleInputChange("umore", "");
@@ -154,7 +152,7 @@ const symptomFields: {
                 }}
                 >
                 <Text style={styles.cancelText}>Cancel</Text>
-                </TouchableOpacity>
+                </PressableScale>
                 </View>
             </View>
             </Modal>
@@ -163,7 +161,7 @@ const symptomFields: {
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
                 {["Good", "Normal", "Poor", "Insomnia"].map((option) => (
-                    <TouchableOpacity
+                    <PressableScale
                     key={option}
                     style={styles.optionItem}
                     onPress={() => {
@@ -172,9 +170,9 @@ const symptomFields: {
                     }}
                     >
                     <Text style={styles.optionText}>{option}</Text>
-                    </TouchableOpacity>
+                    </PressableScale>
                 ))}
-                <TouchableOpacity
+                <PressableScale
                     style={styles.cancelItem}
                     onPress={() => {
                     handleInputChange("sonno", "");
@@ -182,7 +180,7 @@ const symptomFields: {
                     }}
                 >
                     <Text style={styles.cancelText}>Cancel</Text>
-                </TouchableOpacity>
+                </PressableScale>
                 </View>
             </View>
             </Modal>
@@ -191,7 +189,7 @@ const symptomFields: {
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
                 {["Stable", "Worsened", "Improved"].map((option) => (
-                    <TouchableOpacity
+                    <PressableScale
                     key={option}
                     style={styles.optionItem}
                     onPress={() => {
@@ -200,9 +198,9 @@ const symptomFields: {
                     }}
                     >
                     <Text style={styles.optionText}>{option}</Text>
-                    </TouchableOpacity>
+                    </PressableScale>
                 ))}
-                <TouchableOpacity
+                <PressableScale
                     style={styles.cancelItem}
                     onPress={() => {
                     handleInputChange("andamentoSintomi", "");
@@ -210,7 +208,7 @@ const symptomFields: {
                     }}
                 >
                     <Text style={styles.cancelText}>Cancel</Text>
-                </TouchableOpacity>
+                </PressableScale>
                 </View>
             </View>
             </Modal>
@@ -328,12 +326,12 @@ const symptomFields: {
                 </Picker>
               </View>
 
-              <TouchableOpacity
+              <PressableScale
                 onPress={() => setShowPicker(null)}
                 style={styles.saveButton}
               >
                 <Text style={styles.saveText}>Save</Text>
-              </TouchableOpacity>
+              </PressableScale>
             </View>
           </View>
         </Modal>
@@ -342,7 +340,6 @@ const symptomFields: {
             <Text style={styles.submitButtonText}>Submit</Text>
           </Pressable>
         </ScrollView>
-      </Animatable.View>
       <BottomNavigation />
     </View>
   );
