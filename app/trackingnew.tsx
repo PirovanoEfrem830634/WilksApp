@@ -37,7 +37,7 @@ type FormDataType = {
 
 
 
-export default function SymptomTracking() {
+export default function TrackingNew() {
   const [formData, setFormData] = useState<FormDataType>({
     debolezzaMuscolare: false,
     andamentoSintomi: "",

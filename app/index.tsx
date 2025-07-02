@@ -190,7 +190,7 @@ export default function Index() {
             <Text style={styles.actionText}>Monitoring</Text>
           </Pressable>
         </Link>
-          <Link href="/diettracker" asChild>
+          <Link href="/diettrackernew" asChild>
           <Pressable style={styles.actionButtonSmall}>
             <Ionicons name="nutrition-outline" size={24} color="#007AFF" />
             <Text style={styles.actionText}>Diet</Text>

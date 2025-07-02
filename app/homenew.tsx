@@ -15,7 +15,7 @@ import { Image } from "react-native";
 import { Link } from "expo-router";
 
 
-export default function SummaryScreen() {
+export default function HomeNew() {
   
   const [summary, setSummary] = useState<SummaryData>({
     nextMedication: null,
