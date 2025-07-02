@@ -54,9 +54,11 @@ useFocusEffect(
         if (snap.exists()) {
           const data = snap.data();
           const last = data.lastCompiledAt?.seconds * 1000;
-          if (last && Date.now() - last < 7 * 24 * 60 * 60 * 1000) {
-            const date = moment(last).format("DD/MM/YYYY");
-            result[survey.key] = { status: "completed", date };
+          const lastDate = moment(last).format("YYYY-MM-DD");
+          const todayDate = moment().format("YYYY-MM-DD");
+
+          if (lastDate === todayDate) {
+            result[survey.key] = { status: "completed", date: moment(last).format("DD/MM/YYYY") };
           } else {
             result[survey.key] = { status: "todo" };
           }
