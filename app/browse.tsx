@@ -9,6 +9,8 @@ import { PressableScale } from "react-native-pressable-scale";
 import { TextInput } from "react-native";
 import { Image } from "react-native";
 import Toast from "react-native-toast-message";
+import PressableScaleWithRef from "../components/PressableScaleWithRef";
+
 
 /* Import PDF Function */
 
@@ -119,17 +121,17 @@ export default function Browse() {
         {filteredSections.map((item, index) => (
           item.href && !item.onPress ? (
             <Link href={item.href} asChild key={index}>
-              <PressableScale 
+              <PressableScaleWithRef 
                 style={styles.card}
                 weight="light"
                 activeScale={0.96}>
                 <Ionicons name={item.icon} size={20} color={item.color} style={styles.icon} />
                 <Text style={FontStyles.variants.body}>{item.label}</Text>
                 <Ionicons name="chevron-forward" size={16} color={Colors.light3} style={styles.chevron} />
-              </PressableScale>
+              </PressableScaleWithRef>
             </Link>
           ) : (
-            <PressableScale
+            <PressableScaleWithRef
               key={index}
               style={[styles.card, item.disabled && { opacity: 0.5 }]}
               weight="light"
@@ -143,7 +145,7 @@ export default function Browse() {
                 <Text style={FontStyles.variants.body}>{item.label}</Text>
               )}
               <Ionicons name="chevron-forward" size={16} color={Colors.light3} style={styles.chevron} />
-            </PressableScale>
+            </PressableScaleWithRef>
           )
         ))}
       </ScrollView>
