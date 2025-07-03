@@ -18,27 +18,48 @@ export default function ClinicalSurveysScreen() {
   const router = useRouter();
 
   const surveys = [
-    {
-      key: "mg_adl",
-      label: "MG-ADL",
-      icon: "pulse",
-      color: Colors.blue,
-      href: "/mgadlsurveyscreen",
-    },
-    {
-      key: "mg_qol15",
-      label: "MG-QoL15",
-      icon: "heart",
-      color: Colors.purple,
-      href: "/mgqol15",
-    },
-    {
-      key: "mgfa",
-      label: "MGFA Classification",
-      icon: "medkit",
-      color: Colors.turquoise,
-      href: "/mgfaclassification",
-    },
+  {
+    key: "mg_adl",
+    label: "MG-ADL",
+    icon: "pulse",
+    color: Colors.blue,
+    href: "/mgadlsurveyscreen",
+  },
+  {
+    key: "mg_qol15",
+    label: "MG-QoL15",
+    icon: "heart",
+    color: Colors.purple,
+    href: "/mgqol15",
+  },
+  {
+    key: "mgfa",
+    label: "MGFA Classification",
+    icon: "medkit",
+    color: Colors.turquoise,
+    href: "/mgfaclassification",
+  },
+  {
+    key: "eq5d5l",
+    label: "EQ-5D-5L",
+    icon: "fitness",
+    color: Colors.orange,
+    href: "/eq5d5l",
+  },
+  {
+    key: "hads",
+    label: "HADS",
+    icon: "sad",
+    color: Colors.red,
+    href: "/hads",
+  },
+  {
+    key: "hui3",
+    label: "HUI3",
+    icon: "analytics",
+    color: Colors.green,
+    href: "/hui3",
+  },
   ];
 
 useFocusEffect(
