@@ -22,7 +22,8 @@ const Colors = {
   yellow: "#F1A33B",
   purple: "#B25FEA",
   ocean: "#87E3E1",
-  mint: "#00C8B3"
+  mint: "#00C8B3",
+  indigo: "#EA8DFF"
 };
 
 export default Colors;

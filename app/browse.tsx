@@ -88,6 +88,7 @@ export default function Browse() {
     { label: "Sleep", icon: "bed", color: Colors.green, href: "/sleeptrackingnew" },
     { label: "Weekly Dashboard", icon: "bar-chart", color: Colors.mint, href: "/weeklydashboard" },
     { label: "Monthly Recap PDF", icon: "document-text", color: Colors.yellow, onPress: generateAndDownloadPDF, disabled: generating, },
+    { label: "Mental Resources", icon: "help-buoy", color: Colors.indigo, href: "/MentalResourcesScreen" },
   ];
 
   const filteredSections = sections.filter((section) =>
