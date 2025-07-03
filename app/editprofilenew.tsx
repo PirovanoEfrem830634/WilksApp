@@ -38,8 +38,10 @@ export default function EditProfile() {
     weight: "",
   });
 
-  useEffect(() => {
+useFocusEffect(
+  useCallback(() => {
     const loadUserData = async () => {
+      setLoading(true);
       if (auth.currentUser) {
         const userRef = doc(db, "users", auth.currentUser.uid);
         const snapshot = await getDoc(userRef);
@@ -60,7 +62,21 @@ export default function EditProfile() {
     };
 
     loadUserData();
-  }, []);
+
+    // Quando esci dalla schermata: resetta i dati
+    return () => {
+      setFormData({
+        firstName: "",
+        lastName: "",
+        age: "",
+        city: "",
+        phone: "",
+        height: "",
+        weight: "",
+      });
+    };
+  }, [])
+);
 
   const handleChange = (key: string, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
