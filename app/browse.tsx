@@ -79,15 +79,15 @@ export default function Browse() {
     onPress?: () => void;
     disabled?: boolean;
   }[] = [
-    { label: "Track", icon: "analytics", color: Colors.blue, href: "/trackingnew" },
-    { label: "Tracking History", icon: "calendar", color: Colors.pink, href: "/trackinghistorynew" },
-    { label: "Medications", icon: "medkit", color: Colors.turquoise, href: "/mymedicationnew" },
-    { label: "Symptoms Infos", icon: "information-circle", color: Colors.purple, href: "/infonew" },
     { label: "Blood Monitoring", icon: "water", color: Colors.red, href: "/Bloodmonitoringnew" },
     { label: "Diet", icon: "nutrition", color: Colors.orange, href: "/diettrackernew" },
+    { label: "Monthly Recap PDF", icon: "document-text", color: Colors.yellow, onPress: generateAndDownloadPDF, disabled: generating, },
     { label: "Sleep", icon: "bed", color: Colors.green, href: "/sleeptrackingnew" },
     { label: "Weekly Dashboard", icon: "bar-chart", color: Colors.mint, href: "/weeklydashboard" },
-    { label: "Monthly Recap PDF", icon: "document-text", color: Colors.yellow, onPress: generateAndDownloadPDF, disabled: generating, },
+    { label: "Track", icon: "analytics", color: Colors.blue, href: "/trackingnew" },
+    { label: "Medications", icon: "medkit", color: Colors.turquoise, href: "/mymedicationnew" },
+    { label: "Tracking History", icon: "calendar", color: Colors.pink, href: "/trackinghistorynew" },
+    { label: "Symptoms Infos", icon: "information-circle", color: Colors.purple, href: "/infonew" },
     { label: "Mental Resources", icon: "help-buoy", color: Colors.indigo, href: "/MentalResourcesScreen" },
   ];
 

@@ -19,6 +19,8 @@ import Colors from "../Styles/color";
 import { PressableScale } from "react-native-pressable-scale";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Modal } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 type FormDataType = {
   debolezzaMuscolare: boolean;
@@ -50,6 +52,24 @@ export default function TrackingNew() {
     umore: "",
     sonno: "",
   });
+
+  useFocusEffect(
+  useCallback(() => {
+    setFormData({
+      debolezzaMuscolare: false,
+      andamentoSintomi: "",
+      affaticamentoMuscolare: 0,
+      disfagia: false,
+      disartria: false,
+      ptosi: false,
+      diplopia: false,
+      difficoltaRespiratorie: false,
+      ansia: false,
+      umore: "",
+      sonno: "",
+    });
+  }, [])
+);
 
   const router = useRouter();
 
@@ -293,7 +313,13 @@ const symptomFields: {
             </View>
             </PressableScale>
 
-          <PressableScale onPress={() => setShowPicker("fatigue")} style={styles.card}>
+          <PressableScale
+              onPress={() => setShowPicker("fatigue")}
+              style={[
+                styles.card,
+                formData.affaticamentoMuscolare > 0 && styles.cardSelected,
+              ]}
+            >
             <View style={styles.cardHeader}>
             <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
               <Activity size={18} color={Colors.blue} style={{ marginRight: 9 }}/>
