@@ -1,17 +1,126 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  TouchableOpacity,
+} from "react-native";
+import { auth, db } from "../firebaseconfig";
+import { doc, setDoc, Timestamp } from "firebase/firestore";
+import * as Animatable from "react-native-animatable";
+import BottomNavigation from "./bottomnavigationnew";
+import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
+import { PressableScale } from "react-native-pressable-scale";
+import { Ionicons } from "@expo/vector-icons";
 
-export default function Hui3Survey() {
+const hui3Attributes = [
+  { label: "Vision", icon: "eye" },
+  { label: "Hearing", icon: "ear" },
+  { label: "Speech", icon: "mic" },
+  { label: "Ambulation", icon: "walk" },
+  { label: "Dexterity", icon: "hand-left-outline" },
+  { label: "Emotion", icon: "happy" },
+  { label: "Cognition", icon: "brain" },
+  { label: "Pain", icon: "alert-circle" },
+];
+
+export default function HUI3Survey() {
+  const [answers, setAnswers] = useState<number[]>(Array(8).fill(1));
+
+  const handleAnswer = (index: number, value: number) => {
+    const updated = [...answers];
+    updated[index] = value;
+    setAnswers(updated);
+  };
+
+  const saveSurvey = async () => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+      Alert.alert("Error", "User not logged in");
+      return;
+    }
+
+    const docRef = doc(db, `users/${uid}/clinical_surveys/hui3`);
+    try {
+      await setDoc(docRef, {
+        lastCompiledAt: Timestamp.now(),
+        responses: {
+          vision: answers[0],
+          hearing: answers[1],
+          speech: answers[2],
+          ambulation: answers[3],
+          dexterity: answers[4],
+          emotion: answers[5],
+          cognition: answers[6],
+          pain: answers[7],
+          summaryScore: null, // placeholder per ora
+        },
+      });
+      Alert.alert("Success", "HUI3 survey saved successfully.");
+    } catch (err: any) {
+      Alert.alert("Error", err.message);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <Ionicons name="analytics" size={40} color={Colors.green} style={styles.icon} />
-      <Text style={FontStyles.variants.mainTitle}>HUI3</Text>
-      <Text style={styles.description}>
-        This is a placeholder for the Health Utilities Index (HUI3). You can build the full questionnaire UI here.
-      </Text>
+      <Animatable.View animation="fadeInUp" duration={600} style={{ flex: 1 }}>
+        <LinearGradient
+          colors={["#C2F1E7", Colors.light1]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.gradientBackground}
+        />
+        <View style={styles.mainHeader}>
+          <Ionicons name="analytics" size={48} color={Colors.green} style={{ marginBottom: 10 }} />
+          <Text style={FontStyles.variants.mainTitle}>HUI3 Survey</Text>
+          <Text style={[FontStyles.variants.sectionTitle, { textAlign: "center" }]}>
+            Evaluate each health attribute 
+            {"\n"}(1 = best, 5 = worst)
+            </Text>
+        </View>
+        <ScrollView contentContainerStyle={styles.scrollView}>
+          {hui3Attributes.map((attr, index) => (
+            <View key={index} style={styles.card}>
+              <View style={styles.questionRow}>
+                <Ionicons name={attr.icon as any} size={18} color={Colors.green} style={{ marginRight: 8 }} />
+                <Text style={styles.questionText}>{attr.label}</Text>
+              </View>
+              <View style={styles.optionRow}>
+                {[1, 2, 3, 4, 5].map((val) => (
+                  <PressableScale
+                    key={val}
+                    onPress={() => handleAnswer(index, val)}
+                    weight="light"
+                    activeScale={0.95}
+                    style={[
+                      styles.option,
+                      answers[index] === val && styles.optionSelected,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.optionText,
+                        answers[index] === val && styles.optionTextSelected,
+                      ]}
+                    >
+                      {val}
+                    </Text>
+                  </PressableScale>
+                ))}
+              </View>
+            </View>
+          ))}
+          <TouchableOpacity style={styles.submitButton} onPress={saveSurvey}>
+            <Text style={styles.submitButtonText}>Submit</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </Animatable.View>
+      <BottomNavigation />
     </View>
   );
 }
@@ -20,17 +129,85 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light1,
-    alignItems: "center",
-    justifyContent: "center",
+  },
+  gradientBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 160,
+    zIndex: -1,
+  },
+  scrollView: {
     padding: 20,
+    paddingBottom: 100,
   },
-  icon: {
-    marginBottom: 12,
+  mainHeader: {
+    alignItems: "center",
+    marginTop: 32,
+    marginBottom: 20,
+    paddingHorizontal: 20,
   },
-  description: {
-    textAlign: "center",
-    fontSize: 14,
-    color: Colors.gray3,
-    marginTop: 8,
+  card: {
+    backgroundColor: Colors.white,
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  questionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  questionText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: Colors.gray1,
+    flexShrink: 1,
+  },
+  optionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  option: {
+    backgroundColor: Colors.light2,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginHorizontal: 4,
+    flex: 1,
+    alignItems: "center",
+  },
+  optionSelected: {
+    backgroundColor: Colors.green,
+  },
+  optionText: {
+    color: Colors.gray1,
+    fontWeight: "500",
+  },
+  optionTextSelected: {
+    color: "#fff",
+  },
+  submitButton: {
+    backgroundColor: Colors.green,
+    padding: 15,
+    borderRadius: 15,
+    alignItems: "center",
+    marginTop: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  submitButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
 });
