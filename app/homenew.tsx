@@ -13,6 +13,7 @@ import { Pressable, Animated } from "react-native"
 import { useNavigation } from "@react-navigation/native";
 import { Image } from "react-native";
 import { Link } from "expo-router";
+import PressableScaleWithRef from "../components/PressableScaleWithRef";
 
 
 export default function HomeNew() {
@@ -151,7 +152,7 @@ export default function HomeNew() {
         <Text style={[styles.sectionTitle, FontStyles.variants.bodySemibold]}>Today</Text>
 
         <Animatable.View animation="fadeInUp" delay={100}>
-          <PressableScale
+          <PressableScaleWithRef
             onPress={() => navigation.navigate("mymedicationnew")}
             activeScale={0.96}
             weight="light"
@@ -166,17 +167,17 @@ export default function HomeNew() {
               </View>
               <Ionicons name="chevron-forward" size={18} color={Colors.light3} />
             </View>
-            <Text style={[FontStyles.variants.dataValue, styles.cardValue]}>
+            <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
               {summary.nextMedication || "No meds today"}
             </Text>
             <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
               Next Dose
             </Text>
-          </PressableScale>
+          </PressableScaleWithRef>
         </Animatable.View>
 
         <Animatable.View animation="fadeInUp" delay={200}>
-            <PressableScale
+            <PressableScaleWithRef
               onPress={() => navigation.navigate("sleeptrackingnew")}
               activeScale={0.96}
               weight="light"
@@ -192,7 +193,7 @@ export default function HomeNew() {
               <Ionicons name="chevron-forward" size={18} color={Colors.light3} />
             </View>
 
-            <Text style={[FontStyles.variants.dataValue, styles.cardValue]}>
+            <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
               {summary.realSleepHours !== null
                 ? formatSleepDuration(summary.realSleepHours)
                 : "Not set"}
@@ -200,11 +201,11 @@ export default function HomeNew() {
             <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
               Time Asleep
             </Text>
-          </PressableScale>
+          </PressableScaleWithRef>
         </Animatable.View>
 
         <Animatable.View animation="fadeInUp" delay={300}>
-          <PressableScale
+          <PressableScaleWithRef
             onPress={() => navigation.navigate("trackingnew")}
             activeScale={0.96}
             weight="light"
@@ -219,17 +220,17 @@ export default function HomeNew() {
               </View>
               <Ionicons name="chevron-forward" size={18} color={Colors.light3} />
             </View>
-            <Text style={[FontStyles.variants.dataValue, styles.cardValue]}>
+            <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
               {summary.mood || "Not set"}
             </Text>
             <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
               Last Entry
             </Text>
-          </PressableScale>
+          </PressableScaleWithRef>
         </Animatable.View>
 
         <Animatable.View animation="fadeInUp" delay={400}>
-          <PressableScale
+          <PressableScaleWithRef
             onPress={() => navigation.navigate("trackingnew")}
             activeScale={0.96}
             weight="light"
@@ -244,17 +245,17 @@ export default function HomeNew() {
               </View>
               <Ionicons name="chevron-forward" size={18} color={Colors.light3} />
             </View>
-            <Text style={[FontStyles.variants.dataValue, styles.cardValue]}>
+            <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
               {summary.fatigue !== null ? `${summary.fatigue}/10` : "Not set"}
             </Text>
             <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
               Perceived Fatigue
             </Text>
-          </PressableScale>
+          </PressableScaleWithRef>
         </Animatable.View>
 
         <Animatable.View animation="fadeInUp" delay={500}>
-          <PressableScale
+          <PressableScaleWithRef
             onPress={() => navigation.navigate("diettrackernew")}
             activeScale={0.96}
             weight="light"
@@ -269,13 +270,13 @@ export default function HomeNew() {
               </View>
               <Ionicons name="chevron-forward" size={18} color={Colors.light3} />
             </View>
-            <Text style={[FontStyles.variants.dataValue, styles.cardValue]}>
+            <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
               {summary.dietStatus === "Completed" ? "All meals tracked" : "Pending"}
             </Text>
             <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
               Daily Meals
             </Text>
-          </PressableScale>
+          </PressableScaleWithRef>
         </Animatable.View>
 
       </View>
