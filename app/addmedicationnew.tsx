@@ -216,9 +216,15 @@ export default function AddMedication() {
         <Switch value={notifications} onValueChange={setNotifications} />
         </View>
 
-        <TouchableOpacity style={styles.submitButton} onPress={saveMedication}>
-          <Text style={styles.submitButtonText}>Save Medication</Text>
-        </TouchableOpacity>
+      <PressableScale
+            onPress={() => router.push("/addmedicationnew")}
+            weight="light"
+            activeScale={0.96}
+            style={styles.submitButton}
+            >
+            <Text style={styles.submitButtonText}>+ Add Medication</Text>
+      </PressableScale>
+
       </ScrollView>
       <BottomNavigation />
     </View>

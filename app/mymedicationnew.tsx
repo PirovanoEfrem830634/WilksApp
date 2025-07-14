@@ -117,12 +117,15 @@ export default function MyMedications() {
         contentContainerStyle={{ padding: 20 }}
       />
 
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => router.push("/addmedicationnew")}
-      >
-        <Text style={styles.addButtonText}>+ Add Medication</Text>
-      </TouchableOpacity>
+      <PressableScale
+            onPress={() => router.push("/addmedicationnew")}
+            weight="light"
+            activeScale={0.96}
+            style={styles.addButton}
+            >
+            <Text style={styles.addButtonText}>+ Add Medication</Text>
+      </PressableScale>
+
       <BottomNavigation />
     </View>
   );
