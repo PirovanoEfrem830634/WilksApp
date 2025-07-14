@@ -126,9 +126,14 @@ export default function MGADLSurvey() {
             </View>
           ))}
 
-          <TouchableOpacity style={styles.submitButton} onPress={saveSurvey}>
+          <PressableScale
+            onPress={saveSurvey}
+            weight="light"
+            activeScale={0.96}
+            style={styles.submitButton}
+            >
             <Text style={styles.submitButtonText}>Submit</Text>
-          </TouchableOpacity>
+          </PressableScale>
         </ScrollView>
       </Animatable.View>
           {toastMessage && (

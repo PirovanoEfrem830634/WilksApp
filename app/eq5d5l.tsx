@@ -154,9 +154,14 @@ export default function EQ5D5LSurvey() {
             />
           </View>
 
-          <TouchableOpacity style={styles.submitButton} onPress={saveSurvey}>
-            <Text style={styles.submitButtonText}>Submit</Text>
-          </TouchableOpacity>
+          <PressableScale
+                    onPress={saveSurvey}
+                    weight="light"
+                    activeScale={0.96}
+                    style={styles.submitButton}
+                  >
+                    <Text style={styles.submitButtonText}>Submit</Text>
+                  </PressableScale>
         </ScrollView>
       </Animatable.View>
           {toastMessage && (
