@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Alert,
   TouchableOpacity,
   TextInput,
+  Animated ,
 } from "react-native";
 import { auth, db } from "../firebaseconfig";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
@@ -30,6 +31,26 @@ export default function EQ5D5LSurvey() {
   const [answers, setAnswers] = useState<number[]>(Array(5).fill(1));
   const [vasScore, setVasScore] = useState<string>("");
 
+  const toastAnim = useRef(new Animated.Value(0)).current;
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    Animated.sequence([
+      Animated.timing(toastAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.delay(2000),
+      Animated.timing(toastAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start(() => setToastMessage(null));
+  };
+
   const handleAnswer = (index: number, value: number) => {
     const newAnswers = [...answers];
     newAnswers[index] = value;
@@ -44,7 +65,7 @@ export default function EQ5D5LSurvey() {
     }
 
     if (!vasScore || isNaN(Number(vasScore)) || Number(vasScore) < 0 || Number(vasScore) > 100) {
-      Alert.alert("Invalid VAS", "Please enter a valid number between 0 and 100.");
+      showToast("❌ Invalid VAS: Enter a value between 0–100");
       return;
     }
 
@@ -61,9 +82,9 @@ export default function EQ5D5LSurvey() {
           vasScore: Number(vasScore),
         },
       });
-      Alert.alert("Success", "Survey saved successfully");
+      showToast("✅ Survey saved successfully");
     } catch (err: any) {
-      Alert.alert("Error", err.message);
+      showToast("❌ User not logged in");
     }
   };
 
@@ -138,6 +159,41 @@ export default function EQ5D5LSurvey() {
           </TouchableOpacity>
         </ScrollView>
       </Animatable.View>
+          {toastMessage && (
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            top: 60,
+            left: 20,
+            right: 20,
+            backgroundColor: Colors.orange,
+            padding: 14,
+            borderRadius: 16,
+            alignItems: "center",
+            zIndex: 10,
+            opacity: toastAnim,
+            transform: [
+              {
+                translateY: toastAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-60, 0],
+                }),
+              },
+            ],
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+            elevation: 5,
+          },
+        ]}
+      >
+        <Text style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>
+          {toastMessage}
+        </Text>
+      </Animated.View>
+    )}
       <BottomNavigation />
     </View>
   );
