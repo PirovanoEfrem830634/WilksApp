@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   headerCentered: {
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 50,
+    marginTop: 32,
     marginBottom: 20,
   },
   description: {

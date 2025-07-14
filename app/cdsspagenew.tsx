@@ -131,7 +131,7 @@ const CDSSPage = () => {
 
       Toast.show({
         type: 'success',
-        text1: 'Updated data',
+        text1: '✅ Updated data',
         position: 'top',
         visibilityTime: 2000,
       });
@@ -139,7 +139,7 @@ const CDSSPage = () => {
       console.error("Error while fetching:", err);
       Toast.show({
         type: 'error',
-        text1: 'Error loading',
+        text1: '❌ Error loading',
         text2: err.message,
         position: 'top',
       });
@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
   headerCentered: {
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 50,
+    marginTop: 32,
     marginBottom: 20,
   },
   description: {
