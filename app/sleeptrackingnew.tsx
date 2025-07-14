@@ -213,9 +213,14 @@ const handleSave = async () => {
         </Text>
         </PressableScale>
 
-      <Pressable onPress={handleSave} style={styles.saveButton}>
-        <Text style={styles.saveText}>Salva</Text>
-      </Pressable>
+      <PressableScale
+      onPress={handleSave}
+      weight="light"
+      activeScale={0.96}
+      style={styles.saveButton}
+      >
+      <Text style={styles.saveText}>Submit</Text>
+      </PressableScale>
 
       <Modal visible={noteModalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>

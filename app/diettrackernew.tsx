@@ -21,6 +21,7 @@ import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import { Activity, AlertCircle, Eye, Mic, Droplet, Wind, TrendingUp, Smile, Moon, Info, X } from "lucide-react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { PressableScale } from "react-native-pressable-scale";
 
 
 const meals = ["breakfast", "lunch", "dinner", "snack"];
@@ -176,10 +177,14 @@ export default function DietTracker() {
       })}
     </ScrollView>
 
-
-      <TouchableOpacity style={styles.globalSaveButton} onPress={handleSave}>
-        <Text style={styles.globalSaveText}>Save All</Text>
-      </TouchableOpacity>
+      <PressableScale
+            onPress={handleSave}
+            weight="light"
+            activeScale={0.96}
+            style={styles.globalSaveButton}
+            >
+            <Text style={styles.globalSaveText}>Submit</Text>
+      </PressableScale>
 
       {/* Toast visivo animato */}
       <Animated.View
