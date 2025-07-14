@@ -302,7 +302,6 @@ const handleSave = async () => {
     </View>
     </Modal>
 
-
     <Toast />
     <BottomNavigation />
   </View>
