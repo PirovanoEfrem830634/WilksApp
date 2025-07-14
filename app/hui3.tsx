@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef  } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
+  Animated,
 } from "react-native";
 import { auth, db } from "../firebaseconfig";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
@@ -30,6 +31,25 @@ const hui3Attributes = [
 
 export default function HUI3Survey() {
   const [answers, setAnswers] = useState<number[]>(Array(8).fill(1));
+  const toastAnim = useRef(new Animated.Value(0)).current;
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    Animated.sequence([
+      Animated.timing(toastAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.delay(2000),
+      Animated.timing(toastAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start(() => setToastMessage(null));
+  };
 
   const handleAnswer = (index: number, value: number) => {
     const updated = [...answers];
@@ -40,7 +60,7 @@ export default function HUI3Survey() {
   const saveSurvey = async () => {
     const uid = auth.currentUser?.uid;
     if (!uid) {
-      Alert.alert("Error", "User not logged in");
+      showToast("❌ User not logged in");
       return;
     }
 
@@ -60,9 +80,9 @@ export default function HUI3Survey() {
           summaryScore: null, // placeholder per ora
         },
       });
-      Alert.alert("Success", "HUI3 survey saved successfully.");
+      showToast("✅ HUI3 survey saved successfully");
     } catch (err: any) {
-      Alert.alert("Error", err.message);
+      showToast("❌ Error: " + err.message);
     }
   };
 
@@ -120,6 +140,41 @@ export default function HUI3Survey() {
           </TouchableOpacity>
         </ScrollView>
       </Animatable.View>
+          {toastMessage && (
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            top: 60,
+            left: 20,
+            right: 20,
+            backgroundColor: Colors.green,
+            padding: 14,
+            borderRadius: 16,
+            alignItems: "center",
+            zIndex: 10,
+            opacity: toastAnim,
+            transform: [
+              {
+                translateY: toastAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-60, 0],
+                }),
+              },
+            ],
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+            elevation: 5,
+          },
+        ]}
+      >
+        <Text style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>
+          {toastMessage}
+        </Text>
+      </Animated.View>
+    )}
       <BottomNavigation />
     </View>
   );
