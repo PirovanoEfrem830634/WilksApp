@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
+  Animated,
 } from "react-native";
 import { auth, db } from "../firebaseconfig";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
@@ -38,6 +39,26 @@ const questions = [
 export default function MGQoL15Survey() {
   const [answers, setAnswers] = useState<number[]>(Array(15).fill(0));
 
+  const toastAnim = useRef(new Animated.Value(0)).current;
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    Animated.sequence([
+      Animated.timing(toastAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.delay(2000),
+      Animated.timing(toastAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start(() => setToastMessage(null));
+  };
+
   const saveSurvey = async () => {
     const user = auth.currentUser;
     if (!user) {
@@ -51,9 +72,9 @@ export default function MGQoL15Survey() {
         answers,
         lastCompiledAt: Timestamp.now(),
       });
-      Alert.alert("Success", "Survey saved successfully");
+      showToast("✅ Survey saved successfully");
     } catch (err: any) {
-      Alert.alert("Error", err.message);
+      showToast("❌ Error: " + err.message);
     }
   };
 
@@ -116,6 +137,34 @@ export default function MGQoL15Survey() {
           </TouchableOpacity>
         </ScrollView>
       </Animatable.View>
+          {toastMessage && (
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            top: 60,
+            left: 20,
+            right: 20,
+            backgroundColor: Colors.purple,
+            padding: 14,
+            borderRadius: 12,
+            alignItems: "center",
+            zIndex: 10,
+            opacity: toastAnim,
+            transform: [
+              {
+                translateY: toastAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-60, 0],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <Text style={{ color: "#fff", fontWeight: "600" }}>{toastMessage}</Text>
+      </Animated.View>
+    )}
       <BottomNavigation />
     </View>
   );
