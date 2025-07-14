@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   Pressable,
   Alert,
+  Animated,
 } from "react-native";
 import Slider from "@react-native-community/slider";
 import { Picker } from "@react-native-picker/picker";
@@ -53,6 +54,26 @@ export default function TrackingNew() {
     sonno: "",
   });
 
+  const toastAnim = useRef(new Animated.Value(0)).current;
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    Animated.sequence([
+      Animated.timing(toastAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.delay(2000),
+      Animated.timing(toastAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start(() => setToastMessage(null));
+  };
+
   useFocusEffect(
   useCallback(() => {
     setFormData({
@@ -93,7 +114,7 @@ export default function TrackingNew() {
   console.log("🔍 USER:", user?.uid);
 
   if (!user) {
-    Alert.alert("Errore", "Utente non loggato.");
+    showToast("❌ User not logged in");
     return;
   }
 
@@ -111,10 +132,10 @@ export default function TrackingNew() {
 
   try {
     await setDoc(symptomsDocRef, dataToSave);
-    Alert.alert("✅ Success", "Symptoms saved successfully!");
+    showToast("✅ Symptoms saved successfully!");
   } catch (error: any) {
-    console.error("❌ Errore salvataggio sintomi:", error);
-    Alert.alert("Errore", error.message || "Errore nel salvataggio.");
+    console.error("❌ Error saving symptoms:", error);
+    showToast("❌ Error: " + (error.message || "Error saving."));
   }
 };
 
@@ -362,10 +383,50 @@ const symptomFields: {
           </View>
         </Modal>
 
-          <Pressable onPress={saveSymptoms} style={styles.submitButton}>
-            <Text style={styles.submitButtonText}>Submit</Text>
-          </Pressable>
+          <PressableScale
+          onPress={saveSymptoms}
+          weight="light"
+          activeScale={0.96}
+          style={styles.submitButton}
+        >
+          <Text style={styles.submitButtonText}>Submit</Text>
+        </PressableScale>
         </ScrollView>
+              {toastMessage && (
+        <Animated.View
+          style={[
+            {
+              position: "absolute",
+              top: 60,
+              left: 20,
+              right: 20,
+              backgroundColor: Colors.blue,
+              padding: 14,
+              borderRadius: 16,
+              alignItems: "center",
+              zIndex: 10,
+              opacity: toastAnim,
+              transform: [
+                {
+                  translateY: toastAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-60, 0],
+                  }),
+                },
+              ],
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 5,
+            },
+          ]}
+        >
+          <Text style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>
+            {toastMessage}
+          </Text>
+        </Animated.View>
+      )}
       <BottomNavigation />
     </View>
   );
