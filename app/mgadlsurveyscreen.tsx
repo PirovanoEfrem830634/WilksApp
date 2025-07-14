@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,8 @@ import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import { PressableScale } from "react-native-pressable-scale";
 import { Ionicons } from "@expo/vector-icons";
+import { Animated } from "react-native";
+
 
 const questions = [
   { label: "Talking", icon: "mic" },
@@ -31,6 +33,26 @@ const questions = [
 export default function MGADLSurvey() {
   const [answers, setAnswers] = useState<number[]>(Array(8).fill(0));
 
+  const toastAnim = useRef(new Animated.Value(0)).current;
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    Animated.sequence([
+      Animated.timing(toastAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.delay(2000),
+      Animated.timing(toastAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start(() => setToastMessage(null));
+  };
+
   const saveSurvey = async () => {
     const user = auth.currentUser;
     if (!user) {
@@ -44,9 +66,9 @@ export default function MGADLSurvey() {
         answers,
         lastCompiledAt: Timestamp.now(),
       });
-      Alert.alert("Success", "Survey saved successfully");
+      showToast("✅ Survey saved successfully");
     } catch (err: any) {
-      Alert.alert("Error", err.message);
+      showToast("❌ Error: " + err.message);
     }
   };
 
@@ -109,6 +131,34 @@ export default function MGADLSurvey() {
           </TouchableOpacity>
         </ScrollView>
       </Animatable.View>
+          {toastMessage && (
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            top: 60,
+            left: 20,
+            right: 20,
+            backgroundColor: "#007AFF",
+            padding: 14,
+            borderRadius: 12,
+            alignItems: "center",
+            zIndex: 10,
+            opacity: toastAnim,
+            transform: [
+              {
+                translateY: toastAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-60, 0],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <Text style={{ color: "#fff", fontWeight: "600" }}>{toastMessage}</Text>
+      </Animated.View>
+    )}
       <BottomNavigation />
     </View>
   );

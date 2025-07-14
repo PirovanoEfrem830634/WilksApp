@@ -199,17 +199,10 @@ const CDSSPage = () => {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <LinearGradient
-        colors={["#FFE0B2", Colors.light1]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.gradientBackground}
-        />
-
-        <View style={styles.mainHeader}>
-        <Ionicons name="hardware-chip" size={48} color={Colors.yellow} />
-        <Text style={FontStyles.variants.mainTitle}>Clinical Decision Support</Text>
-        <Text style={FontStyles.variants.sectionTitle}>Personalized analysis based on your data</Text>
+        <View style={styles.headerCentered}>
+          <Ionicons name="git-branch-outline" size={42} color={Colors.blue} style={{ marginBottom: 10 }} />
+          <Text style={FontStyles.variants.mainTitle}>Clinical Decision Support</Text>
+          <Text style={styles.description}>Personalized analysis based on your data</Text>
         </View>
 
         <PressableScale
@@ -594,7 +587,19 @@ const styles = StyleSheet.create({
   flexDirection: "row",
   alignItems: "center",
   gap: 8,
-},
+  },
+  headerCentered: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 50,
+    marginBottom: 20,
+  },
+  description: {
+    fontSize: 14,
+    color: Colors.gray3,
+    marginTop: 6,
+    textAlign: "center",
+  },
 });
 
 export default CDSSPage;

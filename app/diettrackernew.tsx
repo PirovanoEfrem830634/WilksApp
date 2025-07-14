@@ -191,7 +191,7 @@ export default function DietTracker() {
               {
                 translateY: toastAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [60, 0],
+                  outputRange: [-60, 0],
                 }),
               },
             ],
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   },
   toast: {
     position: "absolute",
-    bottom: 100,
+    top: 60,
     left: 20,
     right: 20,
     backgroundColor: "#007AFF",
