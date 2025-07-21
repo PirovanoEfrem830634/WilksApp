@@ -14,6 +14,8 @@ import { useNavigation } from "@react-navigation/native";
 import { Image } from "react-native";
 import { Link } from "expo-router";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 
 export default function HomeNew() {
@@ -47,7 +49,8 @@ export default function HomeNew() {
   realSleepHours: number | null;
 }
 
-  useEffect(() => {
+useFocusEffect(
+  useCallback(() => {
     const fetchSummary = async () => {
       const user = auth.currentUser;
       if (!user) return;
@@ -97,7 +100,7 @@ export default function HomeNew() {
           .sort((a, b) => (a.id > b.id ? -1 : 1))[0];
       }
 
-      // 4. Sleep
+      // 3. Sleep
       const sleepRef = collection(db, "users", uid, "sleep");
       const sleepSnap = await getDocs(sleepRef);
       const latestSleep = sleepSnap.docs
@@ -117,7 +120,7 @@ export default function HomeNew() {
 
       const realSleepHours = latestSleep?.hours ?? null;
 
-      // 3. Diet
+      // 4. Diet
       const dietRef = collection(db, "users", uid, "diet");
       const dietSnap = await getDocs(dietRef);
       const dietToday = dietSnap.docs.find(doc => doc.id === todayStr);
@@ -133,8 +136,10 @@ export default function HomeNew() {
         realSleepHours,
       });
     };
+
     fetchSummary();
-  }, []);
+  }, [])
+);
 
   return (
     <View style={{ flex: 1 }}>

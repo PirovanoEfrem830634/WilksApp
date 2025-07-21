@@ -1,8 +1,9 @@
 import React, { useState, useLayoutEffect } from "react";
 import { View, Text, TextInput, Pressable, Alert, Image, StyleSheet } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebaseconfig";
+import { db, auth } from "../firebaseconfig";
 import { useRouter, useNavigation } from "expo-router";
+import { doc, getDocs, query, collection, where, updateDoc } from "firebase/firestore";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -14,15 +15,36 @@ export default function SignIn() {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  const handleSignIn = async () => {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      Alert.alert("Success", "Logged in successfully!");
-      router.push("/");
-    } catch (error) {
-      Alert.alert("Error", "Invalid email or password");
+const handleSignIn = async () => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Cerca il documento del paziente con la stessa email
+    const q = query(collection(db, "users"), where("email", "==", email));
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      const docRef = querySnapshot.docs[0].ref;
+
+      await updateDoc(docRef, {
+        firebase_uid: user.uid,
+        has_mobile_account: true,
+      });
+
+      console.log("✅ Firebase UID salvato con successo nel documento utente");
+    } else {
+      console.warn("⚠️ Nessun documento utente trovato con questa email.");
     }
-  };
+
+    Alert.alert("Success", "Logged in successfully!");
+    router.push("/");
+
+  } catch (error) {
+    console.error("Login error:", error);
+    Alert.alert("Error", "Invalid email or password");
+  }
+};
 
   return (
     <View style={styles.container}>
