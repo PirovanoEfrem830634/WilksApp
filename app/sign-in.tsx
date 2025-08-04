@@ -20,19 +20,25 @@ const handleSignIn = async () => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Cerca il documento del paziente con la stessa email
+    // Cerca il documento utente tramite email
     const q = query(collection(db, "users"), where("email", "==", email));
     const querySnapshot = await getDocs(q);
 
     if (!querySnapshot.empty) {
-      const docRef = querySnapshot.docs[0].ref;
+      const docSnap = querySnapshot.docs[0];
+      const docRef = docSnap.ref;
+      const docData = docSnap.data();
 
-      await updateDoc(docRef, {
-        firebase_uid: user.uid,
-        has_mobile_account: true,
-      });
-
-      console.log("✅ Firebase UID salvato con successo nel documento utente");
+      // ✅ Solo se manca firebase_uid, aggiorna il documento
+      if (!docData.firebase_uid) {
+        await updateDoc(docRef, {
+          firebase_uid: user.uid,
+          has_mobile_account: true,
+        });
+        console.log("✅ Firebase UID associato all'utente");
+      } else {
+        console.log("ℹ️ Firebase UID già presente nel documento");
+      }
     } else {
       console.warn("⚠️ Nessun documento utente trovato con questa email.");
     }

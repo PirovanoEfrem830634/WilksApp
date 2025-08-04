@@ -25,22 +25,34 @@ export default function SignUp() {
   const router = useRouter();
 
   const handleSignUp = async () => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+  try {
+    // ✅ 1. Crea l'utente su Firebase Auth
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-      await setDoc(doc(db, "users", user.uid), {
-        firstName,
-        lastName,
-        email,
-      });
+    // ✅ 2. Crea il documento su Firestore con lo stesso ID del Firebase UID
+    await setDoc(doc(db, "users", user.uid), {
+      firstName,
+      lastName,
+      email,
+      firebase_uid: user.uid,           // 🔐 richiesto dalle regole
+      has_mobile_account: true,         // ✅ opzionale ma utile
+    });
 
-      Alert.alert("Registrazione completata", "Benvenuto!");
-      router.push("/sign-in");
-    } catch (error) {
-      Alert.alert("Errore", "Registrazione fallita. Riprova.");
-    }
-  };
+    Alert.alert("Registrazione completata", "Benvenuto!");
+    router.push("/sign-in");
+
+  } catch (error) {
+  console.error("Errore Firebase SignUp:", error);
+
+  if (error instanceof Error) {
+    Alert.alert("Errore", error.message);
+  } else {
+    Alert.alert("Errore", "Registrazione fallita. Riprova.");
+  }
+}
+
+};
 
   return (
     <KeyboardAvoidingView
