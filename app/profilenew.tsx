@@ -11,6 +11,7 @@ import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import { TouchableOpacity } from "react-native";
 import { PressableScale } from "react-native-pressable-scale";
+import { onAuthStateChanged } from "firebase/auth";
 
 interface UserData {
   firstName: string;
@@ -34,26 +35,30 @@ export default function Profile() {
   }, [navigation]);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (auth.currentUser) {
-        const userDocRef = doc(db, "users", auth.currentUser.uid);
-        const userDoc = await getDoc(userDocRef);
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
 
-        if (userDoc.exists()) {
-          setUserData(userDoc.data() as UserData);
-        } else {
-          console.log("User document does not exist");
-        }
+      if (userDoc.exists()) {
+        setUserData(userDoc.data() as UserData);
+      } else {
+        console.log("User document does not exist");
+        setUserData(null);
       }
-      setLoading(false);
-    };
+    } else {
+      setUserData(null);
+    }
+    setLoading(false);
+  });
 
-    fetchUserData();
+  return () => unsubscribe();
   }, []);
 
   const handleLogout = async () => {
-    await signOut(auth);
-    router.push("/sign-in");
+  await signOut(auth);
+  setUserData(null);
+  router.replace("/sign-in"); // meglio di push per evitare che si possa tornare indietro
   };
 
   if (loading) {
