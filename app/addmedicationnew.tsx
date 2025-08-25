@@ -20,7 +20,7 @@ import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import { PressableScale } from "react-native-pressable-scale";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from 'expo-linear-gradient';
+import { LinearGradient } from "expo-linear-gradient";
 
 const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -34,7 +34,6 @@ export default function AddMedication() {
   const [notifications, setNotifications] = useState(true);
 
   const router = useRouter();
-
   const [manualTime, setManualTime] = useState("");
 
   const toggleDay = (day: string) => {
@@ -55,59 +54,84 @@ export default function AddMedication() {
   };
 
   const saveMedication = async () => {
-    console.log("[DEBUG] Submitting medication...");
+    console.log("[DEBUG] Submitting medication…");
     const user = auth.currentUser;
-    console.log("[DEBUG] Current user:", user);
+    console.log("[DEBUG] Current user uid/email:", user?.uid, user?.email);
+
+    console.log("[DEBUG] Form state:", {
+      name,
+      dose,
+      days,
+      times,
+      notes,
+      notifications,
+      platform: Platform.OS,
+    });
 
     if (!user) {
+      console.warn("[WARN] No authenticated user");
       Alert.alert("Error", "User not logged in");
       return;
     }
 
     if (!name || !dose || days.length === 0 || times.length === 0) {
-      console.log("[DEBUG] Validation failed:", { name, dose, days, times });
+      console.warn("[WARN] Validation failed", { name, dose, days, times });
       Alert.alert("Missing Information", "Please fill out all required fields.");
       return;
     }
 
     try {
-      const docRef = collection(db, "users", user.uid, "medications");
+      const path = `users/${user.uid}/medications`;
+      const colRef = collection(db, "users", user.uid, "medications");
       const payload = {
-        name,
-        dose,
-        days,
-        times,
-        notes,
-        notifications,
+        name: name.trim(),
+        dose: dose.trim(),
+        days: [...days].sort(),
+        times: times.map((t) => t.trim()),
+        notes: notes.trim(),
+        notifications: !!notifications,
         createdAt: Timestamp.now(),
+        createdBy: user.uid,
       };
-      console.log("[DEBUG] Payload to save:", payload);
 
-      await addDoc(docRef, payload);
+      console.log("[DEBUG] Writing to:", path);
+      console.log("[DEBUG] Payload:", payload);
+
+      const res = await addDoc(colRef, payload);
+      console.log("[DEBUG] Saved doc id:", res.id);
 
       Alert.alert("Success", "Medication saved successfully");
       router.back();
-    } catch (error) {
-      console.error("[ERROR] Error saving medication:", error);
-      Alert.alert("Error", "Something went wrong. Please try again.");
+    } catch (error: any) {
+      console.error("[ERROR] addDoc failed:", {
+        code: error?.code,
+        name: error?.name,
+        message: error?.message,
+        stack: error?.stack?.split("\n")[0],
+      });
+      Alert.alert(
+        "Error",
+        error?.message || "Something went wrong. Please try again."
+      );
     }
   };
 
   return (
     <View style={styles.container}>
-        <LinearGradient
+      <LinearGradient
         colors={["#D2E1FF", Colors.light1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.gradientBackground}
-        />
-        <View style={styles.mainHeader}>
+      />
+      <View style={styles.mainHeader}>
         <Ionicons name="add-circle" size={48} color={Colors.turquoise} />
         <Text style={FontStyles.variants.mainTitle}>Add Medication</Text>
-        <Text style={FontStyles.variants.sectionTitle}>Plan your next intake</Text>
-        </View>
+        <Text style={FontStyles.variants.sectionTitle}>
+          Plan your next intake
+        </Text>
+      </View>
       <ScrollView style={styles.scrollView}>
-
         <TextInput
           placeholder="Medication name"
           value={name}
@@ -148,17 +172,28 @@ export default function AddMedication() {
 
         <Text style={styles.sectionTitle}>Time(s) of intake</Text>
         {times.map((time, index) => (
-        <View key={index} style={styles.orarioCard}>
+          <View key={index} style={styles.orarioCard}>
             <Ionicons name="time" size={20} color={Colors.turquoise} />
             <Text style={FontStyles.variants.body}>{time}</Text>
-            <TouchableOpacity onPress={() => setTimes(prev => prev.filter((_, i) => i !== index))}>
-            <Ionicons name="close" size={20} color={Colors.light3} />
+            <TouchableOpacity
+              onPress={() =>
+                setTimes((prev) => prev.filter((_, i) => i !== index))
+              }
+            >
+              <Ionicons name="close" size={20} color={Colors.light3} />
             </TouchableOpacity>
-        </View>
+          </View>
         ))}
 
         {Platform.OS === "web" ? (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 16,
+            }}
+          >
             <TextInput
               placeholder="Enter time (e.g. 08:00)"
               style={[styles.input, { flex: 1 }]}
@@ -209,22 +244,21 @@ export default function AddMedication() {
         />
 
         <View style={styles.switchRow}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <Ionicons name="notifications" size={24} color={Colors.turquoise} />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Ionicons name="notifications" size={24} color={Colors.turquoise} />
             <Text style={FontStyles.variants.body}>Enable notifications</Text>
-        </View>
-        <Switch value={notifications} onValueChange={setNotifications} />
+          </View>
+          <Switch value={notifications} onValueChange={setNotifications} />
         </View>
 
-      <PressableScale
-            onPress={() => router.push("/addmedicationnew")}
-            weight="light"
-            activeScale={0.96}
-            style={styles.submitButton}
-            >
-            <Text style={styles.submitButtonText}>+ Add Medication</Text>
-      </PressableScale>
-
+        <PressableScale
+          onPress={saveMedication} // <<< FIX QUI
+          weight="light"
+          activeScale={0.96}
+          style={styles.submitButton}
+        >
+          <Text style={styles.submitButtonText}>+ Add Medication</Text>
+        </PressableScale>
       </ScrollView>
       <BottomNavigation />
     </View>
@@ -247,20 +281,20 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   input: {
-  backgroundColor: Colors.white,
-  borderColor: Colors.light3,
-  borderWidth: 1,
-  borderRadius: 12,
-  paddingVertical: 12,
-  paddingHorizontal: 14,
-  fontSize: 16,
-  color: Colors.gray1,
-  marginBottom: 14,
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.03,
-  shadowRadius: 2,
-  elevation: 1,
+    backgroundColor: Colors.white,
+    borderColor: Colors.light3,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    fontSize: 16,
+    color: Colors.gray1,
+    marginBottom: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 1,
   },
   sectionTitle: {
     fontSize: 16,
@@ -292,14 +326,14 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   orarioCard: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  backgroundColor: Colors.white,
-  borderRadius: 12,
-  padding: 12,
-  marginBottom: 8,
-  gap: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+    gap: 10,
   },
   orarioText: {
     fontSize: 16,
@@ -343,30 +377,30 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   gradientBackground: {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  height: 180,
-  zIndex: -1,
-  borderBottomLeftRadius: 20,
-  borderBottomRightRadius: 20,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 180,
+    zIndex: -1,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   mainHeader: {
-  marginTop: 32,
-  marginBottom: 30,
-  alignItems: "center",
-  paddingHorizontal: 20,
+    marginTop: 32,
+    marginBottom: 30,
+    alignItems: "center",
+    paddingHorizontal: 20,
   },
   iconWrapper: {
-  backgroundColor: "#fff",
-  padding: 16,
-  borderRadius: 20,
-  marginBottom: 12,
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.08,
-  shadowRadius: 4,
-  elevation: 2,
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
 });

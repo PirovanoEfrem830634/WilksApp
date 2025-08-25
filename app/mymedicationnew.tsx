@@ -7,19 +7,24 @@ import {
   StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { MoveRight, Pill } from "lucide-react-native";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { MoveRight, Pill, Trash2, Activity, AlertCircle, Eye, Mic, Droplet, Wind, TrendingUp, Smile, Moon, Check, X, BriefcaseMedical } from "lucide-react-native";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  query,
+  orderBy,
+  getDocs, // (rimane importato se vuoi usarlo altrove)
+} from "firebase/firestore";
 import { auth, db } from "../firebaseconfig";
-import { Trash2 } from "lucide-react-native";
 import BottomNavigation from "../app/bottomnavigationnew";
-import * as Animatable from 'react-native-animatable';
+import * as Animatable from "react-native-animatable";
 import FontStyles from "../Styles/fontstyles";
 import Colors from "../Styles/color";
 import { PressableScale } from "react-native-pressable-scale";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from 'expo-linear-gradient';
-import { Activity, AlertCircle, Eye, Mic, Droplet, Wind, TrendingUp, Smile, Moon, Check, X, BriefcaseMedical } from "lucide-react-native";
-
+import { LinearGradient } from "expo-linear-gradient";
 
 type Medication = {
   id: string;
@@ -34,32 +39,42 @@ export default function MyMedications() {
   const router = useRouter();
 
   useEffect(() => {
-    const fetchMedications = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
+    const user = auth.currentUser;
+    if (!user) {
+      console.warn("[WARN] MyMedications: no authenticated user");
+      return;
+    }
 
-      const medsRef = collection(db, "users", user.uid, "medications");
-      const snapshot = await getDocs(medsRef);
+    const medsRef = collection(db, "users", user.uid, "medications");
+    const q = query(medsRef, orderBy("createdAt", "desc"));
 
-      console.log("[DEBUG] Firebase meds snapshot:", snapshot.docs);
+    console.log("[DEBUG] Subscribing to medications onSnapshot…");
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        console.log("[DEBUG] onSnapshot size:", snapshot.size);
+        const meds = snapshot.docs.map((d) => {
+          const data = d.data() as any;
+          return {
+            id: d.id,
+            name: data?.name || "",
+            dose: data?.dose || "",
+            days: Array.isArray(data?.days) ? data.days : [],
+            times: Array.isArray(data?.times) ? data.times : [],
+          } as Medication;
+        });
+        console.log("[DEBUG] Parsed medications (live):", meds);
+        setMedications(meds);
+      },
+      (err) => {
+        console.error("[ERROR] onSnapshot medications:", err?.code, err?.message);
+      }
+    );
 
-      const meds = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        console.log("[DEBUG] Single doc:", data);
-        return {
-          id: doc.id,
-          name: data.name || "",
-          dose: data.dose || "",
-          days: Array.isArray(data.days) ? data.days : [],
-          times: Array.isArray(data.times) ? data.times : [],
-        };
-      });
-
-      console.log("[DEBUG] Parsed medications:", meds);
-      setMedications(meds);
+    return () => {
+      console.log("[DEBUG] Unsubscribe medications onSnapshot");
+      unsubscribe();
     };
-
-    fetchMedications();
   }, []);
 
   const handleDelete = async (id: string) => {
@@ -67,30 +82,30 @@ export default function MyMedications() {
     if (!user) return;
 
     await deleteDoc(doc(db, "users", user.uid, "medications", id));
-    setMedications((prev) => prev.filter((med) => med.id !== id));
+    // Non serve setMedications manuale: onSnapshot aggiorna da solo.
   };
 
   const renderItem = ({ item }: { item: Medication }) => (
     <View style={styles.card}>
-        <View style={styles.cardHeader}>
-            <Pill size={18} color={Colors.turquoise} />
-            <Text
-            style={[FontStyles.variants.bodySemibold, { flex: 1 }]}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            >
-            {item.name} ({item.dose})
-            </Text>
+      <View style={styles.cardHeader}>
+        <Pill size={18} color={Colors.turquoise} />
+        <Text
+          style={[FontStyles.variants.bodySemibold, { flex: 1 }]}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {item.name} ({item.dose})
+        </Text>
         <TouchableOpacity onPress={() => handleDelete(item.id)}>
-            <Ionicons name="trash" size={18} color={Colors.red} />
+          <Ionicons name="trash" size={18} color={Colors.red} />
         </TouchableOpacity>
-    </View>
-    <Text style={styles.sub}>
+      </View>
+      <Text style={styles.sub}>
         <Text style={styles.sub}>Days:</Text> {item.days.join(", ")}
-    </Text>
-    <Text style={styles.sub}>
+      </Text>
+      <Text style={styles.sub}>
         <Text style={styles.sub}>Times:</Text> {item.times.join(", ")}
-    </Text>
+      </Text>
     </View>
   );
 
@@ -101,13 +116,15 @@ export default function MyMedications() {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.gradientBackground}
-        />
+      />
       <View style={styles.mainHeader}>
         <View style={styles.iconWrapper}>
-            <BriefcaseMedical size={48} color={Colors.turquoise}  />
+          <BriefcaseMedical size={48} color={Colors.turquoise} />
         </View>
         <Text style={FontStyles.variants.mainTitle}>My Medications</Text>
-        <Text style={FontStyles.variants.sectionTitle}>Keep track of your current prescriptions</Text>
+        <Text style={FontStyles.variants.sectionTitle}>
+          Keep track of your current prescriptions
+        </Text>
       </View>
 
       <FlatList
@@ -118,12 +135,12 @@ export default function MyMedications() {
       />
 
       <PressableScale
-            onPress={() => router.push("/addmedicationnew")}
-            weight="light"
-            activeScale={0.96}
-            style={styles.addButton}
-            >
-            <Text style={styles.addButtonText}>+ Add Medication</Text>
+        onPress={() => router.push("/addmedicationnew")}
+        weight="light"
+        activeScale={0.96}
+        style={styles.addButton}
+      >
+        <Text style={styles.addButtonText}>+ Add Medication</Text>
       </PressableScale>
 
       <BottomNavigation />
@@ -180,22 +197,22 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   gradientBackground: {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  height: 160,
-  zIndex: -1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 160,
+    zIndex: -1,
   },
   mainHeader: {
-  alignItems: "center",
-  marginTop: 32,
-  marginBottom: 20,
-  paddingHorizontal: 20,
+    alignItems: "center",
+    marginTop: 32,
+    marginBottom: 20,
+    paddingHorizontal: 20,
   },
   iconWrapper: {
-  borderRadius: 60,
-  padding: 5,
-  marginBottom: 10,
+    borderRadius: 60,
+    padding: 5,
+    marginBottom: 10,
   },
 });
