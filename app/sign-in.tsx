@@ -44,7 +44,7 @@ const handleSignIn = async () => {
     }
 
     Alert.alert("Success", "Logged in successfully!");
-    router.push("/");
+    router.replace("/homenew");
 
   } catch (error) {
     console.error("Login error:", error);
