@@ -18,48 +18,58 @@ export default function ClinicalSurveysScreen() {
   const router = useRouter();
 
   const surveys = [
-  {
-    key: "mg_adl",
-    label: "MG-ADL",
-    icon: "pulse",
-    color: Colors.blue,
-    href: "/mgadlsurveyscreen",
-  },
-  {
-    key: "mg_qol15",
-    label: "MG-QoL15",
-    icon: "heart",
-    color: Colors.purple,
-    href: "/mgqol15",
-  },
-  {
-    key: "mgfa",
-    label: "MGFA Classification",
-    icon: "medkit",
-    color: Colors.turquoise,
-    href: "/mgfaclassification",
-  },
-  {
-    key: "eq5d5l",
-    label: "EQ-5D-5L",
-    icon: "fitness",
-    color: Colors.orange,
-    href: "/eq5d5l",
-  },
-  {
-    key: "hads",
-    label: "HADS",
-    icon: "sad",
-    color: Colors.red,
-    href: "/hads",
-  },
-  {
-    key: "hui3",
-    label: "HUI3",
-    icon: "analytics",
-    color: Colors.green,
-    href: "/hui3",
-  },
+    // === ✅ Allegati & lato paziente (TENERE) ===
+    {
+      key: "mg_qol15",
+      label: "MG-QoL15r",
+      icon: "heart",
+      color: Colors.purple,
+      href: "/mgqol15", // tua screen già prevista
+    },
+    {
+      key: "neuro_qol_fatigue",
+      label: "Neuro-QoL Fatigue",
+      icon: "flash",          // suggerito; cambia se preferisci
+      color: Colors.blue,     // coerente Apple-like
+      href: "/neuroqol-fatigue", // crea la screen dedicata
+    },
+    {
+      key: "eq5d5l",
+      label: "EQ-5D-5L",
+      icon: "fitness",
+      color: Colors.orange,
+      href: "/eq5d5l", // tua screen già prevista
+    },
+
+    // === ❌ Non usare lato paziente ora (commentati) ===
+    // {
+    //   key: "mg_adl",
+    //   label: "MG-ADL",
+    //   icon: "pulse",
+    //   color: Colors.blue,
+    //   href: "/mgadlsurveyscreen", // strumento clinico → rimosso lato paziente
+    // },
+    // {
+    //   key: "mgfa",
+    //   label: "MGFA Classification",
+    //   icon: "medkit",
+    //   color: Colors.turquoise,
+    //   href: "/mgfaclassification", // classificazione clinica
+    // },
+    // {
+    //   key: "hads",
+    //   label: "HADS",
+    //   icon: "sad",
+    //   color: Colors.red,
+    //   href: "/hads", // non allegato → per ora no
+    // },
+    // {
+    //   key: "hui3",
+    //   label: "HUI3",
+    //   icon: "analytics",
+    //   color: Colors.green,
+    //   href: "/hui3", // non allegato → per ora no
+    // },
   ];
 
 useFocusEffect(
