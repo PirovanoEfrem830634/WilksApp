@@ -3,7 +3,8 @@ import { View, Text, TextInput, Pressable, Alert, Image, StyleSheet } from "reac
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { db, auth } from "../firebaseconfig";
 import { useRouter, useNavigation } from "expo-router";
-import { doc, getDocs, query, collection, where, updateDoc } from "firebase/firestore";
+import { doc, getDocs, query, collection, where, updateDoc, serverTimestamp, getDoc } from "firebase/firestore";
+
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -17,38 +18,54 @@ export default function SignIn() {
 
 const handleSignIn = async () => {
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+    const { user } = await signInWithEmailAndPassword(auth, email, password);
 
-    // Cerca il documento utente tramite email
-    const q = query(collection(db, "users"), where("email", "==", email));
-    const querySnapshot = await getDocs(q);
+    // 1) PROVA DIRETTA: users/{uid}
+    const directRef = doc(db, "users", user.uid);
+    const directSnap = await getDoc(directRef);
 
-    if (!querySnapshot.empty) {
-      const docSnap = querySnapshot.docs[0];
-      const docRef = docSnap.ref;
-      const docData = docSnap.data();
-
-      // ✅ Solo se manca firebase_uid, aggiorna il documento
-      if (!docData.firebase_uid) {
-        await updateDoc(docRef, {
-          firebase_uid: user.uid,
+    if (directSnap.exists()) {
+      // siamo a posto: il paziente può leggere il SUO doc
+      // opzionale: assicurati che sia marcato come mobile-linked
+      const data = directSnap.data() || {};
+      if (!data.has_mobile_account) {
+        await updateDoc(directRef, {
           has_mobile_account: true,
+          last_modified_by: user.uid,
+          mobile_linked_at: serverTimestamp(),
         });
-        console.log("✅ Firebase UID associato all'utente");
-      } else {
-        console.log("ℹ️ Firebase UID già presente nel documento");
       }
     } else {
-      console.warn("⚠️ Nessun documento utente trovato con questa email.");
+      // 2) FALLBACK: cerca per email e linka il primo doc trovato
+      const q = query(collection(db, "users"), where("email", "==", user.email));
+      const r = await getDocs(q);
+
+      if (r.empty) {
+        // nessun profilo paziente creato dal medico con questa email
+        // puoi decidere di bloccare o di crearne uno nuovo lato app (sconsigliato ora)
+        throw new Error("no_patient_doc_for_email");
+      }
+
+      const ref = r.docs[0].ref;
+      await updateDoc(ref, {
+        firebase_uid: user.uid,
+        has_mobile_account: true,
+        last_modified_by: user.uid,
+        mobile_linked_at: serverTimestamp(),
+      });
     }
 
-    Alert.alert("Success", "Logged in successfully!");
+    // SUCCESSO → vai in home
     router.replace("/homenew");
-
-  } catch (error) {
-    console.error("Login error:", error);
-    Alert.alert("Error", "Invalid email or password");
+  } catch (err: any) {
+    console.error("Login error:", err);
+    // Messaggi un filo più chiari
+    if (String(err?.message || "").includes("no_patient_doc_for_email")) {
+      Alert.alert("Account non collegato",
+        "Non trovo un profilo paziente con questa email. Contatta il tuo medico.");
+    } else {
+      Alert.alert("Errore", "Missing/insufficient permissions o credenziali non valide.");
+    }
   }
 };
 
