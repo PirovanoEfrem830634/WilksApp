@@ -15,10 +15,10 @@ import { Clock3, Bell, CalendarPlus } from "lucide-react-native";
 import { auth, db } from "../firebaseconfig";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { useRouter } from "expo-router";
-import BottomNavigation from "../app/bottomnavigationnew";
+import BottomNavigation from "../components/bottomnavigationnew";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import { PressableScale } from "react-native-pressable-scale";
+import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -251,14 +251,14 @@ export default function AddMedication() {
           <Switch value={notifications} onValueChange={setNotifications} />
         </View>
 
-        <PressableScale
+        <PressableScaleWithRef
           onPress={saveMedication} // <<< FIX QUI
           weight="light"
           activeScale={0.96}
           style={styles.submitButton}
         >
           <Text style={styles.submitButtonText}>+ Add Medication</Text>
-        </PressableScale>
+        </PressableScaleWithRef>
       </ScrollView>
       <BottomNavigation />
     </View>

@@ -3,12 +3,12 @@ import { View, Text, StyleSheet, ScrollView, Alert, Animated } from "react-nativ
 import * as Animatable from "react-native-animatable";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { PressableScale } from "react-native-pressable-scale";
+import PressableScaleWithRef from "../components/PressableScaleWithRef"
 import { auth, db } from "../firebaseconfig";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import BottomNavigation from "./bottomnavigationnew";
+import BottomNavigation from "../components/bottomnavigationnew";
 
 /** Neuro-QoL Item Bank v1.0 – Fatigue (Italiano)
  * Scala: 1=Mai, 2=Raramente, 3=Qualche volta, 4=Spesso, 5=Sempre
@@ -142,7 +142,7 @@ export default function NeuroQoLFatigueScreen() {
                   {SCALE.map((label) => {
                     const selected = answers[item.code] === label;
                     return (
-                      <PressableScale
+                      <PressableScaleWithRef
                         key={label}
                         onPress={() => handleSelect(item.code, label)}
                         weight="light"
@@ -152,7 +152,7 @@ export default function NeuroQoLFatigueScreen() {
                         <Text style={[styles.pillText, selected && styles.pillTextSelected]}>
                           {label}
                         </Text>
-                      </PressableScale>
+                      </PressableScaleWithRef>
                     );
                   })}
                 </View>
@@ -160,14 +160,14 @@ export default function NeuroQoLFatigueScreen() {
             </Animatable.View>
           ))}
 
-          <PressableScale
+          <PressableScaleWithRef
             onPress={saveSurvey}
             weight="light"
             activeScale={0.96}
             style={styles.submitButton}
           >
             <Text style={styles.submitButtonText}>Invia</Text>
-          </PressableScale>
+          </PressableScaleWithRef>
         </ScrollView>
       </Animatable.View>
 

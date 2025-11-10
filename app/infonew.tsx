@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { ChevronDown, ChevronUp, Search } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import BottomNavigation from "../app/bottomnavigationnew";
+import BottomNavigation from "../components/bottomnavigationnew";
 import * as Animatable from "react-native-animatable";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../Styles/color";

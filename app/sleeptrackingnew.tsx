@@ -11,7 +11,7 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import Slider from "@react-native-community/slider";
 import { Ionicons } from "@expo/vector-icons";
-import BottomNavigation from "../app/bottomnavigationnew";
+import BottomNavigation from "../components/bottomnavigationnew";
 import { auth, db } from "../firebaseconfig";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import Toast from 'react-native-toast-message';
@@ -20,7 +20,7 @@ import * as Animatable from "react-native-animatable";
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import { PressableScale } from "react-native-pressable-scale";
+import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { Modal, TouchableOpacity } from "react-native";
 import { Activity, AlertCircle, Eye, Mic, Droplet, Wind, TrendingUp, Smile, Moon, Check, X } from "lucide-react-native";
 
@@ -110,7 +110,7 @@ const handleSave = async () => {
     </View>
 
     <ScrollView contentContainerStyle={styles.scrollView}>
-    <PressableScale
+    <PressableScaleWithRef
     onPress={() => setShowPicker("quality")}
     style={[styles.card, quality ? styles.cardSelected : null]}
     weight="light"
@@ -129,9 +129,9 @@ const handleSave = async () => {
         {quality || "Select"}
         </Text>
     </View>
-    </PressableScale>
+    </PressableScaleWithRef>
 
-    <PressableScale
+    <PressableScaleWithRef
         onPress={() => setShowPicker("duration")}
         style={[styles.card, hours ? styles.cardSelected : null]}
         weight="light"
@@ -144,7 +144,7 @@ const handleSave = async () => {
             <Text style={styles.cardRightValue}>{hours !== null ? `${hours} h` : "Select"}</Text>
             <Ionicons name="chevron-forward-outline" size={16} color={Colors.light3} style={{ marginLeft: 6 }} />
         </View>
-    </PressableScale>
+    </PressableScaleWithRef>
 
       {[
         {
@@ -169,7 +169,7 @@ const handleSave = async () => {
             icon: <Ionicons name="trending-down" size={20} color={Colors.green} />,
         },
         ].map((item) => (
-        <PressableScale
+        <PressableScaleWithRef
             key={item.key}
             onPress={() => item.setter(!item.value)}
             style={[styles.card, item.value && styles.cardSelected]}
@@ -186,10 +186,10 @@ const handleSave = async () => {
                     <X size={18} color={Colors.light3} />
                 )}
             </View>
-        </PressableScale>
+        </PressableScaleWithRef>
         ))}
 
-      <PressableScale
+      <PressableScaleWithRef
         onPress={() => setNoteModalVisible(true)}
         style={[styles.card, notes ? styles.cardSelected : null]}
         activeScale={0.96}
@@ -211,16 +211,16 @@ const handleSave = async () => {
         >
             {notes || "Add a note"}
         </Text>
-        </PressableScale>
+        </PressableScaleWithRef>
 
-      <PressableScale
+      <PressableScaleWithRef
       onPress={handleSave}
       weight="light"
       activeScale={0.96}
       style={styles.saveButton}
       >
       <Text style={styles.saveText}>Submit</Text>
-      </PressableScale>
+      </PressableScaleWithRef>
 
       <Modal visible={noteModalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>

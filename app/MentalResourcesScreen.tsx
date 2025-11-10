@@ -2,7 +2,7 @@ import React from "react";
 import { View, ScrollView, Text, StyleSheet, TouchableOpacity, Linking } from "react-native";
 import * as Animatable from "react-native-animatable";
 import { Ionicons } from "@expo/vector-icons";
-import BottomNavigation from "../app/bottomnavigationnew";
+import BottomNavigation from "../components/bottomnavigationnew";
 import { LinearGradient } from "expo-linear-gradient";
 import FontStyles from "../Styles/fontstyles";
 import Colors from "../Styles/color";

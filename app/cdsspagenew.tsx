@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebaseconfig";
-import BottomNavigation from "../app/bottomnavigationnew";
+import BottomNavigation from "../components/bottomnavigationnew";
 import { ChevronDown, ChevronUp, RefreshCw } from "lucide-react-native";
 import { getAuth } from "firebase/auth";
 import { MotiView } from "moti";

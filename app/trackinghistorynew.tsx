@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Platform, ScrollView, TouchableOpacity } from "
 import { Agenda, Calendar } from "react-native-calendars";
 import { collection, getDocs } from "firebase/firestore";
 import { auth, db } from "../firebaseconfig";
-import BottomNavigation from "../app/bottomnavigationnew";
+import BottomNavigation from "../components/bottomnavigationnew";
 import { DateData } from 'react-native-calendars';
 import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../Styles/color";

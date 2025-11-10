@@ -15,13 +15,13 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { auth, db } from "../firebaseconfig";
-import BottomNavigation from "../app/bottomnavigationnew";
+import BottomNavigation from "../components/bottomnavigationnew";
 import { LinearGradient } from 'expo-linear-gradient'
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import { Activity, AlertCircle, Eye, Mic, Droplet, Wind, TrendingUp, Smile, Moon, Info, X } from "lucide-react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { PressableScale } from "react-native-pressable-scale";
+import PressableScaleWithRef from "../components/PressableScaleWithRef";
 
 
 const meals = ["breakfast", "lunch", "dinner", "snack"];
@@ -177,14 +177,14 @@ export default function DietTracker() {
       })}
     </ScrollView>
 
-      <PressableScale
+      <PressableScaleWithRef
             onPress={handleSave}
             weight="light"
             activeScale={0.96}
             style={styles.globalSaveButton}
             >
             <Text style={styles.globalSaveText}>Submit</Text>
-      </PressableScale>
+      </PressableScaleWithRef>
 
       {/* Toast visivo animato */}
       <Animated.View

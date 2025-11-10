@@ -5,7 +5,7 @@ import { getDoc, doc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { useRouter, useNavigation } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import BottomNavigation from "../app/bottomnavigationnew";
+import BottomNavigation from "../components/bottomnavigationnew";
 import * as Animatable from "react-native-animatable";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";

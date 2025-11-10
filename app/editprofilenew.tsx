@@ -14,7 +14,7 @@ import {
 import { auth, db } from "../firebaseconfig";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { useRouter } from "expo-router";
-import BottomNavigation from "../app/bottomnavigationnew";
+import BottomNavigation from "../components/bottomnavigationnew";
 import * as Animatable from 'react-native-animatable';
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";

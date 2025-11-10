@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, Animated }
 import { auth, db } from "../firebaseconfig";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import * as Animatable from "react-native-animatable";
-import BottomNavigation from "../app/bottomnavigationnew";
+import BottomNavigation from "../components/bottomnavigationnew";
 import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";

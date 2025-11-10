@@ -5,7 +5,7 @@ import { useRouter } from "expo-router";
 import { Pill, Clock3, CalendarDays, BriefcaseMedical, Lock } from "lucide-react-native";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { auth, db } from "../firebaseconfig";
-import BottomNavigation from "../app/bottomnavigationnew";
+import BottomNavigation from "../components/bottomnavigationnew";
 import * as Animatable from "react-native-animatable";
 import FontStyles from "../Styles/fontstyles";
 import Colors from "../Styles/color";

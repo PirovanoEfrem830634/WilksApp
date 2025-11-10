@@ -10,7 +10,7 @@ import FontStyles from "../Styles/fontstyles";
 import Colors from "../Styles/color";
 import { LinearGradient } from "expo-linear-gradient";
 import { format } from 'date-fns';
-import BottomNavigation from "../app/bottomnavigationnew";
+import BottomNavigation from "../components/bottomnavigationnew";
 
 const formatWeekRange = (start: Date, end: Date): string => {
   const startStr = format(start, 'dd');

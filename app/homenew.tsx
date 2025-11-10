@@ -3,14 +3,14 @@ import { View, Text, ScrollView, StyleSheet } from "react-native";
 import * as Animatable from "react-native-animatable";
 import { auth, db } from "../firebaseconfig";
 import { collection, getDocs } from "firebase/firestore";
-import BottomNavigation from "../app/bottomnavigationnew";
+import BottomNavigation from "../components/bottomnavigationnew";
 import { PressableScale } from "react-native-pressable-scale";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import { TouchableOpacity } from "react-native";
 import { Pressable, Animated } from "react-native"
-import { useNavigation } from "@react-navigation/native";
+import { router } from "expo-router";
 import { Image } from "react-native";
 import { Link } from "expo-router";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
@@ -18,7 +18,9 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
 
 
-export default function HomeNew() {
+export default function homenew() {
+
+
   
   const [summary, setSummary] = useState<SummaryData>({
     nextMedication: null,
@@ -37,8 +39,6 @@ export default function HomeNew() {
 
   const hoursFloat = parseFloat(summary?.sleep || "0");
   const formattedSleep = formatSleepDuration(hoursFloat);
-  
-  const navigation = useNavigation() as any;
 
   interface SummaryData {
   nextMedication: string | null;
@@ -158,7 +158,7 @@ useFocusEffect(
 
         <Animatable.View animation="fadeInUp" delay={100}>
           <PressableScaleWithRef
-            onPress={() => navigation.navigate("mymedicationnew")}
+            onPress={() => router.push("/mymedicationnew")}
             activeScale={0.96}
             weight="light"
             style={styles.card}
@@ -183,7 +183,7 @@ useFocusEffect(
 
         <Animatable.View animation="fadeInUp" delay={200}>
             <PressableScaleWithRef
-              onPress={() => navigation.navigate("sleeptrackingnew")}
+              onPress={() => router.push("/sleeptrackingnew")}
               activeScale={0.96}
               weight="light"
               style={styles.card}
@@ -211,7 +211,7 @@ useFocusEffect(
 
         <Animatable.View animation="fadeInUp" delay={300}>
           <PressableScaleWithRef
-            onPress={() => navigation.navigate("trackingnew")}
+            onPress={() => router.push("/trackingnew")}
             activeScale={0.96}
             weight="light"
             style={styles.card}
@@ -236,7 +236,7 @@ useFocusEffect(
 
         <Animatable.View animation="fadeInUp" delay={400}>
           <PressableScaleWithRef
-            onPress={() => navigation.navigate("trackingnew")}
+            onPress={() => router.push("/trackingnew")}
             activeScale={0.96}
             weight="light"
             style={styles.card}
@@ -261,7 +261,7 @@ useFocusEffect(
 
         <Animatable.View animation="fadeInUp" delay={500}>
           <PressableScaleWithRef
-            onPress={() => navigation.navigate("diettrackernew")}
+            onPress={() => router.push("/diettrackernew")}
             activeScale={0.96}
             weight="light"
             style={styles.card}

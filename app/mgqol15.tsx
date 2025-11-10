@@ -8,7 +8,7 @@ import { auth, db } from "../firebaseconfig";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import BottomNavigation from "../app/bottomnavigationnew";
+import BottomNavigation from "../components/bottomnavigationnew";
 
 // ===== MG-QoL15r =====
 // Scala: 0=Per niente, 1=Abbastanza, 2=Molto (compilato dal paziente)

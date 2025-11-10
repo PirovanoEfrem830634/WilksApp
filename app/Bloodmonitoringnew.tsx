@@ -16,7 +16,7 @@ import { getAuth } from "firebase/auth";
 import { ChevronDown, ChevronUp, RefreshCw } from "lucide-react-native";
 import { MotiView } from "moti";
 import Toast from "react-native-toast-message";
-import BottomNavigation from "../app/bottomnavigationnew";
+import BottomNavigation from "../components/bottomnavigationnew";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import { PressableScale } from "react-native-pressable-scale";

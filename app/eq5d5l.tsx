@@ -8,7 +8,7 @@ import { auth, db } from "../firebaseconfig";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import BottomNavigation from "./bottomnavigationnew";
+import BottomNavigation from "../components/bottomnavigationnew";
 
 // ===== EQ-5D-5L (Italiano) =====
 const DIMENSIONS = [
