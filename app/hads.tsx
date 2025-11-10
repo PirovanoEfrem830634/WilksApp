@@ -15,7 +15,7 @@ import BottomNavigation from "../components/bottomnavigationnew";
 import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import { PressableScale } from "react-native-pressable-scale";
+import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { Ionicons } from "@expo/vector-icons";
 
 const hadsQuestions = [
@@ -127,7 +127,7 @@ export default function HADSSurvey() {
               </View>
               <View style={styles.optionRow}>
                 {[0, 1, 2, 3].map((val) => (
-                  <PressableScale
+                  <PressableScaleWithRef
                     key={val}
                     onPress={() => handleAnswer(index, val)}
                     weight="light"
@@ -145,19 +145,19 @@ export default function HADSSurvey() {
                     >
                       {val}
                     </Text>
-                  </PressableScale>
+                  </PressableScaleWithRef>
                 ))}
               </View>
             </View>
           ))}
-          <PressableScale
+          <PressableScaleWithRef
                     onPress={saveSurvey}
                     weight="light"
                     activeScale={0.96}
                     style={styles.submitButton}
                   >
                     <Text style={styles.submitButtonText}>Submit</Text>
-                  </PressableScale>
+                  </PressableScaleWithRef>
         </ScrollView>
       </Animatable.View>
           {toastMessage && (

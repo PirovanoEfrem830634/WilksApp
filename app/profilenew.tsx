@@ -10,7 +10,7 @@ import * as Animatable from "react-native-animatable";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import { TouchableOpacity } from "react-native";
-import { PressableScale } from "react-native-pressable-scale";
+import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { onAuthStateChanged } from "firebase/auth";
 
 interface UserData {
@@ -120,7 +120,7 @@ export default function Profile() {
             animation="fadeInUp"
             delay={300 + index * 100}
             >
-            <PressableScale
+            <PressableScaleWithRef
                 weight="light"
                 activeScale={0.96}
                 style={styles.miniCard}
@@ -137,29 +137,29 @@ export default function Profile() {
                 </Text>
                 <Text style={FontStyles.variants.body}>{item.value}</Text>
                 </View>
-            </PressableScale>
+            </PressableScaleWithRef>
             </Animatable.View>
         ))}
         </View>
 
     <Animatable.View animation="fadeInUp" delay={700} style={styles.buttonColumn}>
-    <PressableScale
+    <PressableScaleWithRef
     onPress={() => router.push("/editprofilenew")}
     weight="light"
     activeScale={0.96}
     style={[styles.fullButton, styles.editButton]}
     >
     <Text style={styles.fullButtonText}>Edit Profile</Text>
-    </PressableScale>
+    </PressableScaleWithRef>
 
-    <PressableScale
+    <PressableScaleWithRef
     onPress={handleLogout}
     weight="light"
     activeScale={0.96}
     style={[styles.fullButton, styles.logoutButton]}
     >
     <Text style={styles.fullButtonText}>Logout</Text>
-    </PressableScale>
+    </PressableScaleWithRef>
     </Animatable.View>
 
   </Animatable.View>

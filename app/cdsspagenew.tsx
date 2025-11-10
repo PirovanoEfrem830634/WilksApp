@@ -22,7 +22,7 @@ import { TouchableOpacity } from 'react-native';
 import * as Animatable from "react-native-animatable";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import { PressableScale } from "react-native-pressable-scale";
+import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Activity, BatteryLow, AlertCircle, Smile, TrendingUp, Bed} from "lucide-react-native";
@@ -169,7 +169,7 @@ const CDSSPage = () => {
 
   return (
     <View style={styles.card}>
-      <PressableScale
+      <PressableScaleWithRef
         onPress={() => toggleSection(section)}
         activeScale={0.96}
         weight="light"
@@ -184,7 +184,7 @@ const CDSSPage = () => {
         ) : (
           <Ionicons name="chevron-down" size={18} color={Colors.gray2} />
         )}
-      </PressableScale>
+      </PressableScaleWithRef>
       {open[section] && <View style={styles.cardBody}>{content}</View>}
     </View>
   );
@@ -205,7 +205,7 @@ const CDSSPage = () => {
           <Text style={styles.description}>Personalized analysis based on your data</Text>
         </View>
 
-        <PressableScale
+        <PressableScaleWithRef
           onPress={() => {
             if (showAdvice) {
               setShowAdvice(false);
@@ -225,7 +225,7 @@ const CDSSPage = () => {
             style={styles.adviceButton}
         >
             <Text style={styles.adviceButtonText}>Get Personalized Tips</Text>
-        </PressableScale>
+        </PressableScaleWithRef>
 
         {showAdvice && (
           <View style={styles.adviceBox}>
@@ -255,7 +255,7 @@ const CDSSPage = () => {
           </View>
         )}
 
-        <PressableScale
+        <PressableScaleWithRef
         onPress={reloadData}
         activeScale={0.96}
         weight="light"
@@ -271,7 +271,7 @@ const CDSSPage = () => {
             </MotiView>
             <Text style={styles.reloadText}>Refresh Data</Text>
         </View>
-        </PressableScale>
+        </PressableScaleWithRef>
 
         {/* Sezioni collapsible (invariate) */}
         {renderSection("sleep", last.sleep ? (

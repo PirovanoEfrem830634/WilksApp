@@ -4,7 +4,7 @@ import * as Animatable from "react-native-animatable";
 import { auth, db } from "../firebaseconfig";
 import { collection, getDocs, getDoc, doc } from "firebase/firestore";
 import BottomNavigation from "../components/bottomnavigationnew";
-import { PressableScale } from "react-native-pressable-scale";
+import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
@@ -231,7 +231,7 @@ export default function ClinicalSurveysScreen() {
               delay={index * 100}
               key={survey.key}
             >
-              <PressableScale
+              <PressableScaleWithRef
                 onPress={() => router.push(survey.href)}
                 activeScale={0.96}
                 weight="light"
@@ -266,7 +266,7 @@ export default function ClinicalSurveysScreen() {
                       : "To complete"}
                   </Text>
                 </View>
-              </PressableScale>
+              </PressableScaleWithRef>
             </Animatable.View>
           );
         })}

@@ -15,7 +15,7 @@ import BottomNavigation from "../components/bottomnavigationnew";
 import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import { PressableScale } from "react-native-pressable-scale";
+import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { Ionicons } from "@expo/vector-icons";
 
 const hui3Attributes = [
@@ -112,7 +112,7 @@ export default function HUI3Survey() {
               </View>
               <View style={styles.optionRow}>
                 {[1, 2, 3, 4, 5].map((val) => (
-                  <PressableScale
+                  <PressableScaleWithRef
                     key={val}
                     onPress={() => handleAnswer(index, val)}
                     weight="light"
@@ -130,19 +130,19 @@ export default function HUI3Survey() {
                     >
                       {val}
                     </Text>
-                  </PressableScale>
+                  </PressableScaleWithRef>
                 ))}
               </View>
             </View>
           ))}
-          <PressableScale
+          <PressableScaleWithRef
                     onPress={saveSurvey}
                     weight="light"
                     activeScale={0.96}
                     style={styles.submitButton}
                   >
                     <Text style={styles.submitButtonText}>Submit</Text>
-                  </PressableScale>
+                  </PressableScaleWithRef>
         </ScrollView>
       </Animatable.View>
           {toastMessage && (

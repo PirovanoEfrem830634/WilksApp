@@ -21,8 +21,6 @@ import { useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import { TouchableOpacity } from "react-native";
-import { PressableScale } from "react-native-pressable-scale";
 
 export default function EditProfile() {
   const router = useRouter();

@@ -7,7 +7,7 @@ import BottomNavigation from "../components/bottomnavigationnew";
 import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import { PressableScale } from "react-native-pressable-scale";
+import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { Ionicons } from "@expo/vector-icons";
 
 const classifications = [
@@ -104,7 +104,7 @@ export default function MGFAClassificationSurvey() {
 
         <ScrollView contentContainerStyle={styles.scrollView}>
           {classifications.map((item, index) => (
-            <PressableScale
+            <PressableScaleWithRef
               key={index}
               onPress={() => setSelected(item.label)}
               style={[styles.card, selected === item.label && styles.cardSelected]}
@@ -113,17 +113,17 @@ export default function MGFAClassificationSurvey() {
             >
               <Text style={styles.cardLabel}>{item.label}</Text>
               <Text style={styles.cardDescription}>{item.description}</Text>
-            </PressableScale>
+            </PressableScaleWithRef>
           ))}
 
-          <PressableScale
+          <PressableScaleWithRef
                     onPress={saveSurvey}
                     weight="light"
                     activeScale={0.96}
                     style={styles.submitButton}
                   >
                     <Text style={styles.submitButtonText}>Submit</Text>
-                  </PressableScale>
+                  </PressableScaleWithRef>
         </ScrollView>
       </Animatable.View>
       {toastMessage && (

@@ -4,7 +4,6 @@ import * as Animatable from "react-native-animatable";
 import { auth, db } from "../firebaseconfig";
 import { collection, getDocs } from "firebase/firestore";
 import BottomNavigation from "../components/bottomnavigationnew";
-import { PressableScale } from "react-native-pressable-scale";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";

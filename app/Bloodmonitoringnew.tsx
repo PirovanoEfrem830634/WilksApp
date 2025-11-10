@@ -19,7 +19,6 @@ import Toast from "react-native-toast-message";
 import BottomNavigation from "../components/bottomnavigationnew";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import { PressableScale } from "react-native-pressable-scale";
 import { Ionicons } from "@expo/vector-icons";
 import { Modal, TouchableOpacity } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';

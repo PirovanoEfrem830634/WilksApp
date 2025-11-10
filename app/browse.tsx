@@ -5,7 +5,6 @@ import FontStyles from "../Styles/fontstyles";
 import { Ionicons } from "@expo/vector-icons";
 import BottomNavigation from "../components/bottomnavigationnew";
 import Colors from "../Styles/color";
-import { PressableScale } from "react-native-pressable-scale";
 import { TextInput } from "react-native";
 import { Image } from "react-native";
 import Toast from "react-native-toast-message";

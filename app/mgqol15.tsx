@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Alert, Animated } from "react-nativ
 import * as Animatable from "react-native-animatable";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { PressableScale } from "react-native-pressable-scale";
+import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { auth, db } from "../firebaseconfig";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import Colors from "../Styles/color";
@@ -131,7 +131,7 @@ export default function MGQoL15Survey() {
 
                   <View style={styles.optionRow}>
                     {SCALE.map((label) => (
-                      <PressableScale
+                      <PressableScaleWithRef
                         key={label}
                         onPress={() => handleAnswer(qKey, label)}
                         weight="light"
@@ -141,7 +141,7 @@ export default function MGQoL15Survey() {
                         <Text style={[styles.optionText, selected === label && styles.optionTextSelected]}>
                           {label}
                         </Text>
-                      </PressableScale>
+                      </PressableScaleWithRef>
                     ))}
                   </View>
                 </View>
@@ -149,14 +149,14 @@ export default function MGQoL15Survey() {
             );
           })}
 
-          <PressableScale
+          <PressableScaleWithRef
             onPress={saveSurvey}
             weight="light"
             activeScale={0.96}
             style={styles.submitButton}
           >
             <Text style={styles.submitButtonText}>Invia</Text>
-          </PressableScale>
+          </PressableScaleWithRef>
         </ScrollView>
       </Animatable.View>
 

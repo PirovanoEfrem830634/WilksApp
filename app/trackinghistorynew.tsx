@@ -8,7 +8,6 @@ import { DateData } from 'react-native-calendars';
 import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import { PressableScale } from "react-native-pressable-scale";
 import { Ionicons } from "@expo/vector-icons";
 import * as Animatable from "react-native-animatable";
 

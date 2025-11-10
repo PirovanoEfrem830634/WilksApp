@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Alert, TextInput, Animated } from "
 import * as Animatable from "react-native-animatable";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { PressableScale } from "react-native-pressable-scale";
+import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { auth, db } from "../firebaseconfig";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import Colors from "../Styles/color";
@@ -174,7 +174,7 @@ export default function EQ5D5LSurvey() {
                   {/* ✅ Pill full-width con wrapping del testo */}
                   <View style={styles.optionColumn}>
                     {dim.levels.map((label) => (
-                      <PressableScale
+                      <PressableScaleWithRef
                         key={label}
                         onPress={() => handleAnswer(dim.key, label)}
                         weight="light"
@@ -184,7 +184,7 @@ export default function EQ5D5LSurvey() {
                         <Text style={[styles.optionText, selected === label && styles.optionTextSelected]}>
                           {label}
                         </Text>
-                      </PressableScale>
+                      </PressableScaleWithRef>
                     ))}
                   </View>
                 </View>
@@ -213,14 +213,14 @@ export default function EQ5D5LSurvey() {
             />
           </View>
 
-          <PressableScale
+          <PressableScaleWithRef
             onPress={saveSurvey}
             weight="light"
             activeScale={0.96}
             style={styles.submitButton}
           >
             <Text style={styles.submitButtonText}>Invia</Text>
-          </PressableScale>
+          </PressableScaleWithRef>
         </ScrollView>
       </Animatable.View>
 
