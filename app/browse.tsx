@@ -10,20 +10,11 @@ import { Image } from "react-native";
 import Toast from "react-native-toast-message";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
 
-
 /* Import PDF Function */
-
 import { generateMonthlyPDF } from "../utils/generateMonthlyPDF";
 import { getAuth } from "firebase/auth";
 import { db } from "../firebaseconfig";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  Timestamp,
-} from "firebase/firestore";
-
+import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
 /* End Of Import PDF Function */
 
 export default function Browse() {
@@ -80,13 +71,17 @@ export default function Browse() {
   }[] = [
     { label: "Blood Monitoring", icon: "water", color: Colors.red, href: "/Bloodmonitoringnew" },
     { label: "Diet", icon: "nutrition", color: Colors.orange, href: "/diettrackernew" },
-    { label: "Monthly Recap PDF", icon: "document-text", color: Colors.yellow, onPress: generateAndDownloadPDF, disabled: generating, },
+    { label: "Monthly Recap PDF", icon: "document-text", color: Colors.yellow, onPress: generateAndDownloadPDF, disabled: generating },
     { label: "Sleep", icon: "bed", color: Colors.green, href: "/sleeptrackingnew" },
     { label: "Weekly Dashboard", icon: "bar-chart", color: Colors.mint, href: "/weeklydashboard" },
     { label: "Track", icon: "analytics", color: Colors.blue, href: "/trackingnew" },
     { label: "Medications", icon: "medkit", color: Colors.turquoise, href: "/mymedicationnew" },
     { label: "Tracking History", icon: "calendar", color: Colors.pink, href: "/trackinghistorynew" },
     { label: "Symptoms Infos", icon: "information-circle", color: Colors.purple, href: "/infonew" },
+
+    // 👇 Nuova voce “Schede informative”
+    { label: "Schede informative", icon: "reader-outline", color: Colors.indigo, href: "/infosheets" },
+
     { label: "Mental Resources", icon: "help-buoy", color: Colors.indigo, href: "/MentalResourcesScreen" },
   ];
 
@@ -100,12 +95,10 @@ export default function Browse() {
         <View style={styles.headerRow}>
           <Text style={FontStyles.variants.mainTitle}>Browse</Text>
           <Link href="/profilenew" asChild>
-            <Image
-              source={require("../assets/images/avatar-ios.jpg")}
-              style={styles.avatar}
-            />
+            <Image source={require("../assets/images/avatar-ios.jpg")} style={styles.avatar} />
           </Link>
         </View>
+
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={18} color={Colors.gray3} style={styles.searchIcon} />
           <TextInput
@@ -116,15 +109,13 @@ export default function Browse() {
             onChangeText={setSearchTerm}
           />
         </View>
-        <Text style={[FontStyles.variants.sectionTitle,{ marginBottom: 20 }]}>Health Categories</Text>
 
-        {filteredSections.map((item, index) => (
+        <Text style={[FontStyles.variants.sectionTitle, { marginBottom: 20 }]}>Health Categories</Text>
+
+        {filteredSections.map((item, index) =>
           item.href && !item.onPress ? (
             <Link href={item.href} asChild key={index}>
-              <PressableScaleWithRef 
-                style={styles.card}
-                weight="light"
-                activeScale={0.96}>
+              <PressableScaleWithRef style={styles.card} weight="light" activeScale={0.96}>
                 <Ionicons name={item.icon} size={20} color={item.color} style={styles.icon} />
                 <Text style={FontStyles.variants.body}>{item.label}</Text>
                 <Ionicons name="chevron-forward" size={16} color={Colors.light3} style={styles.chevron} />
@@ -147,8 +138,9 @@ export default function Browse() {
               <Ionicons name="chevron-forward" size={16} color={Colors.light3} style={styles.chevron} />
             </PressableScaleWithRef>
           )
-        ))}
+        )}
       </ScrollView>
+
       <BottomNavigation />
       <Toast />
     </View>
@@ -156,14 +148,8 @@ export default function Browse() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light1,
-  },
-  scrollContainer: {
-    padding: 20,
-    paddingBottom: 100,
-  },
+  container: { flex: 1, backgroundColor: Colors.light1 },
+  scrollContainer: { padding: 20, paddingBottom: 100 },
   card: {
     backgroundColor: Colors.white,
     flexDirection: "row",
@@ -178,12 +164,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
-  icon: {
-    marginRight: 12,
-  },
-  chevron: {
-    marginLeft: "auto",
-  },
+  icon: { marginRight: 12 },
+  chevron: { marginLeft: "auto" },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -194,9 +176,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     marginTop: 12,
   },
-  searchIcon: {
-    marginRight: 8,
-  },
+  searchIcon: { marginRight: 8 },
   searchInput: {
     flex: 1,
     fontSize: 14,
@@ -210,9 +190,5 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 30,
   },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
+  avatar: { width: 32, height: 32, borderRadius: 16 },
 });
