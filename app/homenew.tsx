@@ -7,7 +7,6 @@ import BottomNavigation from "../components/bottomnavigationnew";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import { TouchableOpacity } from "react-native";
 import { Pressable, Animated } from "react-native"
 import { router } from "expo-router";
 import { Image } from "react-native";
@@ -208,6 +207,7 @@ useFocusEffect(
           </PressableScaleWithRef>
         </Animatable.View>
 
+        {/* Fatigue (era la card Mood, ora mostra la fatigue in blu) */}
         <Animatable.View animation="fadeInUp" delay={300}>
           <PressableScaleWithRef
             onPress={() => router.push("/trackingnew")}
@@ -217,33 +217,8 @@ useFocusEffect(
           >
             <View style={styles.cardHeader}>
               <View style={styles.cardRow}>
-                <Ionicons name="happy" size={20} color={Colors.blue} />
+                <Ionicons name="barbell" size={20} color={Colors.blue} />
                 <Text style={[FontStyles.variants.sectionTitle, { color: Colors.blue }]}>
-                  Mood
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={Colors.light3} />
-            </View>
-            <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
-              {summary.mood || "Not set"}
-            </Text>
-            <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
-              Last Entry
-            </Text>
-          </PressableScaleWithRef>
-        </Animatable.View>
-
-        <Animatable.View animation="fadeInUp" delay={400}>
-          <PressableScaleWithRef
-            onPress={() => router.push("/trackingnew")}
-            activeScale={0.96}
-            weight="light"
-            style={styles.card}
-          >
-            <View style={styles.cardHeader}>
-              <View style={styles.cardRow}>
-                <Ionicons name="barbell" size={20} color={Colors.red} />
-                <Text style={[FontStyles.variants.sectionTitle, { color: Colors.red }]}>
                   Fatigue
                 </Text>
               </View>
@@ -254,6 +229,32 @@ useFocusEffect(
             </Text>
             <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
               Perceived Fatigue
+            </Text>
+          </PressableScaleWithRef>
+        </Animatable.View>
+
+        {/* Work card (al posto della vecchia Fatigue, colore rosso, va alla pagina lavoro) */}
+        <Animatable.View animation="fadeInUp" delay={400}>
+          <PressableScaleWithRef
+            onPress={() => router.push("/WorkStatusScreen")}
+            activeScale={0.96}
+            weight="light"
+            style={styles.card}
+          >
+            <View style={styles.cardHeader}>
+              <View style={styles.cardRow}>
+                <Ionicons name="briefcase" size={20} color={Colors.red} />
+                <Text style={[FontStyles.variants.sectionTitle, { color: Colors.red }]}>
+                  Work & Social
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={Colors.light3} />
+            </View>
+            <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
+              Working status
+            </Text>
+            <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
+              Employment status
             </Text>
           </PressableScaleWithRef>
         </Animatable.View>

@@ -1,12 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Link, useRouter } from "expo-router";
 import FontStyles from "../Styles/fontstyles";
 import { Ionicons } from "@expo/vector-icons";
 import BottomNavigation from "../components/bottomnavigationnew";
 import Colors from "../Styles/color";
-import { TextInput } from "react-native";
-import { Image } from "react-native";
+import { TextInput, Image } from "react-native";
 import Toast from "react-native-toast-message";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
 
@@ -40,7 +39,11 @@ export default function Browse() {
 
       for (const col of collections) {
         const ref = collection(db, `users/${uid}/${col}`);
-        const q = query(ref, where("createdAt", ">=", startTimestamp), where("createdAt", "<=", endTimestamp));
+        const q = query(
+          ref,
+          where("createdAt", ">=", startTimestamp),
+          where("createdAt", "<=", endTimestamp)
+        );
         const snapshot = await getDocs(q);
         results[col] = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       }
@@ -69,19 +72,24 @@ export default function Browse() {
     onPress?: () => void;
     disabled?: boolean;
   }[] = [
-    { label: "Blood Monitoring", icon: "water", color: Colors.red, href: "/Bloodmonitoringnew" },
+    // 🔴 Nuova sezione Lavoro (usa colore rosso, come bloodmonitoring)
+    { label: "Work & Social Impact", icon: "briefcase", color: Colors.red, href: "/WorkStatusScreen" },
+
     { label: "Diet", icon: "nutrition", color: Colors.orange, href: "/diettrackernew" },
-    { label: "Monthly Recap PDF", icon: "document-text", color: Colors.yellow, onPress: generateAndDownloadPDF, disabled: generating },
+    {
+      label: "Monthly Recap PDF",
+      icon: "document-text",
+      color: Colors.yellow,
+      onPress: generateAndDownloadPDF,
+      disabled: generating,
+    },
     { label: "Sleep", icon: "bed", color: Colors.green, href: "/sleeptrackingnew" },
     { label: "Weekly Dashboard", icon: "bar-chart", color: Colors.mint, href: "/weeklydashboard" },
     { label: "Track", icon: "analytics", color: Colors.blue, href: "/trackingnew" },
     { label: "Medications", icon: "medkit", color: Colors.turquoise, href: "/mymedicationnew" },
     { label: "Tracking History", icon: "calendar", color: Colors.pink, href: "/trackinghistorynew" },
     { label: "Symptoms Infos", icon: "information-circle", color: Colors.purple, href: "/infonew" },
-
-    // 👇 Nuova voce “Schede informative”
     { label: "Schede informative", icon: "reader-outline", color: Colors.indigo, href: "/infosheets" },
-
     { label: "Mental Resources", icon: "help-buoy", color: Colors.indigo, href: "/MentalResourcesScreen" },
   ];
 
@@ -110,7 +118,9 @@ export default function Browse() {
           />
         </View>
 
-        <Text style={[FontStyles.variants.sectionTitle, { marginBottom: 20 }]}>Health Categories</Text>
+        <Text style={[FontStyles.variants.sectionTitle, { marginBottom: 20 }]}>
+          Health Categories
+        </Text>
 
         {filteredSections.map((item, index) =>
           item.href && !item.onPress ? (
@@ -118,7 +128,12 @@ export default function Browse() {
               <PressableScaleWithRef style={styles.card} weight="light" activeScale={0.96}>
                 <Ionicons name={item.icon} size={20} color={item.color} style={styles.icon} />
                 <Text style={FontStyles.variants.body}>{item.label}</Text>
-                <Ionicons name="chevron-forward" size={16} color={Colors.light3} style={styles.chevron} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={Colors.light3}
+                  style={styles.chevron}
+                />
               </PressableScaleWithRef>
             </Link>
           ) : (
@@ -131,11 +146,18 @@ export default function Browse() {
             >
               <Ionicons name={item.icon} size={20} color={item.color} style={styles.icon} />
               {item.label === "Monthly Recap PDF" && generating ? (
-                <Text style={[FontStyles.variants.body, { opacity: 0.6 }]}>Generazione in corso...</Text>
+                <Text style={[FontStyles.variants.body, { opacity: 0.6 }]}>
+                  Generazione in corso...
+                </Text>
               ) : (
                 <Text style={FontStyles.variants.body}>{item.label}</Text>
               )}
-              <Ionicons name="chevron-forward" size={16} color={Colors.light3} style={styles.chevron} />
+              <Ionicons
+                name="chevron-forward"
+                size={16}
+                color={Colors.light3}
+                style={styles.chevron}
+              />
             </PressableScaleWithRef>
           )
         )}
