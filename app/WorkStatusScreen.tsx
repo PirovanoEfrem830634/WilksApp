@@ -310,7 +310,7 @@ export default function WorkStatusScreen() {
           <Text style={styles.cardSubtitle}>
             Il lavoro è una parte importante del ruolo sociale di una persona.
             Sapere se la miastenia influenza la tua attività lavorativa ci
-            aiuta a valutare il burden complessivo della malattia.
+            aiuta a valutare l'impatto complessivo della malattia.
           </Text>
           <Text style={styles.cardHighlight}>
             Il medico vedrà questi dati nella tua scheda paziente, insieme a
