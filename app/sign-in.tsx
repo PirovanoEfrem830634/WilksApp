@@ -1,10 +1,16 @@
-import React, { useState, useLayoutEffect } from "react";
+import React, { useState, useLayoutEffect, useEffect } from "react";
 import { View, Text, TextInput, Pressable, Alert, Image, StyleSheet } from "react-native";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { db, auth } from "../firebaseconfig";
 import { useRouter, useNavigation } from "expo-router";
-import { doc, getDocs, query, collection, where, updateDoc, serverTimestamp, getDoc } from "firebase/firestore";
-
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  updateDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -16,58 +22,69 @@ export default function SignIn() {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-const handleSignIn = async () => {
-  try {
-    const { user } = await signInWithEmailAndPassword(auth, email, password);
+  // 🔐 AUTO-LOGOUT: ogni volta che entro nella schermata SignIn
+  useEffect(() => {
+    signOut(auth)
+      .then(() => {
+        console.log("Auto-logout eseguito all'avvio di SignIn");
+      })
+      .catch((err) => {
+        console.log("Errore durante l'auto-logout (puoi ignorarlo in dev):", err);
+      });
+  }, []);
 
-    // 1) PROVA DIRETTA: users/{uid}
-    const directRef = doc(db, "users", user.uid);
-    const directSnap = await getDoc(directRef);
+  const handleSignIn = async () => {
+    try {
+      // 1) Login su Firebase Auth
+      const { user } = await signInWithEmailAndPassword(auth, email.trim(), password);
 
-    if (directSnap.exists()) {
-      // siamo a posto: il paziente può leggere il SUO doc
-      // opzionale: assicurati che sia marcato come mobile-linked
-      const data = directSnap.data() || {};
-      if (!data.has_mobile_account) {
-        await updateDoc(directRef, {
+      if (!user.email) {
+        Alert.alert("Errore", "L'account non ha un'email valida.");
+        return;
+      }
+
+      // 2) Cerca il documento paziente tramite EMAIL
+      const q = query(
+        collection(db, "users"),
+        where("email", "==", user.email)
+      );
+
+      const snap = await getDocs(q);
+
+      if (snap.empty) {
+        Alert.alert(
+          "Profilo non trovato",
+          "Non risulta alcun profilo paziente associato a questa email. Contatta il tuo medico."
+        );
+        return;
+      }
+
+      const patientDoc = snap.docs[0];
+      const patientRef = patientDoc.ref;
+      const data = patientDoc.data() || {};
+
+      // 3) Se firebase_uid è vuoto → collega l'account
+      if (!data.firebase_uid) {
+        await updateDoc(patientRef, {
+          firebase_uid: user.uid,
           has_mobile_account: true,
-          last_modified_by: user.uid,
           mobile_linked_at: serverTimestamp(),
         });
       }
-    } else {
-      // 2) FALLBACK: cerca per email e linka il primo doc trovato
-      const q = query(collection(db, "users"), where("email", "==", user.email));
-      const r = await getDocs(q);
 
-      if (r.empty) {
-        // nessun profilo paziente creato dal medico con questa email
-        // puoi decidere di bloccare o di crearne uno nuovo lato app (sconsigliato ora)
-        throw new Error("no_patient_doc_for_email");
+      // 4) Login OK → vai in home
+      router.replace("/homenew");
+
+    } catch (err: any) {
+      console.error("Login error:", err);
+
+      if (err.code === "auth/wrong-password" || err.code === "auth/user-not-found") {
+        Alert.alert("Errore", "Email o password non corretti.");
+      } else {
+        Alert.alert("Errore", "Missing/insufficient permissions o problema temporaneo.");
       }
-
-      const ref = r.docs[0].ref;
-      await updateDoc(ref, {
-        firebase_uid: user.uid,
-        has_mobile_account: true,
-        last_modified_by: user.uid,
-        mobile_linked_at: serverTimestamp(),
-      });
     }
-
-    // SUCCESSO → vai in home
-    router.replace("/homenew");
-  } catch (err: any) {
-    console.error("Login error:", err);
-    // Messaggi un filo più chiari
-    if (String(err?.message || "").includes("no_patient_doc_for_email")) {
-      Alert.alert("Account non collegato",
-        "Non trovo un profilo paziente con questa email. Contatta il tuo medico.");
-    } else {
-      Alert.alert("Errore", "Missing/insufficient permissions o credenziali non valide.");
-    }
-  }
-};
+  };
 
   return (
     <View style={styles.container}>
@@ -81,6 +98,7 @@ const handleSignIn = async () => {
           onChangeText={setEmail}
           style={styles.input}
           placeholderTextColor="#8A8A8A"
+          autoCapitalize="none"
         />
         <TextInput
           placeholder="Password"
@@ -98,10 +116,11 @@ const handleSignIn = async () => {
         <Pressable onPress={() => router.push("/recover-password")}>
           <Text style={styles.linkText}>Forgot Password?</Text>
         </Pressable>
-        
-        <Pressable onPress={() => router.push("/sign-up")}>
-          <Text style={styles.linkText}>Sign Up</Text>
-        </Pressable>
+
+        {/* ❌ RIMOSSO SIGN-UP */}
+        <Text style={styles.footerMsg}>
+          Per attivare l'account contatta il tuo medico.
+        </Text>
       </View>
     </View>
   );
@@ -153,9 +172,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#2C3E50",
   },
-  inputFocused: {
-    borderColor: "#5DADE2",
-  },
   button: {
     width: "100%",
     padding: 15,
@@ -173,5 +189,10 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 14,
     color: "#5DADE2",
+  },
+  footerMsg: {
+    marginTop: 10,
+    fontSize: 13,
+    color: "#777",
   },
 });
