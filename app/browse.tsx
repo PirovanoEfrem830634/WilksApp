@@ -84,13 +84,12 @@ export default function Browse() {
       disabled: generating,
     },
     { label: "Sleep", icon: "bed", color: Colors.green, href: "/sleeptrackingnew" },
-    { label: "Weekly Dashboard", icon: "bar-chart", color: Colors.mint, href: "/weeklydashboard" },
+    { label: "Myasthenia History", icon: "pulse", color: Colors.turquoise, href: "/HistoryMgScreen" },
     { label: "Track", icon: "analytics", color: Colors.blue, href: "/trackingnew" },
     { label: "Medications", icon: "medkit", color: Colors.turquoise, href: "/mymedicationnew" },
     { label: "Tracking History", icon: "calendar", color: Colors.pink, href: "/trackinghistorynew" },
     { label: "Symptoms Infos", icon: "information-circle", color: Colors.purple, href: "/infonew" },
-    { label: "Schede informative", icon: "reader-outline", color: Colors.indigo, href: "/infosheets" },
-    { label: "Mental Resources", icon: "help-buoy", color: Colors.indigo, href: "/MentalResourcesScreen" },
+    { label: "Schede informative", icon: "reader", color: Colors.indigo, href: "/infosheets" },
   ];
 
   const filteredSections = sections.filter((section) =>
