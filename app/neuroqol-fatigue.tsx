@@ -1,9 +1,16 @@
 import React, { useMemo, useRef, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Alert, Animated } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  Animated,
+} from "react-native";
 import * as Animatable from "react-native-animatable";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import PressableScaleWithRef from "../components/PressableScaleWithRef"
+import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { auth, db } from "../firebaseconfig";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
 import Colors from "../Styles/color";
@@ -18,38 +25,79 @@ const NEUROQOL_ITEMS = [
   { code: "NQFTG13", text: "Mi sono sentito/a esausto/a" },
   { code: "NQFTG11", text: "Mi sono sentito/a senza energie" },
   { code: "NQFTG15", text: "Mi sono sentito/a affaticato/a" },
-  { code: "NQFTG06", text: "Mi sono sentito/a troppo stanco/a per occuparmi delle faccende domestiche" },
-  { code: "NQFTG07", text: "Mi sono sentito/a troppo stanco/a per uscire di casa" },
-  { code: "NQFTG10", text: "Ero frustrato/a perché ero troppo stanco/a per fare le cose che desideravo fare" },
+  {
+    code: "NQFTG06",
+    text: "Mi sono sentito/a troppo stanco/a per occuparmi delle faccende domestiche",
+  },
+  {
+    code: "NQFTG07",
+    text: "Mi sono sentito/a troppo stanco/a per uscire di casa",
+  },
+  {
+    code: "NQFTG10",
+    text: "Ero frustrato/a perché ero troppo stanco/a per fare le cose che desideravo fare",
+  },
   { code: "NQFTG14", text: "Mi sono sentito/a stanco/a" },
-  { code: "NQFTG02", text: "Ho dovuto limitare la mia vita sociale perché mi sentivo stanco/a" },
-  { code: "NQFTG01", text: "Ho avuto bisogno di aiuto per svolgere le mie attività abituali a causa del mio affaticamento" },
+  {
+    code: "NQFTG02",
+    text: "Ho dovuto limitare la mia vita sociale perché mi sentivo stanco/a",
+  },
+  {
+    code: "NQFTG01",
+    text: "Ho avuto bisogno di aiuto per svolgere le mie attività abituali a causa del mio affaticamento",
+  },
   { code: "NQFTG03", text: "Ho avuto bisogno di dormire durante il giorno" },
-  { code: "NQFTG04", text: "Mi sono sentito/a così stanco/a che ho avuto difficoltà a iniziare qualunque cosa" },
-  { code: "NQFTG05", text: "Mi sono sentito/a così stanco/a che ho avuto difficoltà a finire quello che avevo cominciato" },
-  { code: "NQFTG08", text: "Mi sono sentito/a troppo stanco/a per fare una breve passeggiata" },
+  {
+    code: "NQFTG04",
+    text: "Mi sono sentito/a così stanco/a che ho avuto difficoltà a iniziare qualunque cosa",
+  },
+  {
+    code: "NQFTG05",
+    text: "Mi sono sentito/a così stanco/a che ho avuto difficoltà a finire quello che avevo cominciato",
+  },
+  {
+    code: "NQFTG08",
+    text: "Mi sono sentito/a troppo stanco/a per fare una breve passeggiata",
+  },
   { code: "NQFTG09", text: "Mi sono sentito/a troppo stanco/a per mangiare" },
-  { code: "NQFTG12", text: "Mi sono sentito/a così stanco/a che ho avuto bisogno di riposarmi durante il giorno" },
+  {
+    code: "NQFTG12",
+    text: "Mi sono sentito/a così stanco/a che ho avuto bisogno di riposarmi durante il giorno",
+  },
   { code: "NQFTG16", text: "Mi sono sentito/a molto indebolito/a" },
-  { code: "NQFTG17", text: "Ho avuto bisogno di aiuto per svolgere le mie attività abituali a causa della mia debolezza" },
-  { code: "NQFTG18", text: "Ho dovuto limitare la mia vita sociale perché ero debole fisicamente" },
-  { code: "NQFTG20", text: "Mi sono dovuto/a costringere ad alzarmi e fare qualcosa perché ero troppo debole fisicamente" },
+  {
+    code: "NQFTG17",
+    text: "Ho avuto bisogno di aiuto per svolgere le mie attività abituali a causa della mia debolezza",
+  },
+  {
+    code: "NQFTG18",
+    text: "Ho dovuto limitare la mia vita sociale perché ero debole fisicamente",
+  },
+  {
+    code: "NQFTG20",
+    text: "Mi sono dovuto/a costringere ad alzarmi e fare qualcosa perché ero troppo debole fisicamente",
+  },
 ];
 
 const SCALE = ["Mai", "Raramente", "Qualche volta", "Spesso", "Sempre"] as const;
 type ScaleLabel = (typeof SCALE)[number];
 
 const labelToValue: Record<ScaleLabel, number> = {
-  "Mai": 1,
-  "Raramente": 2,
+  Mai: 1,
+  Raramente: 2,
   "Qualche volta": 3,
-  "Spesso": 4,
-  "Sempre": 5,
+  Spesso: 4,
+  Sempre: 5,
 };
 
 export default function NeuroQoLFatigueScreen() {
   const [answers, setAnswers] = useState<Record<string, ScaleLabel>>({});
   const answeredCount = useMemo(() => Object.keys(answers).length, [answers]);
+
+  const totalScore = useMemo(() => {
+    const values = Object.values(answers) as ScaleLabel[];
+    return values.reduce((sum, label) => sum + labelToValue[label], 0);
+  }, [answers]);
 
   const toastAnim = useRef(new Animated.Value(0)).current;
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -59,9 +107,17 @@ export default function NeuroQoLFatigueScreen() {
     setToastMessage(message);
     setToastColor(color);
     Animated.sequence([
-      Animated.timing(toastAnim, { toValue: 1, duration: 350, useNativeDriver: true }),
+      Animated.timing(toastAnim, {
+        toValue: 1,
+        duration: 350,
+        useNativeDriver: true,
+      }),
       Animated.delay(1800),
-      Animated.timing(toastAnim, { toValue: 0, duration: 350, useNativeDriver: true }),
+      Animated.timing(toastAnim, {
+        toValue: 0,
+        duration: 350,
+        useNativeDriver: true,
+      }),
     ]).start(() => setToastMessage(null));
   };
 
@@ -79,17 +135,13 @@ export default function NeuroQoLFatigueScreen() {
       showToast("❌ Completa tutte le domande", Colors.red);
       return;
     }
-    const totalScore = (Object.values(answers) as ScaleLabel[]).reduce(
-      (sum, label) => sum + labelToValue[label],
-      0
-    );
 
     const ref = doc(db, `users/${uid}/clinical_surveys/neuro_qol_fatigue`);
     try {
       await setDoc(ref, {
         lastCompiledAt: Timestamp.now(),
-        responses: answers,   // ✅ TESTUALE ("Mai", "Raramente", ...)
-        totalScore,           // ✅ numerico per analisi CDSS
+        responses: answers, // TESTUALE ("Mai", "Raramente", ...)
+        totalScore, // numerico per analisi CDSS
       });
       showToast("✅ Survey saved successfully", Colors.blue);
     } catch (e) {
@@ -107,19 +159,36 @@ export default function NeuroQoLFatigueScreen() {
           style={styles.gradientBackground}
         />
 
+        {/* HEADER allineato a MG-ADL / EQ-5D-5L */}
         <View style={styles.header}>
-          <Ionicons name="flash" size={48} color={Colors.blue} style={{ marginBottom: 10 }} />
+          <Ionicons
+            name="flash"
+            size={48}
+            color={Colors.blue}
+            style={{ marginBottom: 10 }}
+          />
           <Text style={FontStyles.variants.mainTitle}>Neuro-QoL Fatigue</Text>
-          <Text style={[FontStyles.variants.sectionTitle, styles.subtitle]}>
-            Negli ultimi 7 giorni, indica quanto ciascuna affermazione è stata vera per te.
+          <Text
+            style={[
+              FontStyles.variants.sectionTitle,
+              styles.subtitle,
+            ]}
+          >
+            Negli ultimi 7 giorni, indica quanto ciascuna affermazione è stata
+            vera per te.
           </Text>
 
+          {/* Progress bar */}
           <View style={styles.progressWrap}>
             <View style={styles.progressBg}>
               <View
                 style={[
                   styles.progressFill,
-                  { width: `${(answeredCount / NEUROQOL_ITEMS.length) * 100}%` },
+                  {
+                    width: `${
+                      (answeredCount / NEUROQOL_ITEMS.length) * 100
+                    }%`,
+                  },
                 ]}
               />
             </View>
@@ -127,18 +196,36 @@ export default function NeuroQoLFatigueScreen() {
               {answeredCount}/{NEUROQOL_ITEMS.length} Completati
             </Text>
           </View>
+
+          {/* Badge punteggio totale (stile MG-ADL) */}
+          <View style={styles.badgeRow}>
+            <View style={styles.badge}>
+              <Text style={styles.badgeLabel}>Punteggio totale</Text>
+              <Text style={styles.badgeValue}>{totalScore}</Text>
+            </View>
+          </View>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollView}>
           {NEUROQOL_ITEMS.map((item, idx) => (
-            <Animatable.View key={item.code} animation="fadeInUp" delay={idx * 40}>
+            <Animatable.View
+              key={item.code}
+              animation="fadeInUp"
+              delay={idx * 40}
+            >
               <View style={styles.card}>
                 <View style={styles.questionRow}>
-                  <Ionicons name="help-circle" size={18} color={Colors.blue} style={{ marginRight: 8 }} />
+                  <Ionicons
+                    name="help-circle"
+                    size={18}
+                    color={Colors.blue}
+                    style={{ marginRight: 8 }}
+                  />
                   <Text style={styles.questionText}>{item.text}</Text>
                 </View>
 
-                <View style={styles.scaleRow}>
+                {/* Opzioni full-width in colonna (come EQ-5D-5L / MG-ADL) */}
+                <View style={styles.optionColumn}>
                   {SCALE.map((label) => {
                     const selected = answers[item.code] === label;
                     return (
@@ -147,9 +234,17 @@ export default function NeuroQoLFatigueScreen() {
                         onPress={() => handleSelect(item.code, label)}
                         weight="light"
                         activeScale={0.96}
-                        style={[styles.pill, selected && styles.pillSelected]}
+                        style={[
+                          styles.optionFull,
+                          selected && styles.optionSelected,
+                        ]}
                       >
-                        <Text style={[styles.pillText, selected && styles.pillTextSelected]}>
+                        <Text
+                          style={[
+                            styles.optionText,
+                            selected && styles.optionTextSelected,
+                          ]}
+                        >
                           {label}
                         </Text>
                       </PressableScaleWithRef>
@@ -198,21 +293,68 @@ export default function NeuroQoLFatigueScreen() {
   );
 }
 
-const GAP = 8;
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.light1 },
   gradientBackground: {
-    position: "absolute", top: 0, left: 0, right: 0, height: 160, zIndex: -1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 160,
+    zIndex: -1,
   },
-  header: { alignItems: "center", marginTop: 32, marginBottom: 14, paddingHorizontal: 20 },
-  subtitle: { textAlign: "center", color: Colors.gray3, marginTop: 6 },
+
+  // Header centrato come gli altri questionari
+  header: {
+    alignItems: "center",
+    marginTop: 32,
+    marginBottom: 14,
+    paddingHorizontal: 20,
+  },
+  subtitle: {
+    textAlign: "center",
+    color: Colors.gray3,
+    marginTop: 6,
+  },
+
+  // Progress
   progressWrap: { width: "90%", marginTop: 12, alignItems: "center" },
   progressBg: {
-    width: "100%", height: 10, backgroundColor: Colors.light3, borderRadius: 10, overflow: "hidden",
+    width: "100%",
+    height: 10,
+    backgroundColor: Colors.light3,
+    borderRadius: 10,
+    overflow: "hidden",
   },
   progressFill: { height: "100%", backgroundColor: Colors.blue },
   progressText: { fontSize: 12, color: Colors.gray3, marginTop: 6 },
+
+  // Badge punteggio
+  badgeRow: {
+    marginTop: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badge: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: Colors.light2,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  badgeLabel: {
+    fontSize: 12,
+    color: Colors.gray3,
+    fontWeight: "500",
+  },
+  badgeValue: {
+    fontSize: 14,
+    color: Colors.blue,
+    fontWeight: "700",
+  },
+
   scrollView: { padding: 20, paddingBottom: 120 },
 
   card: {
@@ -226,26 +368,45 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  questionRow: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
-  questionText: { fontSize: 16, fontWeight: "600", color: Colors.gray1, flexShrink: 1 },
 
-  // ✅ pill al centro, con margini uniformi
-  scaleRow: {
+  // Domanda centrata come MG-ADL / EQ-5D-5L
+  questionRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: -4,
+    marginBottom: 10,
   },
-  pill: {
+  questionText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: Colors.gray1,
+    flexShrink: 1,
+    flexWrap: "wrap",
+    textAlign: "center",
+  },
+
+  // Opzioni full-width in colonna
+  optionColumn: {
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: 8,
+  },
+  optionFull: {
     backgroundColor: Colors.light2,
     borderRadius: 14,
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 12,
-    margin: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
   },
-  pillSelected: { backgroundColor: Colors.blue },
-  pillText: { color: Colors.gray1, fontWeight: "600", fontSize: 13 },
-  pillTextSelected: { color: Colors.white },
+  optionSelected: { backgroundColor: Colors.blue },
+  optionText: {
+    color: Colors.gray1,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  optionTextSelected: { color: Colors.white },
 
   submitButton: {
     backgroundColor: Colors.blue,

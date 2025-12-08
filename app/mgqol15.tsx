@@ -12,7 +12,7 @@ import BottomNavigation from "../components/bottomnavigationnew";
 
 // ===== MG-QoL15r =====
 // Scala: 0=Per niente, 1=Abbastanza, 2=Molto (compilato dal paziente)
-// Riferimento: MG-QOL15r (ITA). 
+// Riferimento: MG-QOL15r (ITA).
 const QUESTIONS = [
   "Sono frustrato/a a causa della MG",
   "Ho problemi agli occhi a causa della MG (ad es., visione doppia)",
@@ -33,15 +33,24 @@ const QUESTIONS = [
 
 const SCALE = ["Per niente", "Abbastanza", "Molto"] as const;
 type ScaleLabel = (typeof SCALE)[number];
-const labelToValue: Record<ScaleLabel, number> = { "Per niente": 0, "Abbastanza": 1, "Molto": 2 };
+const labelToValue: Record<ScaleLabel, number> = {
+  "Per niente": 0,
+  "Abbastanza": 1,
+  "Molto": 2,
+};
 
 export default function MGQoL15Survey() {
-  // risposte testuali per item (Q01..Q15) + calcolo totalScore numerico
   const [answers, setAnswers] = useState<Record<string, ScaleLabel>>({});
   const answeredCount = useMemo(() => Object.keys(answers).length, [answers]);
 
+  const totalScore = useMemo(() => {
+    const vals = Object.values(answers) as ScaleLabel[];
+    return vals.reduce((sum, label) => sum + labelToValue[label], 0);
+  }, [answers]);
+
   const toastAnim = useRef(new Animated.Value(0)).current;
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
   const showToast = (message: string) => {
     setToastMessage(message);
     Animated.sequence([
@@ -61,7 +70,6 @@ export default function MGQoL15Survey() {
       Alert.alert("Error", "User not logged in");
       return;
     }
-    // validazione: tutte le 15 domande
     if (Object.keys(answers).length !== QUESTIONS.length) {
       showToast("❌ Completa tutte le domande");
       return;
@@ -77,8 +85,8 @@ export default function MGQoL15Survey() {
     try {
       await setDoc(docRef, {
         lastCompiledAt: Timestamp.now(),
-        responses: answers, // ✅ testuale ("Per niente", "Abbastanza", "Molto")
-        totalScore,         // ✅ numerico (0–30)
+        responses: answers, // testuale ("Per niente", "Abbastanza", "Molto")
+        totalScore,         // numerico (0–30)
       });
       showToast("✅ Survey saved successfully");
     } catch (err: any) {
@@ -96,13 +104,21 @@ export default function MGQoL15Survey() {
           style={styles.gradientBackground}
         />
 
+        {/* HEADER allineato agli altri questionari */}
         <View style={styles.mainHeader}>
-          <Ionicons name="heart" size={48} color={Colors.purple} style={{ marginBottom: 10 }} />
+          <Ionicons
+            name="heart"
+            size={48}
+            color={Colors.purple}
+            style={{ marginBottom: 10 }}
+          />
           <Text style={FontStyles.variants.mainTitle}>MG-QoL15r</Text>
           <Text style={[FontStyles.variants.sectionTitle, styles.subtitle]}>
-            Indichi in quale misura ogni affermazione è risultata vera (ultime settimane).
+            Indichi in quale misura ogni affermazione è risultata vera per lei
+            nelle ultime settimane.
           </Text>
 
+          {/* Progress bar */}
           <View style={styles.progressWrap}>
             <View style={styles.progressBg}>
               <View
@@ -112,7 +128,17 @@ export default function MGQoL15Survey() {
                 ]}
               />
             </View>
-            <Text style={styles.progressText}>{answeredCount}/{QUESTIONS.length} Completati</Text>
+            <Text style={styles.progressText}>
+              {answeredCount}/{QUESTIONS.length} Completati
+            </Text>
+          </View>
+
+          {/* Badge punteggio totale */}
+          <View style={styles.badgeRow}>
+            <View style={styles.badge}>
+              <Text style={styles.badgeLabel}>Punteggio totale</Text>
+              <Text style={styles.badgeValue}>{totalScore}/30</Text>
+            </View>
           </View>
         </View>
 
@@ -125,20 +151,34 @@ export default function MGQoL15Survey() {
               <Animatable.View key={qKey} animation="fadeInUp" delay={index * 40}>
                 <View style={styles.card}>
                   <View style={styles.questionRow}>
-                    <Ionicons name="help-circle" size={18} color={Colors.purple} style={{ marginRight: 8 }} />
+                    <Ionicons
+                      name="help-circle"
+                      size={18}
+                      color={Colors.purple}
+                      style={{ marginRight: 8 }}
+                    />
                     <Text style={styles.questionText}>{q}</Text>
                   </View>
 
-                  <View style={styles.optionRow}>
+                  {/* Opzioni full-width in colonna (come gli altri) */}
+                  <View style={styles.optionColumn}>
                     {SCALE.map((label) => (
                       <PressableScaleWithRef
                         key={label}
                         onPress={() => handleAnswer(qKey, label)}
                         weight="light"
                         activeScale={0.96}
-                        style={[styles.option, selected === label && styles.optionSelected]}
+                        style={[
+                          styles.optionFull,
+                          selected === label && styles.optionSelected,
+                        ]}
                       >
-                        <Text style={[styles.optionText, selected === label && styles.optionTextSelected]}>
+                        <Text
+                          style={[
+                            styles.optionText,
+                            selected === label && styles.optionTextSelected,
+                          ]}
+                        >
                           {label}
                         </Text>
                       </PressableScaleWithRef>
@@ -188,15 +228,60 @@ export default function MGQoL15Survey() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.light1 },
-  gradientBackground: { position: "absolute", top: 0, left: 0, right: 0, height: 160, zIndex: -1 },
+  gradientBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 160,
+    zIndex: -1,
+  },
   scrollView: { padding: 20, paddingBottom: 100 },
 
-  mainHeader: { alignItems: "center", marginTop: 32, marginBottom: 16, paddingHorizontal: 20 },
+  mainHeader: {
+    alignItems: "center",
+    marginTop: 32,
+    marginBottom: 16,
+    paddingHorizontal: 20,
+  },
   subtitle: { textAlign: "center", color: Colors.gray3, marginTop: 6 },
+
   progressWrap: { width: "90%", marginTop: 12, alignItems: "center" },
-  progressBg: { width: "100%", height: 10, backgroundColor: Colors.light3, borderRadius: 10, overflow: "hidden" },
+  progressBg: {
+    width: "100%",
+    height: 10,
+    backgroundColor: Colors.light3,
+    borderRadius: 10,
+    overflow: "hidden",
+  },
   progressFill: { height: "100%", backgroundColor: Colors.purple },
   progressText: { fontSize: 12, color: Colors.gray3, marginTop: 6 },
+
+  // Badge punteggio totale
+  badgeRow: {
+    marginTop: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badge: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: Colors.light2,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  badgeLabel: {
+    fontSize: 12,
+    color: Colors.gray3,
+    fontWeight: "500",
+  },
+  badgeValue: {
+    fontSize: 14,
+    color: Colors.purple,
+    fontWeight: "700",
+  },
 
   card: {
     backgroundColor: Colors.white,
@@ -209,7 +294,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  // ✅ titoli centrati
+
+  // Titoli centrati
   questionRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -224,23 +310,28 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     flexWrap: "wrap",
   },
-  // ✅ pill centrali in riga
-  optionRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    marginHorizontal: -4,
-    marginTop: 4,
+
+  // Opzioni in colonna full-width
+  optionColumn: {
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: 8,
   },
-  option: {
+  optionFull: {
     backgroundColor: Colors.light2,
     borderRadius: 14,
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 12,
-    margin: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
   },
   optionSelected: { backgroundColor: Colors.purple },
-  optionText: { color: Colors.gray1, fontWeight: "600" },
+  optionText: {
+    color: Colors.gray1,
+    fontWeight: "600",
+    textAlign: "center",
+  },
   optionTextSelected: { color: "#fff" },
 
   submitButton: {

@@ -1,11 +1,11 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   Alert,
-  TouchableOpacity,
+  Animated,
 } from "react-native";
 import { auth, db } from "../firebaseconfig";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
@@ -14,24 +14,103 @@ import BottomNavigation from "../components/bottomnavigationnew";
 import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import PressableScaleWithRef from "../components/PressableScaleWithRef"
+import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { Ionicons } from "@expo/vector-icons";
-import { Animated } from "react-native";
 
-
-const questions = [
-  { label: "Talking", icon: "mic" },
-  { label: "Chewing", icon: "restaurant" },
-  { label: "Swallowing", icon: "water" },
-  { label: "Breathing", icon: "cloud" },
-  { label: "Impairment of ability to brush teeth or comb hair", icon: "body" },
-  { label: "Impairment of ability to rise from a chair", icon: "walk" },
-  { label: "Double vision", icon: "eye" },
-  { label: "Eyelid droop", icon: "eye-off" },
+// ===== MG-ADL (paziente) =====
+const MGADL_ITEMS = [
+  {
+    label: "Linguaggio",
+    icon: "mic" as const,
+    levels: [
+      "0 = Normale",
+      "1 = Biascicamento/voce nasale intermittente",
+      "2 = Biascicamento/voce nasale continuo/a ma comprensibile",
+      "3 = Linguaggio difficile da comprendere",
+    ],
+  },
+  {
+    label: "Masticazione",
+    icon: "restaurant" as const,
+    levels: [
+      "0 = Normale",
+      "1 = Faticosa con cibo solido",
+      "2 = Faticosa con cibo morbido",
+      "3 = Necessaria sonda gastrica",
+    ],
+  },
+  {
+    label: "Deglutizione",
+    icon: "water" as const,
+    levels: [
+      "0 = Normale",
+      "1 = Rari episodi di soffocamento",
+      "2 = Frequenti soffocamenti con modifiche alla dieta",
+      "3 = Necessaria sonda gastrica",
+    ],
+  },
+  {
+    label: "Respirazione",
+    icon: "cloud" as const,
+    levels: [
+      "0 = Normale",
+      "1 = Respiro corto sotto sforzo",
+      "2 = Respiro corto a riposo",
+      "3 = Dipendenza dal ventilatore",
+    ],
+  },
+  {
+    label: "Lavarsi i denti / pettinarsi",
+    icon: "body" as const,
+    levels: [
+      "0 = Nessuna difficoltà",
+      "1 = Aumenta lo sforzo ma senza pause",
+      "2 = Necessita di pause",
+      "3 = Non riesce a eseguire una di queste attività",
+    ],
+  },
+  {
+    label: "Alzarsi da una sedia",
+    icon: "walk" as const,
+    levels: [
+      "0 = Nessuna difficoltà",
+      "1 = Lieve, talvolta usa le braccia",
+      "2 = Moderata, usa sempre le braccia",
+      "3 = Grave, necessita di assistenza",
+    ],
+  },
+  {
+    label: "Visione doppia (Diplopia)",
+    icon: "eye" as const,
+    levels: [
+      "0 = Nessuna",
+      "1 = Capita ma non tutti i giorni",
+      "2 = Tutti i giorni ma non costante",
+      "3 = Costante",
+    ],
+  },
+  {
+    label: "Ptosi (palpebra abbassata)",
+    icon: "eye-off" as const,
+    levels: [
+      "0 = Nessuna",
+      "1 = Capita ma non tutti i giorni",
+      "2 = Tutti i giorni ma non costante",
+      "3 = Costante",
+    ],
+  },
 ];
 
 export default function MGADLSurvey() {
-  const [answers, setAnswers] = useState<number[]>(Array(8).fill(0));
+  // 0–3 per ciascun item, default 0 = livello “normale”
+  const [answers, setAnswers] = useState<number[]>(
+    Array(MGADL_ITEMS.length).fill(0)
+  );
+
+  const totalScore = useMemo(
+   () => answers.reduce((sum, v) => sum + v, 0),
+   [answers]
+  );
 
   const toastAnim = useRef(new Animated.Value(0)).current;
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -60,10 +139,13 @@ export default function MGADLSurvey() {
       return;
     }
     const uid = user.uid;
-    const docRef = doc(db, `users/${uid}/clinical_surveys/mg_adl`);
+
+    // 🔹 SALVA sul doc del paziente, non su quello dei clinici
+    const docRef = doc(db, `users/${uid}/clinical_surveys/mg_adl_paziente`);
+
     try {
       await setDoc(docRef, {
-        answers,
+        answers,             // array numerico 0–3
         lastCompiledAt: Timestamp.now(),
       });
       showToast("✅ Survey saved successfully");
@@ -82,88 +164,141 @@ export default function MGADLSurvey() {
     <View style={styles.container}>
       <Animatable.View animation="fadeInUp" duration={600} style={{ flex: 1 }}>
         <LinearGradient
-          colors={["#D1E9FF", Colors.light1]}
+          colors={["#d0929bff", Colors.light1]}
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}
           style={styles.gradientBackground}
         />
 
-        <View style={styles.mainHeader}>
-          <Ionicons name="pulse" size={48} color={Colors.blue} style={{ marginBottom: 10 }} />
-          <Text style={FontStyles.variants.mainTitle}>MG-ADL Survey</Text>
-          <Text style={FontStyles.variants.sectionTitle}>
-            Indicate the severity for each item
+                <View style={styles.mainHeader}>
+          <Ionicons
+            name="list"
+            size={48}
+            color={Colors.red}
+            style={{ marginBottom: 10 }}
+          />
+          <Text style={FontStyles.variants.mainTitle}>MG-ADL</Text>
+          <Text
+            style={[
+              FontStyles.variants.sectionTitle,
+              { textAlign: "center", color: Colors.gray3, marginTop: 6 },
+            ]}
+          >
+            Indichi il livello per ciascun item MG-ADL
           </Text>
+
+          {/* 🔹 Disclaimer ultimi 7 giorni */}
+          <Text style={styles.disclaimer}>
+            Le risposte devono riflettere come 
+            <br></br>si è sentito negli{" "}
+            <Text style={{ fontWeight: "700" }}>ultimi 7 giorni</Text>.
+          </Text>
+
+          {/* 🔹 Badge punteggio totale */}
+          <View style={styles.badgeRow}>
+            <View style={styles.badge}>
+              <Text style={styles.badgeLabel}>Punteggio totale</Text>
+              <Text style={styles.badgeValue}>{totalScore}/24</Text>
+            </View>
+          </View>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollView}>
-          {questions.map((question, index) => (
-            <View key={index} style={styles.card}>
-              <View style={styles.questionRow}>
-                <Ionicons name={question.icon as any} size={18} color={Colors.blue} style={{ marginRight: 8 }} />
-                <Text style={styles.questionText}>{question.label}</Text>
-              </View>
-              <View style={styles.optionRow}>
-                {[0, 1, 2, 3].map((val) => (
-                  <PressableScaleWithRef
-                    key={val}
-                    onPress={() => handleAnswer(index, val)}
-                    weight="light"
-                    activeScale={0.95}
-                    style={[
-                      styles.option,
-                      answers[index] === val && styles.optionSelected,
-                    ]}
-                  >
-                    <Text
-                      style={[styles.optionText, answers[index] === val && styles.optionTextSelected]}
-                    >
-                      {val}
-                    </Text>
-                  </PressableScaleWithRef>
-                ))}
-              </View>
-            </View>
-          ))}
+          {MGADL_ITEMS.map((item, index) => {
+            const selected = answers[index]; // 0–3
+            return (
+              <Animatable.View
+                key={item.label}
+                animation="fadeInUp"
+                delay={index * 40}
+              >
+                <View style={styles.card}>
+                  <View style={styles.questionRow}>
+                    <Ionicons
+                      name={item.icon}
+                      size={18}
+                      color={Colors.red}
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text style={styles.questionText}>{item.label}</Text>
+                  </View>
+
+                  {/* Opzioni full-width come EQ-5D-5L */}
+                  <View style={styles.optionColumn}>
+                    {item.levels.map((levelText, lvlIndex) => (
+                      <PressableScaleWithRef
+                        key={levelText}
+                        onPress={() => handleAnswer(index, lvlIndex)}
+                        weight="light"
+                        activeScale={0.96}
+                        style={[
+                          styles.optionFull,
+                          selected === lvlIndex && styles.optionSelected,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.optionText,
+                            selected === lvlIndex && styles.optionTextSelected,
+                          ]}
+                        >
+                          {levelText}
+                        </Text>
+                      </PressableScaleWithRef>
+                    ))}
+                  </View>
+                </View>
+              </Animatable.View>
+            );
+          })}
 
           <PressableScaleWithRef
             onPress={saveSurvey}
             weight="light"
             activeScale={0.96}
             style={styles.submitButton}
-            >
-            <Text style={styles.submitButtonText}>Submit</Text>
+          >
+            <Text style={styles.submitButtonText}>Invia</Text>
           </PressableScaleWithRef>
         </ScrollView>
       </Animatable.View>
-          {toastMessage && (
-      <Animated.View
-        style={[
-          {
-            position: "absolute",
-            top: 60,
-            left: 20,
-            right: 20,
-            backgroundColor: "#007AFF",
-            padding: 14,
-            borderRadius: 12,
-            alignItems: "center",
-            zIndex: 10,
-            opacity: toastAnim,
-            transform: [
-              {
-                translateY: toastAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-60, 0],
-                }),
-              },
-            ],
-          },
-        ]}
-      >
-        <Text style={{ color: "#fff", fontWeight: "600" }}>{toastMessage}</Text>
-      </Animated.View>
-    )}
+
+      {toastMessage && (
+        <Animated.View
+          style={[
+            {
+              position: "absolute",
+              top: 60,
+              left: 20,
+              right: 20,
+              backgroundColor: "#007AFF",
+              padding: 14,
+              borderRadius: 12,
+              alignItems: "center",
+              zIndex: 10,
+              opacity: toastAnim,
+              transform: [
+                {
+                  translateY: toastAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-60, 0],
+                  }),
+                },
+              ],
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 5,
+            },
+          ]}
+        >
+          <Text style={{ color: "#fff", fontWeight: "600" }}>
+            {toastMessage}
+          </Text>
+        </Animated.View>
+      )}
+
       <BottomNavigation />
     </View>
   );
@@ -206,39 +341,45 @@ const styles = StyleSheet.create({
   questionRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     marginBottom: 10,
   },
   questionText: {
     fontSize: 16,
     fontWeight: "600",
     color: Colors.gray1,
+    textAlign: "center",
     flexShrink: 1,
+    flexWrap: "wrap",
   },
-  optionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  // Colonna come EQ-5D-5L
+  optionColumn: {
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: 8,
   },
-  option: {
+  optionFull: {
     backgroundColor: Colors.light2,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginHorizontal: 4,
-    flex: 1,
+    paddingHorizontal: 12,
     alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
   },
   optionSelected: {
-    backgroundColor: Colors.blue,
+    backgroundColor: Colors.red,
   },
   optionText: {
     color: Colors.gray1,
-    fontWeight: "500",
+    fontWeight: "600",
+    textAlign: "center",
   },
   optionTextSelected: {
     color: "#fff",
   },
   submitButton: {
-    backgroundColor: Colors.blue,
+    backgroundColor: Colors.red,
     padding: 15,
     borderRadius: 15,
     alignItems: "center",
@@ -253,5 +394,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+    disclaimer: {
+    marginTop: 10,
+    fontSize: 13,
+    color: Colors.gray3,
+    textAlign: "center",
+  },
+  badgeRow: {
+    marginTop: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badge: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: Colors.light2,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  badgeLabel: {
+    fontSize: 12,
+    color: Colors.gray3,
+    fontWeight: "500",
+  },
+  badgeValue: {
+    fontSize: 14,
+    color: Colors.red,
+    fontWeight: "700",
   },
 });

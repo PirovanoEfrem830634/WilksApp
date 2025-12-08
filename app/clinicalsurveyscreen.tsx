@@ -17,7 +17,7 @@ import { useFocusEffect } from "@react-navigation/native";
 // ------------------------------------------------------
 // TYPES
 // ------------------------------------------------------
-type SurveyKey = "mg_qol15" | "neuro_qol_fatigue" | "eq5d5l";
+type SurveyKey = "mg_qol15" | "neuro_qol_fatigue" | "eq5d5l" | "mg_adl_paziente";
 
 interface Survey {
   key: SurveyKey;
@@ -40,6 +40,7 @@ export default function ClinicalSurveysScreen() {
     mg_qol15: { status: "todo" },
     neuro_qol_fatigue: { status: "todo" },
     eq5d5l: { status: "todo" },
+    mg_adl_paziente: { status: "todo" },
   });
   const [showQuarterBanner, setShowQuarterBanner] = useState(false);
   const [nextDueDate, setNextDueDate] = useState<string | null>(null);
@@ -47,9 +48,16 @@ export default function ClinicalSurveysScreen() {
   const router = useRouter();
 
   const surveys: Survey[] = [
-    { key: "mg_qol15", label: "MG-QoL15r", icon: "heart", color: Colors.purple, href: "/mgqol15" },
-    { key: "neuro_qol_fatigue", label: "Neuro-QoL Fatigue", icon: "flash", color: Colors.blue, href: "/neuroqol-fatigue" },
-    { key: "eq5d5l", label: "EQ-5D-5L", icon: "fitness", color: Colors.orange, href: "/eq5d5l" },
+  { key: "mg_qol15", label: "MG-QoL15r", icon: "heart", color: Colors.purple, href: "/mgqol15" },
+  {
+    key: "mg_adl_paziente",
+    label: "MG-ADL",
+    icon: "list",
+    color: Colors.red,
+    href: "/mgadlsurveyscreen", // 🔹 Adatta questo path al nome reale della route Expo Router
+  },
+  { key: "neuro_qol_fatigue", label: "Neuro-QoL Fatigue", icon: "flash", color: Colors.blue, href: "/neuroqol-fatigue" },
+  { key: "eq5d5l", label: "EQ-5D-5L", icon: "fitness", color: Colors.orange, href: "/eq5d5l" },
   ];
 
   // ------------------------------------------------------
