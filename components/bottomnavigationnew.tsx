@@ -8,15 +8,15 @@ export default function BottomNavigation() {
   const pathname = usePathname();
 
   const tabs: {
-  name: string;
-  icon: React.ComponentProps<typeof Ionicons>["name"];
-  path: string;
-    }[] = [
-  { name: "Home", icon: "home", path: "/homenew" },
-  { name: "AI Assistant", icon: "git-branch-outline", path: "/cdsspagenew" },
-  { name: "Surveys", icon: "clipboard", path: "/clinicalsurveyscreen" },
-  { name: "Browse", icon: "apps", path: "/browse" },
-    ];
+    name: string;
+    icon: React.ComponentProps<typeof Ionicons>["name"];
+    path: string;
+  }[] = [
+    { name: "Home", icon: "home", path: "/homenew" },
+    // { name: "Assistente AI", icon: "git-branch-outline", path: "/cdsspagenew" },
+    { name: "Questionari", icon: "clipboard", path: "/clinicalsurveyscreen" },
+    { name: "Esplora", icon: "apps", path: "/browse" },
+  ];
 
   return (
     <View style={styles.tabBar}>
