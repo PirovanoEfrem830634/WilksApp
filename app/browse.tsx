@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TextInput, Image } from "react-native";
 import { Link, useRouter } from "expo-router";
 import FontStyles from "../Styles/fontstyles";
 import { Ionicons } from "@expo/vector-icons";
 import BottomNavigation from "../components/bottomnavigationnew";
 import Colors from "../Styles/color";
-import { TextInput, Image } from "react-native";
 import Toast from "react-native-toast-message";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
 
@@ -73,22 +72,50 @@ export default function Browse() {
     disabled?: boolean;
   }[] = [
     // 🔴 Nuova sezione Lavoro (usa colore rosso, come bloodmonitoring)
-    { label: "Work & Social Impact", icon: "briefcase", color: Colors.red, href: "/WorkStatusScreen" },
-
-    { label: "Diet", icon: "nutrition", color: Colors.orange, href: "/diettrackernew" },
     {
-      label: "Monthly Recap PDF",
-      icon: "document-text",
-      color: Colors.yellow,
-      onPress: generateAndDownloadPDF,
-      disabled: generating,
+      label: "Lavoro e impatto sociale",
+      icon: "briefcase",
+      color: Colors.red,
+      href: "/WorkStatusScreen",
     },
-    { label: "Sleep", icon: "bed", color: Colors.green, href: "/sleeptrackingnew" },
-    { label: "Myasthenia History", icon: "pulse", color: Colors.turquoise, href: "/HistoryMgScreen" },
-    { label: "Track", icon: "analytics", color: Colors.blue, href: "/trackingnew" },
-    { label: "Medications", icon: "medkit", color: Colors.turquoise, href: "/mymedicationnew" },
-    { label: "Tracking History", icon: "calendar", color: Colors.pink, href: "/trackinghistorynew" },
-    { label: "Symptoms Infos", icon: "information-circle", color: Colors.purple, href: "/infonew" },
+
+    { label: "Dieta", icon: "nutrition", color: Colors.orange, href: "/diettrackernew" },
+
+    // ⛔️ Monthly Recap PDF rimosso dall’elenco delle voci
+    // {
+    //   label: "Riepilogo mensile (PDF)",
+    //   icon: "document-text",
+    //   color: Colors.yellow,
+    //   onPress: generateAndDownloadPDF,
+    //   disabled: generating,
+    // },
+
+    { label: "Sonno", icon: "bed", color: Colors.green, href: "/sleeptrackingnew" },
+    {
+      label: "Storico Miastenia",
+      icon: "pulse",
+      color: Colors.turquoise,
+      href: "/HistoryMgScreen",
+    },
+    {
+      label: "Compilazione sintomi",
+      icon: "analytics",
+      color: Colors.blue,
+      href: "/trackingnew",
+    },
+    { label: "Farmaci", icon: "medkit", color: Colors.turquoise, href: "/mymedicationnew" },
+    {
+      label: "Storico monitoraggi",
+      icon: "calendar",
+      color: Colors.pink,
+      href: "/trackinghistorynew",
+    },
+    {
+      label: "Informazioni sui sintomi",
+      icon: "information-circle",
+      color: Colors.purple,
+      href: "/infonew",
+    },
     { label: "Schede informative", icon: "reader", color: Colors.indigo, href: "/infosheets" },
   ];
 
@@ -100,7 +127,7 @@ export default function Browse() {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.headerRow}>
-          <Text style={FontStyles.variants.mainTitle}>Browse</Text>
+          <Text style={FontStyles.variants.mainTitle}>Esplora</Text>
           <Link href="/profilenew" asChild>
             <Image source={require("../assets/images/avatar-ios.jpg")} style={styles.avatar} />
           </Link>
@@ -109,7 +136,7 @@ export default function Browse() {
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={18} color={Colors.gray3} style={styles.searchIcon} />
           <TextInput
-            placeholder="Search"
+            placeholder="Cerca"
             placeholderTextColor={Colors.gray3}
             style={styles.searchInput}
             value={searchTerm}
@@ -118,7 +145,7 @@ export default function Browse() {
         </View>
 
         <Text style={[FontStyles.variants.sectionTitle, { marginBottom: 20 }]}>
-          Health Categories
+          Categorie di salute
         </Text>
 
         {filteredSections.map((item, index) =>
@@ -144,7 +171,7 @@ export default function Browse() {
               onPress={item.disabled ? undefined : item.onPress}
             >
               <Ionicons name={item.icon} size={20} color={item.color} style={styles.icon} />
-              {item.label === "Monthly Recap PDF" && generating ? (
+              {item.label === "Riepilogo mensile (PDF)" && generating ? (
                 <Text style={[FontStyles.variants.body, { opacity: 0.6 }]}>
                   Generazione in corso...
                 </Text>

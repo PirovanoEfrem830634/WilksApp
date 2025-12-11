@@ -48,7 +48,7 @@ const FontStyles = {
     },
     cardDescription: {
     fontFamily: "SFProDisplay-Regular",
-    fontSize: 15,
+    fontSize: 14,
     color: Colors.gray3,
   },
   },

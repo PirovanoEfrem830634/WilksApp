@@ -95,7 +95,10 @@ export default function WorkStatusScreen() {
       return;
     }
 
-    if (baseline.currentlyWorking === false && baseline.notWorkingDueToMG === null) {
+    if (
+      baseline.currentlyWorking === false &&
+      baseline.notWorkingDueToMG === null
+    ) {
       Alert.alert(
         "Dato mancante",
         "Per favore indica se non lavori a causa della miastenia."
@@ -104,46 +107,43 @@ export default function WorkStatusScreen() {
     }
 
     try {
-    setSaving(true);
-    const ref = doc(db, "users", user.uid, "work_status", "baseline");
+      setSaving(true);
+      const ref = doc(db, "users", user.uid, "work_status", "baseline");
 
-    await setDoc(
+      await setDoc(
         ref,
         {
-        currentlyWorking: baseline.currentlyWorking,
-        notWorkingDueToMG:
+          currentlyWorking: baseline.currentlyWorking,
+          notWorkingDueToMG:
             baseline.currentlyWorking === false
-            ? baseline.notWorkingDueToMG
-            : null,
-        compiledAt: new Date(),
-        compiledBy: "patient",
+              ? baseline.notWorkingDueToMG
+              : null,
+          compiledAt: new Date(),
+          compiledBy: "patient",
         },
         { merge: true }
-    );
+      );
 
-    Toast.show({
+      Toast.show({
         type: "success",
         text1: "Stato lavorativo aggiornato",
         text2: "Le informazioni sono state salvate correttamente.",
         position: "top",
         visibilityTime: 2200,
-    });
-
+      });
     } catch (err) {
-    console.error("Errore salvando work_status baseline:", err);
+      console.error("Errore salvando work_status baseline:", err);
 
-    Toast.show({
+      Toast.show({
         type: "error",
         text1: "Errore nel salvataggio",
         text2: "Riprova più tardi.",
         position: "top",
         visibilityTime: 2200,
-    });
-
+      });
     } finally {
-    setSaving(false);
+      setSaving(false);
     }
-
   };
 
   const renderBurdenTag = () => {
@@ -213,12 +213,17 @@ export default function WorkStatusScreen() {
           <Ionicons name="briefcase" size={48} color={Colors.red} />
         </View>
         <Text style={FontStyles.variants.mainTitle}>
-          Work & Social Impact
+          Lavoro e impatto sociale
         </Text>
         <Text style={FontStyles.variants.sectionTitle}>
           Indica la tua situazione lavorativa
         </Text>
-        <Text style={[FontStyles.variants.cardDescription, { marginTop: 8 }]}>
+        <Text
+          style={[
+            FontStyles.variants.cardDescription,
+            { marginTop: 8, textAlign: "center" },
+          ]}
+        >
           Questi dati aiutano il team clinico a capire meglio l’impatto della
           miastenia sul tuo ruolo sociale e sulla vita quotidiana.
         </Text>
@@ -318,30 +323,7 @@ export default function WorkStatusScreen() {
           </Text>
         </Animatable.View>
 
-        {/* Placeholder: Aggiornamenti trimestrali – come se fosse una sezione futura */}
-        <Animatable.View
-          animation="fadeInUp"
-          delay={250}
-          style={styles.cardMuted}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Ionicons
-              name="calendar-outline"
-              size={20}
-              color={Colors.gray1}
-            />
-            <Text style={styles.cardLabelMuted}>Aggiornamenti trimestrali</Text>
-          </View>
-          <Text style={styles.cardSubtitleMuted}>
-            In futuro qui potrai indicare se hai perso giorni di lavoro a causa
-            della miastenia nei vari trimestri dell’anno. Questi dati
-            contribuiranno a un indicatore più completo di impatto sociale.
-          </Text>
-          <Text style={styles.cardSubtitleMuted}>
-            La funzionalità verrà attivata quando imposteremo gli alert
-            periodici nella tua app.
-          </Text>
-        </Animatable.View>
+        {/* 🔇 Sezione “Aggiornamenti trimestrali” momentaneamente rimossa */}
 
         {/* Pulsante Salva – stile reloadButton bloodmonitoring */}
         <Animatable.View animation="fadeInUp" delay={300} style={styles.saveWrapper}>
