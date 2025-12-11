@@ -92,7 +92,7 @@ export default function Browse() {
 
     { label: "Sonno", icon: "bed", color: Colors.green, href: "/sleeptrackingnew" },
     {
-      label: "Storico Miastenia",
+      label: "Storico Miastenia Gravis",
       icon: "pulse",
       color: Colors.turquoise,
       href: "/HistoryMgScreen",

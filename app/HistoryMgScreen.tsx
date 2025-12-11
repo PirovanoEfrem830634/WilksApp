@@ -21,11 +21,24 @@ import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 
 import { auth, db } from "../firebaseconfig";
-import { doc, setDoc, Timestamp } from "firebase/firestore";
-import { Check, X } from "lucide-react-native";
+import { doc, setDoc, Timestamp, getDoc } from "firebase/firestore";
+import { Check, X, Lock } from "lucide-react-native";
+
+// helper per testo leggibile dell’onset category
+const getOnsetCategoryLabel = (ageAtOnset: string): string => {
+  const trimmed = ageAtOnset.trim();
+  if (!trimmed) return "-";
+  const n = Number(trimmed.replace(",", "."));
+  if (isNaN(n)) return "-";
+  if (n < 18) return "Esordio in età infantile (<18 anni)";
+  if (n <= 49) return "Early-onset (EOMG, 18–49 anni)";
+  if (n <= 64) return "Late-onset (LOMG, 50–64 anni)";
+  return "Very late-onset (VLOMG, ≥65 anni)";
+};
 
 export default function HistoryMgScreen() {
-  const [onsetAge, setOnsetAge] = useState("");
+  // 🔹 Stati collegati 1:1 ai campi Firestore
+  const [ageAtOnset, setAgeAtOnset] = useState("");
   const [onsetType, setOnsetType] = useState("");
   const [antibodies, setAntibodies] = useState<string[]>([]);
   const [thymectomy, setThymectomy] = useState<"" | "yes" | "no">("");
@@ -34,19 +47,148 @@ export default function HistoryMgScreen() {
   const [hospitalizationsYears, setHospitalizationsYears] = useState("");
   const [comorbidities, setComorbidities] = useState("");
   const [notes, setNotes] = useState("");
+  const [previousTherapies, setPreviousTherapies] = useState("");
+  const [thymectomyDateText, setThymectomyDateText] = useState("");
 
   const [activeModal, setActiveModal] = useState<
-    null | "onsetAge" | "onsetType" | "thymusHistology" | "neurophysiology"
+    null | "onsetType" | "thymusHistology" | "neurophysiology"
   >(null);
+
+  // 🔐 blocco prima modifica
+  const [isLocked, setIsLocked] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  // 🔹 Opzioni per istologia: label IT, value EN (uguale al DB)
+  const histologyOptions = [
+    { value: "Thymoma", label: "Timoma" },
+    { value: "Hyperplasia", label: "Iperplasia" },
+    { value: "Atrophy", label: "Atrofia" },
+    { value: "Not sure", label: "Non lo so" },
+  ];
+
+  // 🔹 Opzioni neurofisiologia: label IT, value EN
+  const neuroOptions = [
+    { value: "RNS altered", label: "RNS alterata" },
+    { value: "RNS normal", label: "RNS nella norma" },
+    { value: "SF-EMG altered", label: "SF-EMG alterata" },
+    { value: "SF-EMG normal", label: "SF-EMG nella norma" },
+    {
+      value: "Not done / I don't remember",
+      label: "Esami non eseguiti / non ricordo",
+    },
+  ];
 
   useFocusEffect(
     React.useCallback(() => {
-      // opzionale: reset ad ogni refocus
+      const loadHistory = async () => {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        try {
+          const ref = doc(db, "users", user.uid, "history", "mg");
+          const snap = await getDoc(ref);
+          if (!snap.exists()) return;
+
+          const data: any = snap.data();
+
+          // 🔐 blocco se il campo è presente
+          if (data.patientHistoryLocked === true) {
+            setIsLocked(true);
+          } else {
+            setIsLocked(false);
+          }
+
+          // ageAtOnset (number -> string)
+          if (data.ageAtOnset !== undefined && data.ageAtOnset !== null) {
+            setAgeAtOnset(String(data.ageAtOnset));
+          } else {
+            setAgeAtOnset("");
+          }
+
+          if (data.onsetType) setOnsetType(data.onsetType);
+          else setOnsetType("");
+
+          // anticorpi DB -> pill
+          if (Array.isArray(data.antibodies)) {
+            const pills: string[] = [];
+            if (data.antibodies.includes("anti-AChR")) pills.push("AChR");
+            if (data.antibodies.includes("anti-MuSK")) pills.push("MuSK");
+            if (data.antibodies.includes("anti-LRP4")) pills.push("LRP4");
+            if (data.antibodies.includes("double-seronegative"))
+              pills.push("Double seronegative");
+            if (data.antibodies.includes("unknown")) pills.push("Not sure");
+            setAntibodies(pills);
+          } else {
+            setAntibodies([]);
+          }
+
+          if (data.thymectomy === "yes" || data.thymectomy === "no") {
+            setThymectomy(data.thymectomy);
+          } else {
+            setThymectomy("");
+          }
+
+          if (data.thymusHistology) setThymusHistology(data.thymusHistology);
+          else setThymusHistology("");
+
+          const neuroSelected: string[] = [];
+          const neuroTests: string[] = Array.isArray(data.neuroTests)
+            ? data.neuroTests
+            : [];
+          const neuroSfEmgResult = data.neuroSfEmgResult || "";
+          const neuroSrEmgResult = data.neuroSrEmgResult || "";
+
+          if (neuroTests.includes("RNS")) {
+            if (neuroSrEmgResult === "alterata")
+              neuroSelected.push("RNS altered");
+            else if (neuroSrEmgResult === "nella norma")
+              neuroSelected.push("RNS normal");
+          }
+          if (neuroTests.includes("SF-EMG")) {
+            if (neuroSfEmgResult === "alterata")
+              neuroSelected.push("SF-EMG altered");
+            else if (neuroSfEmgResult === "nella norma")
+              neuroSelected.push("SF-EMG normal");
+          }
+          setNeurophysiology(neuroSelected);
+
+          if (Array.isArray(data.hospitalizationYears)) {
+            setHospitalizationsYears(data.hospitalizationYears.join(", "));
+          } else {
+            setHospitalizationsYears("");
+          }
+
+          if (data.comorbidities) setComorbidities(data.comorbidities);
+          else setComorbidities("");
+
+          if (data.notes) setNotes(data.notes);
+          else setNotes("");
+
+          if (data.previousTherapies)
+            setPreviousTherapies(data.previousTherapies);
+          else setPreviousTherapies("");
+
+          if (data.thymectomyDate instanceof Timestamp) {
+            const d = data.thymectomyDate.toDate();
+            setThymectomyDateText(d.toLocaleDateString("it-IT"));
+          } else {
+            setThymectomyDateText("");
+          }
+        } catch (err) {
+          console.error("Errore nel caricamento dello storico MG:", err);
+        }
+      };
+
+      loadHistory();
       return () => {};
     }, [])
   );
 
-  const toggleInArray = (value: string, list: string[], setter: (v: string[]) => void) => {
+  const toggleInArray = (
+    value: string,
+    list: string[],
+    setter: (v: string[]) => void
+  ) => {
     if (list.includes(value)) {
       setter(list.filter((v) => v !== value));
     } else {
@@ -54,121 +196,218 @@ export default function HistoryMgScreen() {
     }
   };
 
-  const handleSave = async () => {
-  const user = auth.currentUser;
-  if (!user) {
-    Toast.show({
-      type: "error",
-      text1: "❌ Utente non autenticato",
-      position: "top",
-    });
-    return;
-  }
+  // parser per data timectomia
+  const parseThymectomyDate = (raw: string): Date | null => {
+    const value = raw.trim();
+    if (!value) return null;
 
-  const ref = doc(db, "users", user.uid, "history", "mg");
-
-  // 1) Mappo onsetCategory come fa il web (EOMG / LOMG / VLOMG / Childhood)
-  let onsetCategory = "";
-  if (onsetAge.startsWith("<18")) {
-    onsetCategory = "Childhood";
-  } else if (onsetAge.includes("18–49")) {
-    onsetCategory = "EOMG";
-  } else if (onsetAge.includes("50–64")) {
-    onsetCategory = "LOMG";
-  } else if (onsetAge.includes("65+")) {
-    onsetCategory = "VLOMG";
-  }
-
-  // 2) Converto anni di ospedalizzazione in ARRAY (come nel web)
-  const hospitalizationYearsArray =
-    hospitalizationsYears
-      .split(",")
-      .map((y) => y.trim())
-      .filter((y) => y.length > 0);
-
-  // 3) Anticorpi -> stessi valori del medico
-  const mappedAntibodies: string[] = [];
-  if (antibodies.includes("AChR")) mappedAntibodies.push("anti-AChR");
-  if (antibodies.includes("MuSK")) mappedAntibodies.push("anti-MuSK");
-  if (antibodies.includes("LRP4")) mappedAntibodies.push("anti-LRP4");
-  if (antibodies.includes("Double seronegative")) mappedAntibodies.push("double-seronegative");
-  if (antibodies.includes("Not sure")) mappedAntibodies.push("unknown");
-
-  // 4) Neurofisiologia -> stesso schema del web:
-  //    - neuroTests: ["RNS", "SF-EMG"]
-  //    - neuroSFEmgResult / neuroSrEmgResult: "alterata" | "nella norma" | ""
-  let neuroTests: string[] = [];
-  let neuroSFEmgResult = "";
-  let neuroSrEmgResult = "";
-
-  neurophysiology.forEach((opt) => {
-    switch (opt) {
-      case "RNS altered":
-        if (!neuroTests.includes("RNS")) neuroTests.push("RNS");
-        neuroSrEmgResult = "alterata";
-        break;
-      case "RNS normal":
-        if (!neuroTests.includes("RNS")) neuroTests.push("RNS");
-        neuroSrEmgResult = "nella norma";
-        break;
-      case "SF-EMG altered":
-        if (!neuroTests.includes("SF-EMG")) neuroTests.push("SF-EMG");
-        neuroSFEmgResult = "alterata";
-        break;
-      case "SF-EMG normal":
-        if (!neuroTests.includes("SF-EMG")) neuroTests.push("SF-EMG");
-        neuroSFEmgResult = "nella norma";
-        break;
-      case "Not done / I don't remember":
-        // lascio tutto vuoto (nessun test / nessun risultato)
-        neuroTests = [];
-        neuroSFEmgResult = "";
-        neuroSrEmgResult = "";
-        break;
+    const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (isoMatch) {
+      const [_, y, m, d] = isoMatch;
+      const dt = new Date(
+        Number(y),
+        Number(m) - 1,
+        Number(d),
+        0,
+        0,
+        0,
+        0
+      );
+      return isNaN(dt.getTime()) ? null : dt;
     }
-  });
 
-  // 5) Payload allineato ai CAMPI DEL MEDICO
-  //    NB: non tocco ageAtOnset qui, così se il medico ha messo 21
-  //    non lo sovrascriviamo con una stringa. Lo userà solo il medico.
-  const payload: any = {
-    onsetType,                             // stesso nome del web
-    onsetCategory: onsetCategory || null,  // stesso nome
-    antibodies: mappedAntibodies,          // stesso campo
-    thymectomy,                            // stesso
-    thymusHistology,                       // stesso
-    neuroTests,                            // array come nel web
-    neuroSFEmgResult,
-    neuroSrEmgResult,
-    hospitalizationYears: hospitalizationYearsArray,
-    comorbidities,
-    notes,
-    lastUpdatedAt: Timestamp.now(),
-    source: "patient_app",
+    const itMatch = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (itMatch) {
+      const [_, d, m, y] = itMatch;
+      const dt = new Date(
+        Number(y),
+        Number(m) - 1,
+        Number(d),
+        0,
+        0,
+        0,
+        0
+      );
+      return isNaN(dt.getTime()) ? null : dt;
+    }
+
+    return null;
   };
 
-  try {
-    await setDoc(ref, payload, { merge: true });
-    Toast.show({
-      type: "success",
-      text1: "Storico MG salvato",
-      position: "top",
+  // 🔘 click sul bottone: solo apre il riepilogo
+  const handleSavePress = () => {
+    if (isLocked) {
+      Toast.show({
+        type: "info",
+        text1: "Storico già inviato",
+        text2: "Per modifiche rivolgiti al tuo neurologo.",
+        position: "top",
+      });
+      return;
+    }
+    setShowConfirmModal(true);
+  };
+
+  // 💾 salvataggio effettivo dopo conferma
+  const performSave = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      Toast.show({
+        type: "error",
+        text1: "❌ Utente non autenticato",
+        position: "top",
+      });
+      return;
+    }
+
+    // ageAtOnset → number
+    let ageNumber: number | null = null;
+    if (ageAtOnset.trim().length > 0) {
+      const n = Number(ageAtOnset.replace(",", "."));
+      if (!isNaN(n) && n > 0 && n < 120) {
+        ageNumber = Math.round(n);
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Età all’esordio non valida",
+          text2: "Inserisci un numero realistico (ad es. 31).",
+          position: "top",
+        });
+        return;
+      }
+    }
+
+    // onsetCategory dal numero (stessa logica web)
+    let onsetCategory = "";
+    if (ageNumber !== null) {
+      if (ageNumber < 18) onsetCategory = "Childhood";
+      else if (ageNumber <= 49) onsetCategory = "EOMG";
+      else if (ageNumber <= 64) onsetCategory = "LOMG";
+      else onsetCategory = "VLOMG";
+    }
+
+    // anni di ricovero
+    const hospitalizationYearsArray =
+      hospitalizationsYears
+        .split(",")
+        .map((y) => y.trim())
+        .filter((y) => y.length > 0);
+
+    // anticorpi
+    const mappedAntibodies: string[] = [];
+    if (antibodies.includes("AChR")) mappedAntibodies.push("anti-AChR");
+    if (antibodies.includes("MuSK")) mappedAntibodies.push("anti-MuSK");
+    if (antibodies.includes("LRP4")) mappedAntibodies.push("anti-LRP4");
+    if (antibodies.includes("Double seronegative"))
+      mappedAntibodies.push("double-seronegative");
+    if (antibodies.includes("Not sure")) mappedAntibodies.push("unknown");
+
+    // neurofisiologia
+    let neuroTests: string[] = [];
+    let neuroSfEmgResult = "";
+    let neuroSrEmgResult = "";
+
+    neurophysiology.forEach((opt) => {
+      switch (opt) {
+        case "RNS altered":
+          if (!neuroTests.includes("RNS")) neuroTests.push("RNS");
+          neuroSrEmgResult = "alterata";
+          break;
+        case "RNS normal":
+          if (!neuroTests.includes("RNS")) neuroTests.push("RNS");
+          neuroSrEmgResult = "nella norma";
+          break;
+        case "SF-EMG altered":
+          if (!neuroTests.includes("SF-EMG")) neuroTests.push("SF-EMG");
+          neuroSfEmgResult = "alterata";
+          break;
+        case "SF-EMG normal":
+          if (!neuroTests.includes("SF-EMG")) neuroTests.push("SF-EMG");
+          neuroSfEmgResult = "nella norma";
+          break;
+        case "Not done / I don't remember":
+          neuroTests = [];
+          neuroSfEmgResult = "";
+          neuroSrEmgResult = "";
+          break;
+      }
     });
-  } catch (err) {
-    const error = err as Error;
-    console.error("Errore salvataggio storico MG:", error);
-    Toast.show({
-      type: "error",
-      text1: "Errore durante il salvataggio",
-      text2: error.message,
-      position: "top",
-    });
-  }
-};
+
+    // data timectomia
+    const parsedThDate = parseThymectomyDate(thymectomyDateText);
+
+    const ref = doc(db, "users", user.uid, "history", "mg");
+
+    const payload: any = {
+      onsetType,
+      onsetCategory: onsetCategory || null,
+      antibodies: mappedAntibodies,
+      thymectomy,
+      thymusHistology,
+      neuroTests,
+      neuroSfEmgResult,
+      neuroSrEmgResult,
+      hospitalizationYears: hospitalizationYearsArray,
+      comorbidities,
+      notes,
+      previousTherapies,
+      lastUpdatedAt: Timestamp.now(),
+      source: "patient_app",
+      // 🔐 blocco dopo il primo invio
+      patientHistoryLocked: true,
+    };
+
+    if (ageNumber !== null) {
+      payload.ageAtOnset = ageNumber;
+    }
+
+    if (parsedThDate) {
+      payload.thymectomyDate = Timestamp.fromDate(parsedThDate);
+    }
+
+    try {
+      await setDoc(ref, payload, { merge: true });
+      setShowConfirmModal(false);
+      setIsLocked(true); // blocca localmente subito
+
+      Toast.show({
+        type: "success",
+        text1: "Storico MG inviato",
+        text2: "I dati sono stati salvati. Saranno rivisti dal neurologo.",
+        position: "top",
+      });
+    } catch (err) {
+      const error = err as Error;
+      console.error("Errore salvataggio storico MG:", error);
+      Toast.show({
+        type: "error",
+        text1: "Errore durante il salvataggio",
+        text2: error.message,
+        position: "top",
+      });
+    }
+  };
+
+  const onsetCategoryLabel = getOnsetCategoryLabel(ageAtOnset);
+  const readableThymectomy =
+    thymectomy === "yes" ? "Sì" : thymectomy === "no" ? "No" : "-";
+  const readableHistology =
+    histologyOptions.find((h) => h.value === thymusHistology)?.label || "-";
+  const readableNeuro =
+    neurophysiology.length > 0
+      ? neurophysiology
+          .map(
+            (val) => neuroOptions.find((o) => o.value === val)?.label || val
+          )
+          .join(" · ")
+      : "-";
+
+  const readableAntibodies =
+    antibodies.length > 0 ? antibodies.join(", ") : "Nessuno / non lo so";
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F2F2F7" }}>
-      {/* GRADIENT HEADER */}
+      {/* HEADER GRADIENT */}
       <LinearGradient
         colors={[Colors.turquoise, Colors.light1]}
         start={{ x: 0.5, y: 0 }}
@@ -178,53 +417,74 @@ export default function HistoryMgScreen() {
 
       <View style={styles.mainHeader}>
         <View style={styles.iconWrapper}>
-            <Ionicons name="pulse" size={48} color={Colors.turquoise} />
+          <Ionicons name="pulse" size={48} color={Colors.turquoise} />
         </View>
-        <Text style={FontStyles.variants.mainTitle}>Myasthenia History</Text>
+        <Text style={FontStyles.variants.mainTitle}>
+          Storico Miastenia Gravis
+        </Text>
         <Text style={FontStyles.variants.sectionTitle}>
-          Tell us about your diagnosis journey
+          Raccontaci la storia della tua diagnosi
         </Text>
       </View>
 
+      {/* Banner blocco */}
+      {isLocked && (
+        <View style={styles.lockBanner}>
+          <Lock size={18} color={Colors.turquoise} />
+          <Text style={styles.lockBannerText}>
+            Hai già inviato il tuo storico. Eventuali correzioni verranno fatte
+            dal tuo neurologo in clinica.
+          </Text>
+        </View>
+      )}
+
       <ScrollView contentContainerStyle={styles.scrollView}>
-        {/* Onset age */}
-        <PressableScaleWithRef
-          onPress={() => setActiveModal("onsetAge")}
-          style={[styles.card, onsetAge ? styles.cardSelected : null]}
-          weight="light"
-          activeScale={0.96}
+        {/* Età all’esordio */}
+        <View
+          style={[
+            styles.card,
+            ageAtOnset ? styles.cardSelected : null,
+            isLocked && styles.cardDisabled,
+          ]}
         >
           <View style={styles.cardHeader}>
-            <Ionicons name="calendar-outline" size={20} color={Colors.turquoise} />
-            <Text style={styles.cardLabel}>Age at onset</Text>
-            <View style={{ flex: 1 }} />
-            <Text
-              style={[
-                styles.cardRightValue,
-                onsetAge ? { color: Colors.turquoise } : null,
-              ]}
-            >
-              {onsetAge || "Select"}
-            </Text>
             <Ionicons
-              name="chevron-forward-outline"
-              size={16}
-              color={Colors.light3}
-              style={{ marginLeft: 6 }}
+              name="calendar-outline"
+              size={20}
+              color={Colors.turquoise}
             />
+            <Text style={styles.cardLabel}>Età all’esordio dei sintomi</Text>
           </View>
-        </PressableScaleWithRef>
+          <Text style={styles.helperText}>
+            Inserisci quanti anni avevi quando sono comparsi i primi sintomi di
+            Miastenia Gravis.
+          </Text>
+          <TextInput
+            value={ageAtOnset}
+            onChangeText={setAgeAtOnset}
+            placeholder="Es. 31"
+            keyboardType="numeric"
+            style={styles.textInput}
+            editable={!isLocked}
+          />
+        </View>
 
-        {/* Onset type */}
+        {/* Tipo di esordio */}
         <PressableScaleWithRef
-          onPress={() => setActiveModal("onsetType")}
-          style={[styles.card, onsetType ? styles.cardSelected : null]}
+          onPress={
+            isLocked ? undefined : () => setActiveModal("onsetType")
+          }
+          style={[
+            styles.card,
+            onsetType ? styles.cardSelected : null,
+            isLocked && styles.cardDisabled,
+          ]}
           weight="light"
-          activeScale={0.96}
+          activeScale={isLocked ? 1 : 0.96}
         >
           <View style={styles.cardHeader}>
             <Ionicons name="eye-outline" size={20} color={Colors.turquoise} />
-            <Text style={styles.cardLabel}>Type of onset</Text>
+            <Text style={styles.cardLabel}>Tipo di esordio</Text>
             <View style={{ flex: 1 }} />
             <Text
               style={[
@@ -232,7 +492,7 @@ export default function HistoryMgScreen() {
                 onsetType ? { color: Colors.turquoise } : null,
               ]}
             >
-              {onsetType || "Select"}
+              {onsetType || "Seleziona"}
             </Text>
             <Ionicons
               name="chevron-forward-outline"
@@ -243,11 +503,17 @@ export default function HistoryMgScreen() {
           </View>
         </PressableScaleWithRef>
 
-        {/* Antibodies */}
-        <View style={styles.card}>
+        {/* Anticorpi */}
+        <View
+          style={[
+            styles.card,
+            antibodies.length > 0 ? styles.cardSelected : null,
+            isLocked && styles.cardDisabled,
+          ]}
+        >
           <View style={styles.cardHeader}>
             <Ionicons name="flask-outline" size={20} color={Colors.turquoise} />
-            <Text style={styles.cardLabel}>Antibodies (if known)</Text>
+            <Text style={styles.cardLabel}>Anticorpi (se conosciuti)</Text>
           </View>
           <View style={styles.pillContainer}>
             {["AChR", "MuSK", "LRP4", "Double seronegative", "Not sure"].map(
@@ -256,13 +522,14 @@ export default function HistoryMgScreen() {
                 return (
                   <PressableScaleWithRef
                     key={ab}
-                    onPress={() => toggleInArray(ab, antibodies, setAntibodies)}
-                    style={[
-                      styles.pill,
-                      isSelected && styles.pillSelected,
-                    ]}
+                    onPress={
+                      isLocked
+                        ? undefined
+                        : () => toggleInArray(ab, antibodies, setAntibodies)
+                    }
+                    style={[styles.pill, isSelected && styles.pillSelected]}
                     weight="light"
-                    activeScale={0.96}
+                    activeScale={isLocked ? 1 : 0.96}
                   >
                     <Text
                       style={[
@@ -279,48 +546,125 @@ export default function HistoryMgScreen() {
           </View>
         </View>
 
-        {/* Thymectomy yes/no */}
+        {/* Terapie precedenti */}
+        <View
+          style={[
+            styles.card,
+            previousTherapies ? styles.cardSelected : null,
+            isLocked && styles.cardDisabled,
+          ]}
+        >
+          <View style={styles.cardHeader}>
+            <Ionicons
+              name="medkit-outline"
+              size={20}
+              color={Colors.turquoise}
+            />
+            <Text style={styles.cardLabel}>Terapie precedenti per la MG</Text>
+          </View>
+          <Text style={styles.helperText}>
+            Ad esempio: corticosteroidi, IVIG, plasmaferesi, altri
+            immunosoppressori…
+          </Text>
+          <TextInput
+            value={previousTherapies}
+            onChangeText={setPreviousTherapies}
+            placeholder="Scrivi qui le principali terapie che hai fatto in passato."
+            multiline
+            style={styles.textArea}
+            editable={!isLocked}
+          />
+        </View>
+
+        {/* Timectomia sì/no */}
         <PressableScaleWithRef
-          onPress={() =>
-            setThymectomy((prev) =>
-              prev === "yes" ? "no" : prev === "no" ? "" : "yes"
-            )
+          onPress={
+            isLocked
+              ? undefined
+              : () =>
+                  setThymectomy((prev) =>
+                    prev === "yes" ? "no" : prev === "no" ? "" : "yes"
+                  )
           }
           style={[
             styles.card,
             thymectomy && styles.cardSelected,
+            isLocked && styles.cardDisabled,
           ]}
           weight="light"
-          activeScale={0.96}
+          activeScale={isLocked ? 1 : 0.96}
         >
           <View style={styles.cardHeader}>
             <Ionicons name="body-outline" size={20} color={Colors.turquoise} />
-            <Text style={styles.cardLabel}>Thymectomy</Text>
+            <Text style={styles.cardLabel}>Timectomia</Text>
             <View style={{ flex: 1 }} />
-            {thymectomy === "yes" && <Check size={18} color={Colors.turquoise} />}
+            {thymectomy === "yes" && (
+              <Check size={18} color={Colors.turquoise} />
+            )}
             {thymectomy === "no" && <X size={18} color={Colors.light3} />}
             {!thymectomy && (
-              <Text style={styles.cardRightValue}>Yes / No</Text>
+              <Text style={styles.cardRightValue}>Sì / No</Text>
             )}
           </View>
           {thymectomy === "yes" && (
             <Text style={styles.helperText}>
-              If you know it, you can specify the histology below.
+              Se la ricordi, puoi indicare anche la data dell’intervento e
+              l’istologia.
             </Text>
           )}
         </PressableScaleWithRef>
 
-        {/* Thymus histology (only if thymectomy yes) */}
+        {/* Data timectomia */}
         {thymectomy === "yes" && (
-          <PressableScaleWithRef
-            onPress={() => setActiveModal("thymusHistology")}
-            style={[styles.card, thymusHistology ? styles.cardSelected : null]}
-            weight="light"
-            activeScale={0.96}
+          <View
+            style={[
+              styles.card,
+              thymectomyDateText ? styles.cardSelected : null,
+              isLocked && styles.cardDisabled,
+            ]}
           >
             <View style={styles.cardHeader}>
-              <Ionicons name="file-tray-outline" size={20} color={Colors.turquoise} />
-              <Text style={styles.cardLabel}>Thymus histology</Text>
+              <Ionicons
+                name="calendar-number-outline"
+                size={20}
+                color={Colors.turquoise}
+              />
+              <Text style={styles.cardLabel}>Data della timectomia</Text>
+            </View>
+            <Text style={styles.helperText}>
+              Puoi scrivere la data come gg/mm/aaaa oppure aaaa-mm-gg.
+            </Text>
+            <TextInput
+              value={thymectomyDateText}
+              onChangeText={setThymectomyDateText}
+              placeholder="Es. 11/11/2025 oppure 2025-11-11"
+              style={styles.textInput}
+              editable={!isLocked}
+            />
+          </View>
+        )}
+
+        {/* Istologia timica */}
+        {thymectomy === "yes" && (
+          <PressableScaleWithRef
+            onPress={
+              isLocked ? undefined : () => setActiveModal("thymusHistology")
+            }
+            style={[
+              styles.card,
+              thymusHistology ? styles.cardSelected : null,
+              isLocked && styles.cardDisabled,
+            ]}
+            weight="light"
+            activeScale={isLocked ? 1 : 0.96}
+          >
+            <View style={styles.cardHeader}>
+              <Ionicons
+                name="file-tray-outline"
+                size={20}
+                color={Colors.turquoise}
+              />
+              <Text style={styles.cardLabel}>Istologia timica</Text>
               <View style={{ flex: 1 }} />
               <Text
                 style={[
@@ -328,7 +672,7 @@ export default function HistoryMgScreen() {
                   thymusHistology ? { color: Colors.turquoise } : null,
                 ]}
               >
-                {thymusHistology || "Select"}
+                {readableHistology || "Seleziona"}
               </Text>
               <Ionicons
                 name="chevron-forward-outline"
@@ -340,158 +684,158 @@ export default function HistoryMgScreen() {
           </PressableScaleWithRef>
         )}
 
-        {/* Neurophysiology */}
+        {/* Esami neurofisiologici */}
         <PressableScaleWithRef
-          onPress={() => setActiveModal("neurophysiology")}
+          onPress={
+            isLocked ? undefined : () => setActiveModal("neurophysiology")
+          }
           style={[
             styles.card,
             neurophysiology.length > 0 && styles.cardSelected,
+            isLocked && styles.cardDisabled,
           ]}
           weight="light"
-          activeScale={0.96}
+          activeScale={isLocked ? 1 : 0.96}
         >
           <View style={styles.cardHeader}>
-            <Ionicons name="pulse-outline" size={20} color={Colors.turquoise} />
-            <Text style={styles.cardLabel}>Neurophysiology tests</Text>
+            <Ionicons
+              name="pulse-outline"
+              size={20}
+              color={Colors.turquoise}
+            />
+            <Text style={styles.cardLabel}>Esami neurofisiologici</Text>
           </View>
           <Text style={styles.helperText}>
-            Select the tests you had and, if you remember, the result.
+            Se lo ricordi, indica quali esami hai fatto (RNS, SF-EMG) e il
+            risultato.
           </Text>
           {neurophysiology.length > 0 && (
             <Text style={styles.selectedSummary} numberOfLines={1}>
-              {neurophysiology.join(" · ")}
+              {readableNeuro}
             </Text>
           )}
         </PressableScaleWithRef>
 
-        {/* Hospitalizations years */}
-        <View style={styles.card}>
+        {/* Anni con ricoveri */}
+        <View
+          style={[
+            styles.card,
+            hospitalizationsYears ? styles.cardSelected : null,
+            isLocked && styles.cardDisabled,
+          ]}
+        >
           <View style={styles.cardHeader}>
             <Ionicons name="medkit" size={20} color={Colors.turquoise} />
-            <Text style={styles.cardLabel}>Years with hospitalizations</Text>
+            <Text style={styles.cardLabel}>Anni con ricoveri</Text>
           </View>
           <Text style={styles.helperText}>
-            If you remember approximately how many years you have been hospitalized
-            for MG-related problems, you can indicate it here.
+            Se ti ricordi in quali anni sei stato/a ricoverato/a per problemi
+            legati alla MG, indicali qui (separati da virgola).
           </Text>
           <TextInput
             value={hospitalizationsYears}
             onChangeText={setHospitalizationsYears}
-            placeholder="e.g. 0, 1, 2..."
+            placeholder="Es. 2021, 2023"
             keyboardType="numeric"
             style={styles.textInput}
+            editable={!isLocked}
           />
         </View>
 
-        {/* Comorbidities */}
-        <View style={styles.card}>
+        {/* Comorbidità */}
+        <View
+          style={[
+            styles.card,
+            comorbidities ? styles.cardSelected : null,
+            isLocked && styles.cardDisabled,
+          ]}
+        >
           <View style={styles.cardHeader}>
             <Ionicons name="list-outline" size={20} color={Colors.turquoise} />
-            <Text style={styles.cardLabel}>Other health conditions</Text>
+            <Text style={styles.cardLabel}>Altre condizioni di salute</Text>
           </View>
           <TextInput
             value={comorbidities}
             onChangeText={setComorbidities}
-            placeholder="e.g. thyroid disease, diabetes..."
+            placeholder="Es. malattia tiroidea, diabete..."
             multiline
             style={styles.textArea}
+            editable={!isLocked}
           />
         </View>
 
-        {/* Notes */}
-        <View style={styles.card}>
+        {/* Note libere */}
+        <View
+          style={[
+            styles.card,
+            notes ? styles.cardSelected : null,
+            isLocked && styles.cardDisabled,
+          ]}
+        >
           <View style={styles.cardHeader}>
-            <Ionicons name="document-text-outline" size={20} color={Colors.turquoise} />
-            <Text style={styles.cardLabel}>Notes for your clinician</Text>
+            <Ionicons
+              name="document-text-outline"
+              size={20}
+              color={Colors.turquoise}
+            />
+            <Text style={styles.cardLabel}>Note per il/la neurologo/a</Text>
           </View>
           <TextInput
             value={notes}
             onChangeText={setNotes}
-            placeholder="Anything else you want your doctor to know about your story."
+            placeholder="Qualsiasi altra informazione importante sulla tua storia clinica."
             multiline
             style={styles.textArea}
+            editable={!isLocked}
           />
         </View>
 
-        {/* SAVE BUTTON */}
-        <PressableScaleWithRef
-          onPress={handleSave}
-          weight="light"
-          activeScale={0.96}
-          style={styles.saveButton}
-        >
-          <Text style={styles.saveText}>Submit history</Text>
-        </PressableScaleWithRef>
+        {/* BOTTONE SALVATAGGIO (solo se non bloccato) */}
+        {!isLocked && (
+          <PressableScaleWithRef
+            onPress={handleSavePress}
+            weight="light"
+            activeScale={0.96}
+            style={styles.saveButton}
+          >
+            <Text style={styles.saveText}>Salva storico</Text>
+          </PressableScaleWithRef>
+        )}
       </ScrollView>
 
-      {/* MODAL: Onset age */}
-      <Modal
-        visible={activeModal === "onsetAge"}
-        animationType="slide"
-        transparent
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            {[
-              "<18 years (childhood)",
-              "18–49 years (EOMG)",
-              "50–64 years",
-              "65+ years (late-onset)",
-            ].map((opt) => (
-              <TouchableOpacity
-                key={opt}
-                style={styles.optionItem}
-                onPress={() => {
-                  setOnsetAge(opt);
-                  setActiveModal(null);
-                }}
-              >
-                <Text style={styles.optionText}>{opt}</Text>
-              </TouchableOpacity>
-            ))}
-            <TouchableOpacity
-              style={styles.cancelItem}
-              onPress={() => setActiveModal(null)}
-            >
-              <Text style={styles.cancelText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* MODAL: Onset type */}
+      {/* MODAL: Tipo di esordio */}
       <Modal
         visible={activeModal === "onsetType"}
         animationType="slide"
         transparent
       >
         <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
+          <View style={styles.modalContent}>
             {["oculare", "generalizzata", "oculare poi generalizzata"].map(
-                (opt) => (
+              (opt) => (
                 <TouchableOpacity
-                    key={opt}
-                    style={styles.optionItem}
-                    onPress={() => {
-                    setOnsetType(opt);   // viene salvato tale e quale nel campo onsetType
+                  key={opt}
+                  style={styles.optionItem}
+                  onPress={() => {
+                    setOnsetType(opt);
                     setActiveModal(null);
-                    }}
+                  }}
                 >
-                    <Text style={styles.optionText}>{opt}</Text>
+                  <Text style={styles.optionText}>{opt}</Text>
                 </TouchableOpacity>
-                )
+              )
             )}
             <TouchableOpacity
-                style={styles.cancelItem}
-                onPress={() => setActiveModal(null)}
+              style={styles.cancelItem}
+              onPress={() => setActiveModal(null)}
             >
-                <Text style={styles.cancelText}>Cancel</Text>
+              <Text style={styles.cancelText}>Annulla</Text>
             </TouchableOpacity>
-            </View>
+          </View>
         </View>
-        </Modal>
+      </Modal>
 
-      {/* MODAL: Thymus histology */}
+      {/* MODAL: Istologia timica */}
       <Modal
         visible={activeModal === "thymusHistology"}
         animationType="slide"
@@ -499,29 +843,29 @@ export default function HistoryMgScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            {["Thymoma", "Hyperplasia", "Atrophy", "Not sure"].map((opt) => (
+            {histologyOptions.map((opt) => (
               <TouchableOpacity
-                key={opt}
+                key={opt.value}
                 style={styles.optionItem}
                 onPress={() => {
-                  setThymusHistology(opt);
+                  setThymusHistology(opt.value);
                   setActiveModal(null);
                 }}
               >
-                <Text style={styles.optionText}>{opt}</Text>
+                <Text style={styles.optionText}>{opt.label}</Text>
               </TouchableOpacity>
             ))}
             <TouchableOpacity
               style={styles.cancelItem}
               onPress={() => setActiveModal(null)}
             >
-              <Text style={styles.cancelText}>Cancel</Text>
+              <Text style={styles.cancelText}>Annulla</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      {/* MODAL: Neurophysiology */}
+      {/* MODAL: Neurofisiologia */}
       <Modal
         visible={activeModal === "neurophysiology"}
         animationType="slide"
@@ -529,26 +873,20 @@ export default function HistoryMgScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            {[
-              "RNS altered",
-              "RNS normal",
-              "SF-EMG altered",
-              "SF-EMG normal",
-              "Not done / I don't remember",
-            ].map((opt) => {
-              const selected = neurophysiology.includes(opt);
+            {neuroOptions.map((opt) => {
+              const selected = neurophysiology.includes(opt.value);
               return (
                 <TouchableOpacity
-                  key={opt}
+                  key={opt.value}
                   style={[
                     styles.optionItem,
                     selected && { backgroundColor: "#F2F2F7" },
                   ]}
                   onPress={() =>
-                    toggleInArray(opt, neurophysiology, setNeurophysiology)
+                    toggleInArray(opt.value, neurophysiology, setNeurophysiology)
                   }
                 >
-                  <Text style={styles.optionText}>{opt}</Text>
+                  <Text style={styles.optionText}>{opt.label}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -556,8 +894,115 @@ export default function HistoryMgScreen() {
               style={styles.cancelItem}
               onPress={() => setActiveModal(null)}
             >
-              <Text style={styles.cancelText}>Done</Text>
+              <Text style={styles.cancelText}>Fine</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MODAL: Conferma invio con riepilogo */}
+      <Modal visible={showConfirmModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: "80%" }]}>
+            <Text style={styles.confirmTitle}>Conferma invio storico</Text>
+            <Text style={styles.confirmSubtitle}>
+              Controlla che i dati qui sotto siano corretti. Dopo l’invio non
+              potrai più modificarli dall’app.
+            </Text>
+
+            <ScrollView style={{ marginTop: 12, marginBottom: 16 }}>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Età all’esordio</Text>
+                <Text style={styles.summaryValue}>
+                  {ageAtOnset || "-"}{" "}
+                </Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Categoria esordio</Text>
+                <Text style={styles.summaryValue}>
+                  {onsetCategoryLabel}
+                </Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Tipo di esordio</Text>
+                <Text style={styles.summaryValue}>
+                  {onsetType || "-"}
+                </Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Anticorpi</Text>
+                <Text style={styles.summaryValue}>
+                  {readableAntibodies}
+                </Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Terapie precedenti</Text>
+                <Text style={styles.summaryValue}>
+                  {previousTherapies || "-"}
+                </Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Timectomia</Text>
+                <Text style={styles.summaryValue}>{readableThymectomy}</Text>
+              </View>
+              {thymectomy === "yes" && (
+                <>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>
+                      Data timectomia
+                    </Text>
+                    <Text style={styles.summaryValue}>
+                      {thymectomyDateText || "-"}
+                    </Text>
+                  </View>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>
+                      Istologia timica
+                    </Text>
+                    <Text style={styles.summaryValue}>
+                      {readableHistology}
+                    </Text>
+                  </View>
+                </>
+              )}
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>
+                  Esami neurofisiologici
+                </Text>
+                <Text style={styles.summaryValue}>{readableNeuro}</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Anni con ricoveri</Text>
+                <Text style={styles.summaryValue}>
+                  {hospitalizationsYears || "-"}
+                </Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Comorbidità</Text>
+                <Text style={styles.summaryValue}>
+                  {comorbidities || "-"}
+                </Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Note libere</Text>
+                <Text style={styles.summaryValue}>{notes || "-"}</Text>
+              </View>
+            </ScrollView>
+
+            <View style={styles.confirmButtonsRow}>
+              <TouchableOpacity
+                style={[styles.confirmButton, styles.confirmCancel]}
+                onPress={() => setShowConfirmModal(false)}
+              >
+                <Text style={styles.confirmCancelText}>Annulla</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.confirmButton, styles.confirmOk]}
+                onPress={performSave}
+              >
+                <Text style={styles.confirmOkText}>Conferma invio</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -602,6 +1047,9 @@ const styles = StyleSheet.create({
   cardSelected: {
     borderColor: Colors.turquoise,
     borderWidth: 2,
+  },
+  cardDisabled: {
+    opacity: 0.6,
   },
   cardHeader: {
     flexDirection: "row",
@@ -724,5 +1172,79 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#EB4B62",
     textAlign: "center",
+  },
+  lockBanner: {
+    marginHorizontal: 20,
+    marginBottom: 8,
+    padding: 10,
+    borderRadius: 14,
+    backgroundColor: "#E5F7F4",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  lockBannerText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.gray1,
+  },
+  confirmTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 4,
+    color: "#111",
+  },
+  confirmSubtitle: {
+    fontSize: 13,
+    textAlign: "center",
+    color: Colors.gray3 || "#6e6e73",
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 6,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#E5E5EA",
+  },
+  summaryLabel: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#6e6e73",
+    maxWidth: "55%",
+  },
+  summaryValue: {
+    fontSize: 13,
+    color: "#111",
+    textAlign: "right",
+    maxWidth: "45%",
+  },
+  confirmButtonsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+    gap: 8,
+  },
+  confirmButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 16,
+    alignItems: "center",
+  },
+  confirmCancel: {
+    backgroundColor: "#F2F2F7",
+  },
+  confirmCancelText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#111",
+  },
+  confirmOk: {
+    backgroundColor: Colors.turquoise,
+  },
+  confirmOkText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#FFF",
   },
 });
