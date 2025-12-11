@@ -8,23 +8,37 @@ import {
   ScrollView,
   Animated,
 } from "react-native";
-import {
-  getDoc,
-  doc,
-  setDoc,
-  Timestamp,
-} from "firebase/firestore";
+import { getDoc, doc, setDoc, Timestamp } from "firebase/firestore";
 import { auth, db } from "../firebaseconfig";
 import BottomNavigation from "../components/bottomnavigationnew";
-import { LinearGradient } from 'expo-linear-gradient'
+import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import { Activity, AlertCircle, Eye, Mic, Droplet, Wind, TrendingUp, Smile, Moon, Info, X } from "lucide-react-native";
+import {
+  Activity,
+  AlertCircle,
+  Eye,
+  Mic,
+  Droplet,
+  Wind,
+  TrendingUp,
+  Smile,
+  Moon,
+  Info,
+  X,
+} from "lucide-react-native";
 import { Ionicons } from "@expo/vector-icons";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
 
-
 const meals = ["breakfast", "lunch", "dinner", "snack"];
+
+// 🔤 Label in italiano per i pasti
+const mealLabels: Record<string, string> = {
+  breakfast: "Colazione",
+  lunch: "Pranzo",
+  dinner: "Cena",
+  snack: "Spuntino",
+};
 
 export default function DietTracker() {
   const [diet, setDiet] = useState<Record<string, string>>({});
@@ -93,97 +107,112 @@ export default function DietTracker() {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.gradientBackground}
-        />
+      />
 
-        <View style={styles.mainHeader}>
-            <View style={styles.iconWrapper}>
-                <Ionicons name="nutrition" size={48} color={Colors.orange} />
-            </View>
-            <Text style={FontStyles.variants.mainTitle}>Diet Tracker</Text>
-            <Text style={FontStyles.variants.sectionTitle}>Quickly log what you've eaten today</Text>
+      <View style={styles.mainHeader}>
+        <View style={styles.iconWrapper}>
+          <Ionicons name="nutrition" size={48} color={Colors.orange} />
         </View>
+        <Text style={FontStyles.variants.mainTitle}>Alimentazione</Text>
+        <Text style={FontStyles.variants.sectionTitle}>
+          Registra rapidamente cosa hai mangiato oggi
+        </Text>
+      </View>
 
-    <ScrollView contentContainerStyle={styles.mealContainer}>
+      <ScrollView contentContainerStyle={styles.mealContainer}>
         {meals.map((meal) => {
-        const icons: Record<string, JSX.Element> = {
+          const icons: Record<string, JSX.Element> = {
             breakfast: <Ionicons name="cafe" size={20} color="#EC6330" />,
             lunch: <Ionicons name="restaurant" size={20} color="#EC6330" />,
             dinner: <Ionicons name="pizza" size={20} color="#EC6330" />,
             snack: <Ionicons name="fast-food" size={20} color="#EC6330" />,
-        };
+          };
 
-        const isEditing = editingMeal === meal;
+          const isEditing = editingMeal === meal;
 
-        return (
-            <View key={meal} style={[styles.card, isEditing && styles.cardSelected]}>
-            <View style={styles.cardHeader}>
+          return (
+            <View
+              key={meal}
+              style={[styles.card, isEditing && styles.cardSelected]}
+            >
+              <View style={styles.cardHeader}>
                 {icons[meal]}
                 <Text style={styles.cardLabel}>
-                {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                  {mealLabels[meal] || meal}
                 </Text>
-            </View>
+              </View>
 
-            {isEditing ? (
+              {isEditing ? (
                 <>
-                <TextInput
+                  <TextInput
                     value={input}
                     onChangeText={setInput}
-                    placeholder="Describe your meal..."
+                    placeholder="Descrivi il tuo pasto…"
                     placeholderTextColor="#999"
                     style={styles.inputField}
-                />
-                <View style={styles.inlineActions}>
+                  />
+                  <View style={styles.inlineActions}>
                     <TouchableOpacity
-                    style={[styles.inlineButton, styles.cancelButton]}
-                    onPress={() => {
+                      style={[styles.inlineButton, styles.cancelButton]}
+                      onPress={() => {
                         setEditingMeal(null);
                         setInput("");
-                    }}
+                      }}
                     >
-                    <Text style={styles.cancelText}>Cancel</Text>
+                      <Text style={styles.cancelText}>Annulla</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                    style={[styles.inlineButton, styles.saveButton]}
-                    onPress={() => {
+                      style={[styles.inlineButton, styles.saveButton]}
+                      onPress={() => {
                         const updatedDiet = { ...diet, [meal]: input };
                         setDiet(updatedDiet);
                         setEditingMeal(null);
                         setInput("");
-                    }}
+                      }}
                     >
-                    <Text style={styles.saveText}>Save</Text>
+                      <Text style={styles.saveText}>Salva</Text>
                     </TouchableOpacity>
-                </View>
+                  </View>
                 </>
-            ) : (
+              ) : (
                 <>
-                <TouchableOpacity
-                onPress={() => {
-                    setEditingMeal(meal);
-                    setInput(diet[meal] || "");
-                }}
-                >
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Text style={styles.cardContent}>
-                    {diet[meal] || "Not yet entered"}
-                    </Text>
-                    <Ionicons name="chevron-forward-outline" size={18} color = {Colors.light3} />
-                </View>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setEditingMeal(meal);
+                      setInput(diet[meal] || "");
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text style={styles.cardContent}>
+                        {diet[meal] || "Non ancora compilato"}
+                      </Text>
+                      <Ionicons
+                        name="chevron-forward-outline"
+                        size={18}
+                        color={Colors.light3}
+                      />
+                    </View>
+                  </TouchableOpacity>
                 </>
-            )}
+              )}
             </View>
-        );
-      })}
-    </ScrollView>
+          );
+        })}
+      </ScrollView>
 
       <PressableScaleWithRef
-            onPress={handleSave}
-            weight="light"
-            activeScale={0.96}
-            style={styles.globalSaveButton}
-            >
-            <Text style={styles.globalSaveText}>Submit</Text>
+        onPress={handleSave}
+        weight="light"
+        activeScale={0.96}
+        style={styles.globalSaveButton}
+      >
+        <Text style={styles.globalSaveText}>Salva alimentazione</Text>
       </PressableScaleWithRef>
 
       {/* Toast visivo animato */}
@@ -203,7 +232,9 @@ export default function DietTracker() {
           },
         ]}
       >
-        <Text style={styles.toastText}>✅ Diet saved successfully!</Text>
+        <Text style={styles.toastText}>
+          ✅ Alimentazione salvata con successo!
+        </Text>
       </Animated.View>
 
       <BottomNavigation />
@@ -217,16 +248,16 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light1,
   },
   title: {
-  fontSize: 24,
-  fontWeight: "700",
-  textAlign: "center",
-  color: "#1C1C1E",
+    fontSize: 24,
+    fontWeight: "700",
+    textAlign: "center",
+    color: "#1C1C1E",
   },
-  subtitle: { 
-    fontSize: 16, 
-    textAlign: "center", 
-    color: "#6b7280", 
-    marginBottom: 20 
+  subtitle: {
+    fontSize: 16,
+    textAlign: "center",
+    color: "#6b7280",
+    marginBottom: 20,
   },
   mealContainer: {
     padding: 20,
@@ -254,7 +285,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 10,
-    marginVertical: 5
+    marginVertical: 5,
   },
   editText: {
     color: "#007AFF",
@@ -321,70 +352,70 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   emojiIcon: {
-  fontSize: 18,
-  marginRight: 6,
+    fontSize: 18,
+    marginRight: 6,
   },
   summaryBadge: {
-  marginHorizontal: 20,
-  marginBottom: 10,
-  backgroundColor: "#D4EDDA",
-  borderRadius: 12,
-  paddingVertical: 10,
-  alignItems: "center",
+    marginHorizontal: 20,
+    marginBottom: 10,
+    backgroundColor: "#D4EDDA",
+    borderRadius: 12,
+    paddingVertical: 10,
+    alignItems: "center",
   },
   summaryText: {
     color: "#1E8449",
     fontWeight: "600",
   },
   inlineInput: {
-  borderWidth: 1,
-  borderColor: "#ccc",
-  borderRadius: 10,
-  padding: 10,
-  marginTop: 6,
-  marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 6,
+    marginBottom: 8,
   },
   inlineSave: {
-  alignSelf: "flex-end",
-  backgroundColor: "#007AFF",
-  paddingHorizontal: 14,
-  paddingVertical: 8,
-  borderRadius: 8,
+    alignSelf: "flex-end",
+    backgroundColor: "#007AFF",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
   inlineSaveText: {
     color: "#fff",
     fontWeight: "600",
   },
   mealCard: {
-  backgroundColor: "#fff",
-  borderRadius: 16,
-  padding: 16,
-  marginBottom: 12,
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.05,
-  shadowRadius: 3,
-  elevation: 1,
-  borderWidth: 0.5,
-  borderColor: "#ECECEC",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
+    borderWidth: 0.5,
+    borderColor: "#ECECEC",
   },
-inlineActions: {
-  flexDirection: "row",
-  justifyContent: "flex-end",
-  gap: 12,
-  marginTop: 12,
-},
-inlineButton: {
-  paddingHorizontal: 20,
-  paddingVertical: 10,
-  borderRadius: 100,
-  minWidth: 90,
-  alignItems: "center",
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.05,
-  shadowRadius: 2,
-  elevation: 1,
+  inlineActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 12,
+    marginTop: 12,
+  },
+  inlineButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 100,
+    minWidth: 90,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   cancelButton: {
     backgroundColor: Colors.light1,
@@ -403,63 +434,63 @@ inlineButton: {
     fontSize: 15,
   },
   gradientBackground: {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  height: 160,
-  zIndex: -1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 160,
+    zIndex: -1,
   },
   mainHeader: {
-  alignItems: "center",
-  marginTop: 32,
-  marginBottom: 20,
-  paddingHorizontal: 20,
+    alignItems: "center",
+    marginTop: 32,
+    marginBottom: 20,
+    paddingHorizontal: 20,
   },
   iconWrapper: {
-  borderRadius: 60,
-  padding: 5,
-  marginBottom: 10,
+    borderRadius: 60,
+    padding: 5,
+    marginBottom: 10,
   },
   card: {
-  backgroundColor: "#FFFFFF",
-  borderRadius: 20,
-  padding: 16,
-  marginBottom: 16,
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.05,
-  shadowRadius: 4,
-  elevation: 2,
-  borderWidth: 1,
-  borderColor: Colors.light2,
-},
-cardSelected: {
-  borderColor: Colors.orange,
-  borderWidth: 2,
-},
-cardHeader: {
-  flexDirection: "row",
-  alignItems: "center",
-  gap: 10,
-  marginBottom: 8,
-},
-cardLabel: {
-  fontSize: 16,
-  fontWeight: "600",
-  color: "#1C1C1E",
-},
-cardContent: {
-  fontSize: 15,
-  color: "#444",
-  lineHeight: 20,
-},
-inputField: {
-  backgroundColor: Colors.light1,
-  borderRadius: 12,
-  padding: 12,
-  fontSize: 15,
-  color: "#000",
-  marginTop: 8,
-},
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: Colors.light2,
+  },
+  cardSelected: {
+    borderColor: Colors.orange,
+    borderWidth: 2,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 8,
+  },
+  cardLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1C1C1E",
+  },
+  cardContent: {
+    fontSize: 15,
+    color: "#444",
+    lineHeight: 20,
+  },
+  inputField: {
+    backgroundColor: Colors.light1,
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 15,
+    color: "#000",
+    marginTop: 8,
+  },
 });

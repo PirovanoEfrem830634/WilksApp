@@ -79,7 +79,7 @@ export default function Browse() {
       href: "/WorkStatusScreen",
     },
 
-    { label: "Dieta", icon: "nutrition", color: Colors.orange, href: "/diettrackernew" },
+    { label: "Alimentazione", icon: "nutrition", color: Colors.orange, href: "/diettrackernew" },
 
     // ⛔️ Monthly Recap PDF rimosso dall’elenco delle voci
     // {
