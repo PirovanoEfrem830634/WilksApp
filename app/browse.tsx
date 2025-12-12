@@ -90,7 +90,7 @@ export default function Browse() {
     //   disabled: generating,
     // },
 
-    { label: "Sonno", icon: "bed", color: Colors.green, href: "/sleeptrackingnew" },
+    { label: "Monitoraggio del sonno", icon: "bed", color: Colors.green, href: "/sleeptrackingnew" },
     {
       label: "Storico Miastenia Gravis",
       icon: "pulse",
@@ -98,14 +98,14 @@ export default function Browse() {
       href: "/HistoryMgScreen",
     },
     {
-      label: "Compilazione sintomi",
+      label: "Monitoraggio sintomi",
       icon: "analytics",
       color: Colors.blue,
       href: "/trackingnew",
     },
-    { label: "Farmaci", icon: "medkit", color: Colors.turquoise, href: "/mymedicationnew" },
+    { label: "Farmaci Prescritti", icon: "medkit", color: Colors.turquoise, href: "/mymedicationnew" },
     {
-      label: "Storico monitoraggi",
+      label: "Calendario dei sintomi",
       icon: "calendar",
       color: Colors.pink,
       href: "/trackinghistorynew",

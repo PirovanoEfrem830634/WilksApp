@@ -14,16 +14,27 @@ import { Ionicons } from "@expo/vector-icons";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { auth, db } from "../firebaseconfig";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
-import Toast from 'react-native-toast-message';
-import { useFocusEffect } from '@react-navigation/native';
+import Toast from "react-native-toast-message";
+import { useFocusEffect } from "@react-navigation/native";
 import * as Animatable from "react-native-animatable";
-import { LinearGradient } from 'expo-linear-gradient';
+import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { Modal, TouchableOpacity } from "react-native";
-import { Activity, AlertCircle, Eye, Mic, Droplet, Wind, TrendingUp, Smile, Moon, Check, X } from "lucide-react-native";
-
+import {
+  Activity,
+  AlertCircle,
+  Eye,
+  Mic,
+  Droplet,
+  Wind,
+  TrendingUp,
+  Smile,
+  Moon,
+  Check,
+  X,
+} from "lucide-react-native";
 
 export default function SleepTracking() {
   const [quality, setQuality] = useState("");
@@ -35,282 +46,327 @@ export default function SleepTracking() {
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [hours, setHours] = useState<string>("");
 
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log("🎯 SleepTracking montato o riattivato");
+      setFrequentWakeups(false);
+      setNightmares(false);
+      setApnea(false);
+      setQuality("");
+      setHours("");
+      setNotes("");
+    }, [])
+  );
 
-useFocusEffect(
-  React.useCallback(() => {
-    console.log("🎯 SleepTracking mounted or refocused");
-    setFrequentWakeups(false);
-    setNightmares(false);
-    setApnea(false);
-    setQuality("");
-    setHours("");
-    setNotes("");
-  }, [])
-);
+  const handleSave = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      Toast.show({
+        type: "error",
+        text1: "❌ Utente non autenticato",
+        position: "top",
+      });
+      return;
+    }
 
-const handleSave = async () => {
-  const user = auth.currentUser;
-  if (!user) {
-    Toast.show({
-      type: "error",
-      text1: "❌ Utente non autenticato",
-      position: "top",
-    });
-    return;
-  }
+    const today = new Date().toISOString().split("T")[0];
+    const ref = doc(db, "users", user.uid, "sleep", today);
 
-  const today = new Date().toISOString().split("T")[0];
-  const ref = doc(db, "users", user.uid, "sleep", today);
+    const sleepData = {
+      quality,
+      hours: parseInt(hours) || 0,
+      frequentWakeups,
+      nightmares,
+      apnea,
+      notes,
+      createdAt: Timestamp.now(),
+    };
 
-  const sleepData = {
-    quality,
-    hours: parseInt(hours) || 0,
-    frequentWakeups,
-    nightmares,
-    apnea,
-    notes,
-    createdAt: Timestamp.now(),
+    try {
+      await setDoc(ref, sleepData);
+      Toast.show({
+        type: "success",
+        text1: "Dati salvati correttamente",
+        position: "top",
+      });
+    } catch (err) {
+      const error = err as Error;
+      console.error("Errore salvataggio:", error);
+      Toast.show({
+        type: "error",
+        text1: "Errore durante il salvataggio",
+        text2: error.message,
+        position: "top",
+      });
+    }
   };
 
-  try {
-  await setDoc(ref, sleepData);
-  Toast.show({
-    type: "success",
-    text1: "Data saved successfully",
-    position: "top",
-  });
-} catch (err) {
-  const error = err as Error;
-  console.error("Errore salvataggio:", error);
-  Toast.show({
-    type: "error",
-    text1: "Error while saving",
-    text2: error.message,
-    position: "top",
-  });
-}
-};
-
   return (
-  <View style={{ flex: 1, backgroundColor: "#F2F2F7" }}>
-    {/* HEADER FISSO */}
-    <LinearGradient
-      colors={["#B2EAB2", Colors.light1]}
-      start={{ x: 0.5, y: 0 }}
-      end={{ x: 0.5, y: 1 }}
-      style={styles.gradientBackground}
-    />
+    <View style={{ flex: 1, backgroundColor: "#F2F2F7" }}>
+      {/* HEADER FISSO */}
+      <LinearGradient
+        colors={["#B2EAB2", Colors.light1]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.gradientBackground}
+      />
 
-    <View style={styles.mainHeader}>
-      <View style={styles.iconWrapper}>
-        <Ionicons name="bed" size={48} color={Colors.green} />
-      </View>
-      <Text style={FontStyles.variants.mainTitle}>Sleep Tracking</Text>
-      <Text style={FontStyles.variants.sectionTitle}>Monitor your sleep quality</Text>
-    </View>
-
-    <ScrollView contentContainerStyle={styles.scrollView}>
-    <PressableScaleWithRef
-    onPress={() => setShowPicker("quality")}
-    style={[styles.card, quality ? styles.cardSelected : null]}
-    weight="light"
-    activeScale={0.96}
-    >
-    <View style={styles.cardHeader}>
-        <Ionicons name="moon" size={20} color={Colors.green} />
-        <Text style={styles.cardLabel}>Sleep Quality</Text>
-        <View style={{ flex: 1 }} />
-        <Text
-        style={[
-            styles.cardRightValue,
-            quality ? { color: Colors.green } : null,
-        ]}
-        >
-        {quality || "Select"}
-        </Text>
-    </View>
-    </PressableScaleWithRef>
-
-    <PressableScaleWithRef
-        onPress={() => setShowPicker("duration")}
-        style={[styles.card, hours ? styles.cardSelected : null]}
-        weight="light"
-        activeScale={0.96}
-        >
-        <View style={styles.cardHeader}>
-            <Ionicons name="time" size={20} color={Colors.green} />
-            <Text style={styles.cardLabel}>Sleep Duration</Text>
-            <View style={{ flex: 1 }} />
-            <Text style={styles.cardRightValue}>{hours !== null ? `${hours} h` : "Select"}</Text>
-            <Ionicons name="chevron-forward-outline" size={16} color={Colors.light3} style={{ marginLeft: 6 }} />
+      <View style={styles.mainHeader}>
+        <View style={styles.iconWrapper}>
+          <Ionicons name="bed" size={48} color={Colors.green} />
         </View>
-    </PressableScaleWithRef>
+        <Text style={FontStyles.variants.mainTitle}>Monitoraggio del sonno</Text>
+        <Text style={FontStyles.variants.sectionTitle}>
+          Tieni traccia della qualità del tuo sonno
+        </Text>
+      </View>
 
-      {[
-        {
+      <ScrollView contentContainerStyle={styles.scrollView}>
+        <PressableScaleWithRef
+          onPress={() => setShowPicker("quality")}
+          style={[styles.card, quality ? styles.cardSelected : null]}
+          weight="light"
+          activeScale={0.96}
+        >
+          <View style={styles.cardHeader}>
+            <Ionicons name="moon" size={20} color={Colors.green} />
+            <Text style={styles.cardLabel}>Qualità del sonno</Text>
+            <View style={{ flex: 1 }} />
+            <Text
+              style={[
+                styles.cardRightValue,
+                quality ? { color: Colors.green } : null,
+              ]}
+            >
+              {quality || "Seleziona"}
+            </Text>
+          </View>
+        </PressableScaleWithRef>
+
+        <PressableScaleWithRef
+          onPress={() => setShowPicker("duration")}
+          style={[styles.card, hours ? styles.cardSelected : null]}
+          weight="light"
+          activeScale={0.96}
+        >
+          <View style={styles.cardHeader}>
+            <Ionicons name="time" size={20} color={Colors.green} />
+            <Text style={styles.cardLabel}>Durata del sonno</Text>
+            <View style={{ flex: 1 }} />
+            <Text style={styles.cardRightValue}>
+              {hours !== null ? `${hours} h` : "Seleziona"}
+            </Text>
+            <Ionicons
+              name="chevron-forward-outline"
+              size={16}
+              color={Colors.light3}
+              style={{ marginLeft: 6 }}
+            />
+          </View>
+        </PressableScaleWithRef>
+
+        {[
+          {
             key: "frequentWakeups",
-            label: "Frequent Wakeups",
+            label: "Risvegli frequenti",
             value: frequentWakeups,
             setter: setFrequentWakeups,
             icon: <Ionicons name="alert" size={20} color={Colors.green} />,
-        },
-        {
+          },
+          {
             key: "nightmares",
-            label: "Nightmares",
+            label: "Incubi",
             value: nightmares,
             setter: setNightmares,
-            icon: <Ionicons name="cloudy-night" size={20} color={Colors.green} />,
-        },
-        {
+            icon: (
+              <Ionicons name="cloudy-night" size={20} color={Colors.green} />
+            ),
+          },
+          {
             key: "apnea",
-            label: "Sleep Apnea",
+            label: "Apnea notturna",
             value: apnea,
             setter: setApnea,
-            icon: <Ionicons name="trending-down" size={20} color={Colors.green} />,
-        },
+            icon: (
+              <Ionicons name="trending-down" size={20} color={Colors.green} />
+            ),
+          },
         ].map((item) => (
-        <PressableScaleWithRef
+          <PressableScaleWithRef
             key={item.key}
             onPress={() => item.setter(!item.value)}
             style={[styles.card, item.value && styles.cardSelected]}
             weight="light"
             activeScale={0.96}
-        >
+          >
             <View style={styles.cardHeader}>
-            {item.icon}
-            <Text style={styles.cardLabel}>{item.label}</Text>
-            <View style={{ flex: 1 }} />
-            {item.value ? (
+              {item.icon}
+              <Text style={styles.cardLabel}>{item.label}</Text>
+              <View style={{ flex: 1 }} />
+              {item.value ? (
                 <Check size={18} color={Colors.green} />
-                ) : (
-                    <X size={18} color={Colors.light3} />
-                )}
+              ) : (
+                <X size={18} color={Colors.light3} />
+              )}
             </View>
-        </PressableScaleWithRef>
+          </PressableScaleWithRef>
         ))}
 
-      <PressableScaleWithRef
-        onPress={() => setNoteModalVisible(true)}
-        style={[styles.card, notes ? styles.cardSelected : null]}
-        activeScale={0.96}
-        weight="light"
+        <PressableScaleWithRef
+          onPress={() => setNoteModalVisible(true)}
+          style={[styles.card, notes ? styles.cardSelected : null]}
+          activeScale={0.96}
+          weight="light"
         >
-        <View style={styles.cardHeader}>
+          <View style={styles.cardHeader}>
             <Ionicons name="document-text" size={20} color={Colors.green} />
-            <Text style={styles.cardLabel}>Notes</Text>
+            <Text style={styles.cardLabel}>Note</Text>
             <View style={{ flex: 1 }} />
-            <Ionicons name="chevron-forward-outline" size={18} color={Colors.light3} />
-        </View>
-        <Text
+            <Ionicons
+              name="chevron-forward-outline"
+              size={18}
+              color={Colors.light3}
+            />
+          </View>
+          <Text
             numberOfLines={1}
             style={{
-            fontSize: 14,
-            color: notes ? "#1C1C1E" : Colors.light3,
-            marginTop: 6,
+              fontSize: 14,
+              color: notes ? "#1C1C1E" : Colors.light3,
+              marginTop: 6,
             }}
-        >
-            {notes || "Add a note"}
-        </Text>
+          >
+            {notes || "Aggiungi una nota"}
+          </Text>
         </PressableScaleWithRef>
 
-      <PressableScaleWithRef
-      onPress={handleSave}
-      weight="light"
-      activeScale={0.96}
-      style={styles.saveButton}
-      >
-      <Text style={styles.saveText}>Submit</Text>
-      </PressableScaleWithRef>
+        <PressableScaleWithRef
+          onPress={handleSave}
+          weight="light"
+          activeScale={0.96}
+          style={styles.saveButton}
+        >
+          <Text style={styles.saveText}>Invia</Text>
+        </PressableScaleWithRef>
 
-      <Modal visible={noteModalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
+        <Modal visible={noteModalVisible} animationType="slide" transparent>
+          <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-            <Text style={[styles.label, { textAlign: "center", marginBottom: 10 }]}>Write your note</Text>
-            <TextInput
+              <Text
+                style={[
+                  styles.label,
+                  { textAlign: "center", marginBottom: 10 },
+                ]}
+              >
+                Scrivi la tua nota
+              </Text>
+              <TextInput
                 multiline
-                placeholder="Write here..."
+                placeholder="Scrivi qui..."
                 style={styles.textArea}
                 value={notes}
                 onChangeText={setNotes}
-            />
-            <TouchableOpacity
+              />
+              <TouchableOpacity
                 onPress={() => setNoteModalVisible(false)}
                 style={styles.saveButton}
-            >
-                <Text style={styles.saveText}>Save</Text>
-            </TouchableOpacity>
+              >
+                <Text style={styles.saveText}>Salva</Text>
+              </TouchableOpacity>
             </View>
-        </View>
+          </View>
         </Modal>
 
         <Modal visible={showPicker === "duration"} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
+          <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-            <Text style={[styles.label, { textAlign: "center", marginBottom: 10 }]}>Select sleep duration</Text>
-            
-            <View style={styles.pickerWrapper}>
-                <Picker
-                selectedValue={hours}
-                onValueChange={(value) => setHours(value)}
-                style={styles.picker}
+              <Text
+                style={[
+                  styles.label,
+                  { textAlign: "center", marginBottom: 10 },
+                ]}
               >
-                <Picker.Item label="Select duration" value="" />
-                {[...Array(10)].map((_, i) => {
-                  const val = (i + 3).toString(); // es. "3", "4", ..., "12"
-                  return <Picker.Item key={val} label={`${val} hours`} value={val} />;
-                })}
-              </Picker>
-            </View>
+                Seleziona la durata del sonno
+              </Text>
 
-            <TouchableOpacity
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={hours}
+                  onValueChange={(value) => setHours(value)}
+                  style={styles.picker}
+                >
+                  <Picker.Item label="Seleziona durata" value="" />
+                  {[...Array(10)].map((_, i) => {
+                    const val = (i + 3).toString(); // "3" ... "12"
+                    return (
+                      <Picker.Item
+                        key={val}
+                        label={`${val} ore`}
+                        value={val}
+                      />
+                    );
+                  })}
+                </Picker>
+              </View>
+
+              <TouchableOpacity
                 onPress={() => setShowPicker(null)}
                 style={styles.saveButton}
-            >
-                <Text style={styles.saveText}>Save</Text>
-            </TouchableOpacity>
+              >
+                <Text style={styles.saveText}>Salva</Text>
+              </TouchableOpacity>
             </View>
-        </View>
+          </View>
         </Modal>
+      </ScrollView>
 
-    </ScrollView>
-
-    <Modal visible={showPicker === "quality"} animationType="slide" transparent>
-    <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-        {["Good", "Normal", "Poor", "Insomnia"].map((option) => (
+      <Modal visible={showPicker === "quality"} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {["Buona", "Normale", "Scarsa", "Insonnia"].map((option) => (
+              <TouchableOpacity
+                key={option}
+                style={styles.optionItem}
+                onPress={() => {
+                  setQuality(option);
+                  setShowPicker(null);
+                }}
+              >
+                <Text style={styles.optionText}>{option}</Text>
+              </TouchableOpacity>
+            ))}
             <TouchableOpacity
-            key={option}
-            style={styles.optionItem}
-            onPress={() => {
-                setQuality(option);
+              style={styles.cancelItem}
+              onPress={() => {
+                setQuality("");
                 setShowPicker(null);
-            }}
+              }}
             >
-            <Text style={styles.optionText}>{option}</Text>
+              <Text style={styles.cancelText}>Annulla</Text>
             </TouchableOpacity>
-        ))}
-        <TouchableOpacity
-            style={styles.cancelItem}
-            onPress={() => {
-            setQuality("");
-            setShowPicker(null);
-            }}
-        >
-            <Text style={styles.cancelText}>Cancel</Text>
-        </TouchableOpacity>
+          </View>
         </View>
-    </View>
-    </Modal>
+      </Modal>
 
-    <Toast />
-    <BottomNavigation />
-  </View>
-);
+      <Toast />
+      <BottomNavigation />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 22, fontWeight: "bold", textAlign: "center", color: "#1f2937" },
-  subtitle: { fontSize: 16, textAlign: "center", color: "#6b7280", marginBottom: 20 },
+  title: {
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#1f2937",
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: "center",
+    color: "#6b7280",
+    marginBottom: 20,
+  },
   card: {
     backgroundColor: "#FFF",
     borderRadius: 16,
@@ -361,16 +417,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   saveButton: {
-  backgroundColor: "#007AFF",
-  paddingVertical: 14,
-  paddingHorizontal: 24,
-  borderRadius: 20,
-  alignItems: "center",
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.2,
-  shadowRadius: 4,
-  elevation: 3,
+    backgroundColor: "#007AFF",
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   saveText: {
     color: "#FFF",
@@ -378,19 +434,19 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   toggleCard: {
-  backgroundColor: "#FFFFFF",
-  borderRadius: 24,
-  paddingVertical: 16,
-  paddingHorizontal: 20,
-  marginBottom: 16,
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.05,
-  shadowRadius: 4,
-  elevation: 2,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   toggleCardActive: {
     shadowColor: "#007AFF",
@@ -398,7 +454,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     borderWidth: 1,
     borderColor: "#007AFF",
-    textShadowColor: "#007AFF"
+    textShadowColor: "#007AFF",
   },
   toggleCardText: {
     fontSize: 16,
@@ -406,26 +462,26 @@ const styles = StyleSheet.create({
     color: "#1C1C1E",
   },
   toggleCardTextActive: {
-  color: "#007AFF",
+    color: "#007AFF",
   },
   slider: {
-  width: "100%",
-  height: 40,
+    width: "100%",
+    height: 40,
   },
   pillContainer: {
-  flexDirection: "row",
-  flexWrap: "wrap",
-  gap: 8,
-  marginTop: 12,
-},
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 12,
+  },
 
-pill: {
-  paddingVertical: 8,
-  paddingHorizontal: 14,
-  borderRadius: 20,
-  backgroundColor: "#F2F2F7",
-  borderWidth: 1,
-  borderColor: "#E0E0E0",
+  pill: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    backgroundColor: "#F2F2F7",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
   },
 
   pillSelected: {
@@ -442,79 +498,79 @@ pill: {
   pillTextSelected: {
     color: "#FFFFFF",
   },
-gradientBackground: {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  height: 160,
-  zIndex: -1,
-},
-mainHeader: {
-  alignItems: "center",
-  marginTop: 32,
-  marginBottom: 20,
-  paddingHorizontal: 20,
-},
-iconWrapper: {
-  borderRadius: 60,
-  padding: 5,
-  marginBottom: 10,
-},
-summaryBadge: {
-  marginHorizontal: 20,
-  marginBottom: 10,
-  backgroundColor: "#D4EDDA",
-  borderRadius: 12,
-  paddingVertical: 10,
-  alignItems: "center",
-},
-summaryText: {
-  color: "#1E8449",
-  fontWeight: "600",
-},
+  gradientBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 160,
+    zIndex: -1,
+  },
+  mainHeader: {
+    alignItems: "center",
+    marginTop: 32,
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+  iconWrapper: {
+    borderRadius: 60,
+    padding: 5,
+    marginBottom: 10,
+  },
+  summaryBadge: {
+    marginHorizontal: 20,
+    marginBottom: 10,
+    backgroundColor: "#D4EDDA",
+    borderRadius: 12,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  summaryText: {
+    color: "#1E8449",
+    fontWeight: "600",
+  },
   scrollView: {
     padding: 20,
     paddingBottom: 100,
   },
   modalOverlay: {
-  flex: 1,
-  backgroundColor: "rgba(0,0,0,0.3)",
-  justifyContent: "flex-end",
-},
-modalContent: {
-  backgroundColor: "#FFFFFF",
-  paddingVertical: 20,
-  paddingHorizontal: 16,
-  borderTopLeftRadius: 20,
-  borderTopRightRadius: 20,
-},
-optionItem: {
-  paddingVertical: 14,
-  borderBottomColor: "#E5E5EA",
-  borderBottomWidth: 1,
-},
-optionText: {
-  fontSize: 16,
-  fontWeight: "500",
-  color: "#1C1C1E",
-  textAlign: "center",
-},
-cancelItem: {
-  marginTop: 10,
-  paddingVertical: 14,
-},
-cancelText: {
-  fontSize: 16,
-  fontWeight: "600",
-  color: "#EB4B62",
-  textAlign: "center",
-},
-cardRightValue: {
-  fontSize: 14,
-  color: Colors.light3,
-  fontWeight: "500",
-},
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  optionItem: {
+    paddingVertical: 14,
+    borderBottomColor: "#E5E5EA",
+    borderBottomWidth: 1,
+  },
+  optionText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#1C1C1E",
+    textAlign: "center",
+  },
+  cancelItem: {
+    marginTop: 10,
+    paddingVertical: 14,
+  },
+  cancelText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#EB4B62",
+    textAlign: "center",
+  },
+  cardRightValue: {
+    fontSize: 14,
+    color: Colors.light3,
+    fontWeight: "500",
+  },
   cardSelected: {
     borderColor: Colors.green,
     borderWidth: 2,
@@ -530,15 +586,15 @@ cardRightValue: {
     fontWeight: "600",
     color: Colors.gray1,
   },
-cardValue: {
-  fontSize: 24,
-  fontWeight: "700",
-  color: "#000",
-},
-pickerWrapper: {
-  backgroundColor: "#F2F2F7",
-  borderRadius: 12,
-  overflow: "hidden",
-  marginBottom: 12,
-},
+  cardValue: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#000",
+  },
+  pickerWrapper: {
+    backgroundColor: "#F2F2F7",
+    borderRadius: 12,
+    overflow: "hidden",
+    marginBottom: 12,
+  },
 });

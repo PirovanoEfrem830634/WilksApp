@@ -121,7 +121,7 @@ export default function TrackingNew() {
     console.log("🔍 USER:", user?.uid);
 
     if (!user) {
-      showToast("❌ User not logged in");
+      showToast("❌ Utente non autenticato");
       return;
     }
 
@@ -135,14 +135,11 @@ export default function TrackingNew() {
     };
 
     console.log("📝 Tentativo salvataggio dati:", dataToSave);
-    console.log(
-      "📄 Path Firestore:",
-      `users/${uid}/symptoms/${today}`
-    );
+    console.log("📄 Path Firestore:", `users/${uid}/symptoms/${today}`);
 
     try {
       await setDoc(symptomsDocRef, dataToSave);
-      showToast("✅ Symptoms saved successfully!");
+      showToast("✅ Sintomi salvati correttamente!");
 
       // 🔄 Autoscroll verso l'alto dopo il salvataggio
       if (scrollViewRef.current) {
@@ -150,7 +147,7 @@ export default function TrackingNew() {
       }
     } catch (error: any) {
       console.error("❌ Error saving symptoms:", error);
-      showToast("❌ Error: " + (error.message || "Error saving."));
+      showToast("❌ Errore: " + (error.message || "Errore durante il salvataggio."));
     }
   };
 
@@ -161,37 +158,37 @@ export default function TrackingNew() {
   }[] = [
     {
       key: "debolezzaMuscolare",
-      label: "Muscle Weakness",
+      label: "Debolezza muscolare",
       icon: <Activity size={18} color={Colors.blue} />,
     },
     {
       key: "disfagia",
-      label: "Swallowing Difficulty",
+      label: "Difficoltà di deglutizione",
       icon: <Droplet size={18} color={Colors.blue} />,
     },
     {
       key: "disartria",
-      label: "Speech Difficulty",
+      label: "Difficoltà nel parlare",
       icon: <Mic size={18} color={Colors.blue} />,
     },
     {
       key: "ptosi",
-      label: "Ptosis",
+      label: "Ptosi",
       icon: <Eye size={18} color={Colors.blue} />,
     },
     {
       key: "diplopia",
-      label: "Double Vision",
+      label: "Visione doppia",
       icon: <Eye size={18} color={Colors.blue} />,
     },
     {
       key: "difficoltaRespiratorie",
-      label: "Breathing Difficulty",
+      label: "Difficoltà respiratorie",
       icon: <Wind size={18} color={Colors.blue} />,
     },
     {
       key: "ansia",
-      label: "Anxiety",
+      label: "Ansia",
       icon: <AlertCircle size={18} color={Colors.blue} />,
     },
   ];
@@ -208,24 +205,17 @@ export default function TrackingNew() {
         <View style={styles.iconWrapper}>
           <Activity size={48} color={Colors.blue} />
         </View>
-        <Text style={FontStyles.variants.mainTitle}>Symptom Tracking</Text>
+        <Text style={FontStyles.variants.mainTitle}>Monitoraggio dei sintomi</Text>
         <Text style={FontStyles.variants.sectionTitle}>
-          Track your symptoms
+          Tieni traccia dei tuoi sintomi
         </Text>
       </View>
-      <ScrollView
-        ref={scrollViewRef}
-        contentContainerStyle={styles.scrollView}
-      >
+      <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scrollView}>
         {/* Modal Umore */}
-        <Modal
-          visible={showPicker === "umore"}
-          animationType="slide"
-          transparent
-        >
+        <Modal visible={showPicker === "umore"} animationType="slide" transparent>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              {["Happy", "Neutral", "Sad", "Anxious"].map((option) => (
+              {["Felice", "Neutro", "Triste", "Ansioso"].map((option) => (
                 <PressableScaleWithRef
                   key={option}
                   style={styles.optionItem}
@@ -244,7 +234,7 @@ export default function TrackingNew() {
                   setShowPicker(null);
                 }}
               >
-                <Text style={styles.cancelText}>Cancel</Text>
+                <Text style={styles.cancelText}>Annulla</Text>
               </PressableScaleWithRef>
             </View>
           </View>
@@ -258,7 +248,7 @@ export default function TrackingNew() {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              {["Stable", "Worsened", "Improved"].map((option) => (
+              {["Stabile", "Peggiorato", "Migliorato"].map((option) => (
                 <PressableScaleWithRef
                   key={option}
                   style={styles.optionItem}
@@ -277,7 +267,7 @@ export default function TrackingNew() {
                   setShowPicker(null);
                 }}
               >
-                <Text style={styles.cancelText}>Cancel</Text>
+                <Text style={styles.cancelText}>Annulla</Text>
               </PressableScaleWithRef>
             </View>
           </View>
@@ -288,10 +278,7 @@ export default function TrackingNew() {
           <PressableScaleWithRef
             key={item.key}
             onPress={() => handleToggle(item.key)}
-            style={[
-              styles.card,
-              !!formData[item.key] && styles.cardSelected,
-            ]}
+            style={[styles.card, !!formData[item.key] && styles.cardSelected]}
             weight="light"
             activeScale={0.96}
           >
@@ -308,19 +295,16 @@ export default function TrackingNew() {
           </PressableScaleWithRef>
         ))}
 
-        {/* Mood */}
+        {/* Umore */}
         <PressableScaleWithRef
           onPress={() => setShowPicker("umore")}
-          style={[
-            styles.card,
-            formData.umore ? styles.cardSelected : null,
-          ]}
+          style={[styles.card, formData.umore ? styles.cardSelected : null]}
           weight="light"
           activeScale={0.96}
         >
           <View style={styles.cardHeader}>
             <Smile size={18} color={Colors.blue} />
-            <Text style={styles.cardLabel}>Mood</Text>
+            <Text style={styles.cardLabel}>Umore</Text>
             <View style={{ flex: 1 }} />
             <Text
               style={[
@@ -328,12 +312,12 @@ export default function TrackingNew() {
                 formData.umore ? { color: "#007AFF" } : null,
               ]}
             >
-              {formData.umore ? formData.umore : "Select"}
+              {formData.umore ? formData.umore : "Seleziona"}
             </Text>
           </View>
         </PressableScaleWithRef>
 
-        {/* Symptom progression */}
+        {/* Andamento sintomi */}
         <PressableScaleWithRef
           onPress={() => setShowPicker("andamentoSintomi")}
           style={[
@@ -345,7 +329,7 @@ export default function TrackingNew() {
         >
           <View style={styles.cardHeader}>
             <TrendingUp size={18} color={Colors.blue} />
-            <Text style={styles.cardLabel}>Symptom Progression</Text>
+            <Text style={styles.cardLabel}>Andamento dei sintomi</Text>
             <View style={{ flex: 1 }} />
             <Text
               style={[
@@ -353,60 +337,38 @@ export default function TrackingNew() {
                 formData.andamentoSintomi ? { color: "#007AFF" } : null,
               ]}
             >
-              {formData.andamentoSintomi
-                ? formData.andamentoSintomi
-                : "Select"}
+              {formData.andamentoSintomi ? formData.andamentoSintomi : "Seleziona"}
             </Text>
           </View>
         </PressableScaleWithRef>
 
-        {/* Muscle Fatigue */}
+        {/* Affaticamento muscolare */}
         <PressableScaleWithRef
           onPress={() => setShowPicker("fatigue")}
           style={[
             styles.card,
-            formData.affaticamentoMuscolare > 0 &&
-              styles.cardSelected,
+            formData.affaticamentoMuscolare > 0 && styles.cardSelected,
           ]}
         >
           <View style={styles.cardHeader}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                flex: 1,
-              }}
-            >
-              <Activity
-                size={18}
-                color={Colors.blue}
-                style={{ marginRight: 9 }}
-              />
-              <Text style={styles.cardLabel}>Muscle Fatigue</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+              <Activity size={18} color={Colors.blue} style={{ marginRight: 9 }} />
+              <Text style={styles.cardLabel}>Affaticamento muscolare</Text>
             </View>
             <Text style={styles.cardRightValue}>
               {formData.affaticamentoMuscolare !== undefined
                 ? `${formData.affaticamentoMuscolare} / 10`
-                : "Select"}
+                : "Seleziona"}
             </Text>
           </View>
         </PressableScaleWithRef>
 
         {/* Modal Fatigue */}
-        <Modal
-          visible={showPicker === "fatigue"}
-          animationType="slide"
-          transparent
-        >
+        <Modal visible={showPicker === "fatigue"} animationType="slide" transparent>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text
-                style={[
-                  styles.label,
-                  { textAlign: "center", marginBottom: 10 },
-                ]}
-              >
-                Select Muscle Fatigue
+              <Text style={[styles.label, { textAlign: "center", marginBottom: 10 }]}>
+                Seleziona l’affaticamento muscolare
               </Text>
 
               <View style={styles.pickerWrapper}>
@@ -421,11 +383,7 @@ export default function TrackingNew() {
                   style={styles.picker}
                 >
                   {[...Array(11).keys()].map((val) => (
-                    <Picker.Item
-                      key={val}
-                      label={`${val}`}
-                      value={val}
-                    />
+                    <Picker.Item key={val} label={`${val}`} value={val} />
                   ))}
                 </Picker>
               </View>
@@ -434,20 +392,20 @@ export default function TrackingNew() {
                 onPress={() => setShowPicker(null)}
                 style={styles.saveButton}
               >
-                <Text style={styles.saveText}>Save</Text>
+                <Text style={styles.saveText}>Salva</Text>
               </PressableScaleWithRef>
             </View>
           </View>
         </Modal>
 
-        {/* Submit */}
+        {/* Invia */}
         <PressableScaleWithRef
           onPress={saveSymptoms}
           weight="light"
           activeScale={0.96}
           style={styles.submitButton}
         >
-          <Text style={styles.submitButtonText}>Submit</Text>
+          <Text style={styles.submitButtonText}>Invia</Text>
         </PressableScaleWithRef>
       </ScrollView>
 
@@ -481,13 +439,7 @@ export default function TrackingNew() {
             },
           ]}
         >
-          <Text
-            style={{
-              color: "#fff",
-              fontWeight: "600",
-              fontSize: 14,
-            }}
-          >
+          <Text style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>
             {toastMessage}
           </Text>
         </Animated.View>

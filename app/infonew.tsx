@@ -18,9 +18,8 @@ import * as Animatable from "react-native-animatable";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import { LinearGradient } from 'expo-linear-gradient';
+import { LinearGradient } from "expo-linear-gradient";
 import { BriefcaseMedical, Info } from "lucide-react-native";
-
 
 if (Platform.OS === "android") {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
@@ -30,73 +29,73 @@ const symptoms = [
   {
     key: "debolezzaMuscolare",
     icon: "barbell",
-    title: "Muscle Weakness",
+    title: "Debolezza muscolare",
     description:
-      "Muscle weakness in Myasthenia Gravis results from impaired nerve-muscle communication. It worsens with use and improves with rest.",
+      "Nella miastenia gravis la debolezza muscolare deriva da una comunicazione alterata tra nervi e muscoli. Peggiora con l’uso e migliora con il riposo.",
     actions: [
-      "Avoid overexertion and heavy lifting",
-      "Take frequent rest breaks",
-      "Notify your neurologist if symptoms worsen",
+      "Evita sforzi eccessivi e sollevamenti pesanti",
+      "Fai pause frequenti per riposare",
+      "Avvisa il neurologo se i sintomi peggiorano",
     ],
   },
   {
     key: "disfagia",
     icon: "restaurant",
-    title: "Swallowing Difficulty",
+    title: "Difficoltà di deglutizione",
     description:
-      "Swallowing issues (dysphagia) can impact nutrition and pose a risk of aspiration.",
+      "I problemi di deglutizione (disfagia) possono influire sull’alimentazione e aumentare il rischio di aspirazione.",
     actions: [
-      "Eat soft foods in small bites",
-      "Avoid lying down after meals",
-      "Consult a speech therapist if needed",
+      "Preferisci cibi morbidi e piccoli bocconi",
+      "Evita di sdraiarti subito dopo i pasti",
+      "Valuta una consulenza logopedica se necessario",
     ],
   },
   {
     key: "disartria",
     icon: "mic",
-    title: "Speech Difficulty",
+    title: "Difficoltà nel parlare",
     description:
-      "Speech may become slurred or nasal during periods of fatigue.",
+      "La voce può diventare nasale o l’eloquio può risultare impastato durante i periodi di affaticamento.",
     actions: [
-      "Speak slowly and clearly",
-      "Pause frequently to rest",
-      "Inform your specialist if symptoms persist",
+      "Parla lentamente e in modo chiaro",
+      "Fai pause frequenti per riposare",
+      "Informa lo specialista se i sintomi persistono",
     ],
   },
   {
     key: "ptosi",
     icon: "eye",
-    title: "Ptosis (Drooping Eyelids)",
+    title: "Ptosi (palpebre cadenti)",
     description:
-      "Ptosis is often one of the earliest signs of Myasthenia Gravis, especially noticeable in the evening.",
+      "La ptosi è spesso uno dei primi segni della miastenia gravis, e può essere più evidente la sera.",
     actions: [
-      "Try elevating your head when resting",
-      "Use cooling compresses to relieve fatigue",
-      "Track progression with daily photos",
+      "Prova a tenere la testa leggermente sollevata durante il riposo",
+      "Usa impacchi freschi per alleviare l’affaticamento",
+      "Monitora l’andamento con foto giornaliere",
     ],
   },
   {
     key: "diplopia",
     icon: "glasses",
-    title: "Double Vision",
+    title: "Visione doppia",
     description:
-      "Double vision (diplopia) may come and go depending on muscle fatigue.",
+      "La visione doppia (diplopia) può comparire e scomparire in base all’affaticamento muscolare.",
     actions: [
-      "Avoid reading or screens during flare-ups",
-      "Use an eye patch alternately on each eye",
-      "Discuss corrective lenses with your eye doctor",
+      "Evita lettura o schermi durante le riacutizzazioni",
+      "Usa una benda alternandola tra i due occhi",
+      "Parla con l’oculista di eventuali lenti correttive",
     ],
   },
   {
     key: "difficoltaRespiratorie",
     icon: "cloud",
-    title: "Breathing Difficulties",
+    title: "Difficoltà respiratorie",
     description:
-      "Respiratory weakness can become serious and requires immediate attention if it worsens.",
+      "La debolezza dei muscoli respiratori può diventare seria e richiede attenzione immediata se peggiora.",
     actions: [
-      "Sit upright to facilitate breathing",
-      "Avoid environments with poor air quality",
-      "Seek emergency care if breathing becomes labored",
+      "Siediti con il busto eretto per facilitare la respirazione",
+      "Evita ambienti con aria di scarsa qualità",
+      "Rivolgiti al pronto soccorso se la respirazione diventa faticosa",
     ],
   },
 ];
@@ -125,34 +124,45 @@ export default function SymptomInfo() {
 
   return (
     <View style={styles.wrapper}>
-      <Animatable.View animation="fadeInUp" duration={500} style={styles.scrollWrapper}>
-            <Animated.View style={[styles.headerContainer, { opacity: fadeAnim }]}>
-            <LinearGradient
-                    colors={["#E3D7FF", Colors.light1]}
-                    start={{ x: 0.5, y: 0 }}
-                    end={{ x: 0.5, y: 1 }}
-                    style={styles.gradientBackground}
-                    />
-                  <View style={styles.mainHeader}>
-                    <View style={styles.iconWrapper}>
-                        <Info size={48} color={Colors.purple}  />
-                    </View>
-                    <Text style={FontStyles.variants.mainTitle}>Symptoms Infos</Text>
-                    <Text style={FontStyles.variants.sectionTitle}>Tap on each items to get advices</Text>
-                  </View>
-          </Animated.View>
+      <Animatable.View
+        animation="fadeInUp"
+        duration={500}
+        style={styles.scrollWrapper}
+      >
+        <Animated.View style={[styles.headerContainer, { opacity: fadeAnim }]}>
+          <LinearGradient
+            colors={["#E3D7FF", Colors.light1]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={styles.gradientBackground}
+          />
+          <View style={styles.mainHeader}>
+            <View style={styles.iconWrapper}>
+              <Info size={48} color={Colors.purple} />
+            </View>
+            <Text style={FontStyles.variants.mainTitle}>Informazioni sui sintomi</Text>
+            <Text style={FontStyles.variants.sectionTitle}>
+              Tocca una tab per vedere i consigli
+            </Text>
+          </View>
+        </Animated.View>
+
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.searchContainer}>
-            <Search size={20} color={Colors.gray3} style={{ marginRight: 8 }} />
+            <Search
+              size={20}
+              color={Colors.gray3}
+              style={{ marginRight: 8 }}
+            />
             <TextInput
               style={FontStyles.variants.smallLabelBold}
-              placeholder="Search a Symptom..."
+              placeholder="Cerca un sintomo..."
               value={searchTerm}
               onChangeText={setSearchTerm}
-              placeholderTextColor= {Colors.gray3}
+              placeholderTextColor={Colors.gray3}
             />
           </View>
 
@@ -166,8 +176,14 @@ export default function SymptomInfo() {
                 >
                   <View style={styles.cardHeader}>
                     <View style={styles.iconTitleContainer}>
-                      <Ionicons name={symptom.icon as any} size={20} color={Colors.purple} />
-                      <Text style={FontStyles.variants.bodySemibold}>{symptom.title}</Text>
+                      <Ionicons
+                        name={symptom.icon as any}
+                        size={20}
+                        color={Colors.purple}
+                      />
+                      <Text style={FontStyles.variants.bodySemibold}>
+                        {symptom.title}
+                      </Text>
                     </View>
                     {isExpanded ? (
                       <ChevronUp size={22} color={Colors.gray3} />
@@ -175,10 +191,14 @@ export default function SymptomInfo() {
                       <ChevronDown size={22} color={Colors.gray3} />
                     )}
                   </View>
-                  <Text style={FontStyles.variants.cardDescription}>{symptom.description}</Text>
+
+                  <Text style={FontStyles.variants.cardDescription}>
+                    {symptom.description}
+                  </Text>
+
                   {isExpanded && (
                     <View style={styles.actionContainer}>
-                      <Text style={styles.actionTitle}>What You Can Do:</Text>
+                      <Text style={styles.actionTitle}>Cosa puoi fare:</Text>
                       {symptom.actions.map((item, idx) => (
                         <Text key={idx} style={styles.actionItem}>
                           • {item}
@@ -192,6 +212,7 @@ export default function SymptomInfo() {
           })}
         </ScrollView>
       </Animatable.View>
+
       <BottomNavigation />
     </View>
   );
@@ -295,22 +316,22 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   gradientBackground: {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  height: 160,
-  zIndex: -1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 160,
+    zIndex: -1,
   },
   mainHeader: {
-  alignItems: "center",
-  marginTop: 32,
-  marginBottom: 20,
-  paddingHorizontal: 20,
+    alignItems: "center",
+    marginTop: 32,
+    marginBottom: 20,
+    paddingHorizontal: 20,
   },
   iconWrapper: {
-  borderRadius: 60,
-  padding: 5,
-  marginBottom: 10,
+    borderRadius: 60,
+    padding: 5,
+    marginBottom: 10,
   },
 });

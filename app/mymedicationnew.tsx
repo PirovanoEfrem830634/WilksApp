@@ -263,7 +263,7 @@ export default function MyMedications() {
         <View style={styles.iconWrapper}>
           <BriefcaseMedical size={48} color={Colors.turquoise} />
         </View>
-        <Text style={FontStyles.variants.mainTitle}>My Medications</Text>
+        <Text style={FontStyles.variants.mainTitle}>Farmaci Prescritti</Text>
         <Text style={FontStyles.variants.sectionTitle}>
           Piano terapeutico in sola lettura
         </Text>
