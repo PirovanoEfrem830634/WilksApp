@@ -503,7 +503,7 @@ export default function HistoryMgScreen() {
           </View>
         </PressableScaleWithRef>
 
-        {/* Anticorpi */}
+        {/* Anticorpi (multi-select, stile "questionario") */}
         <View
           style={[
             styles.card,
@@ -515,34 +515,38 @@ export default function HistoryMgScreen() {
             <Ionicons name="flask-outline" size={20} color={Colors.turquoise} />
             <Text style={styles.cardLabel}>Anticorpi (se conosciuti)</Text>
           </View>
-          <View style={styles.pillContainer}>
-            {["AChR", "MuSK", "LRP4", "Double seronegative", "Not sure"].map(
-              (ab) => {
-                const isSelected = antibodies.includes(ab);
-                return (
-                  <PressableScaleWithRef
-                    key={ab}
-                    onPress={
-                      isLocked
-                        ? undefined
-                        : () => toggleInArray(ab, antibodies, setAntibodies)
-                    }
-                    style={[styles.pill, isSelected && styles.pillSelected]}
-                    weight="light"
-                    activeScale={isLocked ? 1 : 0.96}
+
+          <Text style={styles.helperText}>
+            Seleziona uno o più anticorpi. Se non li conosci, puoi scegliere “Not sure”.
+          </Text>
+
+          <View style={styles.optionColumn}>
+            {["AChR", "MuSK", "LRP4", "Double seronegative", "Not sure"].map((ab) => {
+              const isSelected = antibodies.includes(ab);
+              return (
+                <PressableScaleWithRef
+                  key={ab}
+                  onPress={
+                    isLocked ? undefined : () => toggleInArray(ab, antibodies, setAntibodies)
+                  }
+                  weight="light"
+                  activeScale={isLocked ? 1 : 0.96}
+                  style={[
+                    styles.optionFull,
+                    isSelected && styles.optionSelected,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      isSelected && styles.optionTextSelected,
+                    ]}
                   >
-                    <Text
-                      style={[
-                        styles.pillText,
-                        isSelected && styles.pillTextSelected,
-                      ]}
-                    >
-                      {ab}
-                    </Text>
-                  </PressableScaleWithRef>
-                );
-              }
-            )}
+                    {ab}
+                  </Text>
+                </PressableScaleWithRef>
+              );
+            })}
           </View>
         </View>
 
@@ -1069,7 +1073,7 @@ const styles = StyleSheet.create({
   },
   helperText: {
     fontSize: 13,
-    color: Colors.light3,
+    color: Colors.gray3,
     marginTop: 4,
   },
   selectedSummary: {
@@ -1246,5 +1250,26 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: "#FFF",
+  },
+  // --- "Questionnaire-like" options (full-width, stacked) ---
+  optionColumn: {
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: 8,
+    marginTop: 12,
+  },
+  optionFull: {
+    backgroundColor: Colors.light2,     // come questionario
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  optionSelected: {
+    backgroundColor: Colors.turquoise,  // accent della pagina (al posto del viola)
+  },
+  optionTextSelected: {
+    color: "#fff",
   },
 });
