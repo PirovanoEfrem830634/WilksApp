@@ -48,16 +48,16 @@ export default function ClinicalSurveysScreen() {
   const router = useRouter();
 
   const surveys: Survey[] = [
-  { key: "mg_qol15", label: "MG-QoL15r", icon: "heart", color: Colors.purple, href: "/mgqol15" },
-  {
-    key: "mg_adl_paziente",
-    label: "MG-ADL",
-    icon: "list",
-    color: Colors.red,
-    href: "/mgadlsurveyscreen", // 🔹 Adatta questo path al nome reale della route Expo Router
-  },
-  { key: "neuro_qol_fatigue", label: "Neuro-QoL Fatigue", icon: "flash", color: Colors.blue, href: "/neuroqol-fatigue" },
-  { key: "eq5d5l", label: "EQ-5D-5L", icon: "fitness", color: Colors.orange, href: "/eq5d5l" },
+    { key: "mg_qol15", label: "MG-QoL15r", icon: "heart", color: Colors.purple, href: "/mgqol15" },
+    {
+      key: "mg_adl_paziente",
+      label: "MG-ADL",
+      icon: "list",
+      color: Colors.red,
+      href: "/mgadlsurveyscreen", // 🔹 Adatta questo path al nome reale della route Expo Router
+    },
+    { key: "neuro_qol_fatigue", label: "Neuro-QoL Fatigue", icon: "flash", color: Colors.blue, href: "/neuroqol-fatigue" },
+    { key: "eq5d5l", label: "EQ-5D-5L", icon: "fitness", color: Colors.orange, href: "/eq5d5l" },
   ];
 
   // ------------------------------------------------------
@@ -135,8 +135,8 @@ export default function ClinicalSurveysScreen() {
 
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: "Quarterly Therapy Reminder",
-          body: "It’s time to review your MG therapy and update your records.",
+          title: "Promemoria terapia trimestrale",
+          body: "È il momento di rivedere la terapia per la MG e aggiornare i tuoi dati.",
           sound: true,
         },
         trigger: {
@@ -184,15 +184,15 @@ export default function ClinicalSurveysScreen() {
               style={{ marginRight: 10 }}
             />
             <View style={{ flex: 1 }}>
-              <Text style={styles.bannerTitle}>Quarterly Therapy Update</Text>
+              <Text style={styles.bannerTitle}>Aggiornamento terapia trimestrale</Text>
               <Text style={styles.bannerText}>
-                It’s time to review your therapy with your clinician.
+                È il momento di rivedere la terapia con il tuo clinico.
               </Text>
               {nextDueDate && (
                 <Text style={styles.bannerSub}>
                   {daysRemaining && daysRemaining > 0
-                    ? `Next check in ${daysRemaining} days (${nextDueDate})`
-                    : `Next check: ${nextDueDate}`}
+                    ? `Prossimo controllo tra ${daysRemaining} giorni (${nextDueDate})`
+                    : `Prossimo controllo: ${nextDueDate}`}
                 </Text>
               )}
             </View>
@@ -207,10 +207,10 @@ export default function ClinicalSurveysScreen() {
             color={Colors.blue}
             style={{ marginBottom: 10 }}
           />
-          <Text style={FontStyles.variants.mainTitle}>Clinical Evaluations</Text>
+          <Text style={FontStyles.variants.mainTitle}>Valutazioni cliniche</Text>
           <Text style={styles.description}>
-            Complete the clinical surveys regularly to track your condition and
-            help your medical team.
+            Compila regolarmente i questionari clinici per monitorare la tua condizione e
+            supportare i clinici.
           </Text>
         </View>
 
@@ -225,7 +225,7 @@ export default function ClinicalSurveysScreen() {
             />
           </View>
           <Text style={styles.progressText}>
-            {completedCount}/{surveys.length} Completed
+            {completedCount}/{surveys.length} completati
           </Text>
         </View>
 
@@ -270,8 +270,8 @@ export default function ClinicalSurveysScreen() {
                     style={[FontStyles.variants.cardDescription, styles.cardSub]}
                   >
                     {status === "completed"
-                      ? `Completed (${date})`
-                      : "To complete"}
+                      ? `Completato (${date})`
+                      : "Da completare"}
                   </Text>
                 </View>
               </PressableScaleWithRef>

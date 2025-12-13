@@ -7,7 +7,7 @@ import BottomNavigation from "../components/bottomnavigationnew";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
-import { Pressable, Animated } from "react-native"
+import { Pressable, Animated } from "react-native";
 import { router } from "expo-router";
 import { Image } from "react-native";
 import { Link } from "expo-router";
@@ -15,11 +15,7 @@ import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
 
-
 export default function homenew() {
-
-
-  
   const [summary, setSummary] = useState<SummaryData>({
     nextMedication: null,
     sleep: null,
@@ -30,264 +26,315 @@ export default function homenew() {
   });
 
   const formatSleepDuration = (hoursFloat: number) => {
-  const hours = Math.floor(hoursFloat);
-  const minutes = Math.round((hoursFloat - hours) * 60);
-  return `${hours} hr ${minutes} min`;
+    const hours = Math.floor(hoursFloat);
+    const minutes = Math.round((hoursFloat - hours) * 60);
+    return `${hours} h ${minutes} min`;
   };
 
   const hoursFloat = parseFloat(summary?.sleep || "0");
   const formattedSleep = formatSleepDuration(hoursFloat);
 
   interface SummaryData {
-  nextMedication: string | null;
-  sleep: string | null;
-  mood: string | null;
-  fatigue: number | null;
-  dietStatus: string | null;
-  realSleepHours: number | null;
-}
+    nextMedication: string | null;
+    sleep: string | null;
+    mood: string | null;
+    fatigue: number | null;
+    dietStatus: string | null;
+    realSleepHours: number | null;
+  }
 
-useFocusEffect(
-  useCallback(() => {
-    const fetchSummary = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
+  useFocusEffect(
+    useCallback(() => {
+      const fetchSummary = async () => {
+        const user = auth.currentUser;
+        if (!user) return;
 
-      const uid = user.uid;
-      const today = new Date();
-      const todayStr = today.toISOString().split("T")[0];
-      const currentMinutes = today.getHours() * 60 + today.getMinutes();
-      const dayName = today.toLocaleString("en-US", { weekday: "short" });
+        const uid = user.uid;
+        const today = new Date();
+        const todayStr = today.toISOString().split("T")[0];
+        const currentMinutes = today.getHours() * 60 + today.getMinutes();
+        const dayName = today.toLocaleString("en-US", { weekday: "short" });
 
-      // 1. Medications
-      const medsRef = collection(db, "users", uid, "medications");
-      const medsSnap = await getDocs(medsRef);
-      let nextMed = null;
-      const upcomingMeds: { name: string; time: string }[] = [];
+        // 1. Medications
+        const medsRef = collection(db, "users", uid, "medications");
+        const medsSnap = await getDocs(medsRef);
+        let nextMed = null;
+        const upcomingMeds: { name: string; time: string }[] = [];
 
-      medsSnap.docs.forEach((doc) => {
-        const data = doc.data();
-        if (data.days?.includes(dayName)) {
-          data.times?.forEach((time: string) => {
-            const [h, m] = time.split(":").map(Number);
-            const total = h * 60 + m;
-            if (total >= currentMinutes) {
-              upcomingMeds.push({ name: data.name, time });
-            }
-          });
-        }
-      });
-
-      if (upcomingMeds.length > 0) {
-        upcomingMeds.sort((a, b) => {
-          const [h1, m1] = a.time.split(":").map(Number);
-          const [h2, m2] = b.time.split(":").map(Number);
-          return h1 * 60 + m1 - (h2 * 60 + m2);
+        medsSnap.docs.forEach((doc) => {
+          const data = doc.data();
+          if (data.days?.includes(dayName)) {
+            data.times?.forEach((time: string) => {
+              const [h, m] = time.split(":").map(Number);
+              const total = h * 60 + m;
+              if (total >= currentMinutes) {
+                upcomingMeds.push({ name: data.name, time });
+              }
+            });
+          }
         });
-        nextMed = `${upcomingMeds[0].name} at ${upcomingMeds[0].time}`;
-      }
 
-      // 2. Symptoms (last entry)
-      const symptomsRef = collection(db, "users", uid, "symptoms");
-      const symptomsSnap = await getDocs(symptomsRef);
-      let latest = null;
+        if (upcomingMeds.length > 0) {
+          upcomingMeds.sort((a, b) => {
+            const [h1, m1] = a.time.split(":").map(Number);
+            const [h2, m2] = b.time.split(":").map(Number);
+            return h1 * 60 + m1 - (h2 * 60 + m2);
+          });
+          nextMed = `${upcomingMeds[0].name} alle ${upcomingMeds[0].time}`;
+        }
 
-      if (!symptomsSnap.empty) {
-        latest = symptomsSnap.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .sort((a, b) => (a.id > b.id ? -1 : 1))[0];
-      }
+        // 2. Symptoms (last entry)
+        const symptomsRef = collection(db, "users", uid, "symptoms");
+        const symptomsSnap = await getDocs(symptomsRef);
+        let latest = null;
 
-      // 3. Sleep
-      const sleepRef = collection(db, "users", uid, "sleep");
-      const sleepSnap = await getDocs(sleepRef);
-      const latestSleep = sleepSnap.docs
-        .map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as { createdAt?: any; hours?: number })
-        }))
-        .sort((a, b) => {
-          const aDate = a.createdAt?.seconds
-            ? new Date(a.createdAt.seconds * 1000)
-            : new Date(a.id);
-          const bDate = b.createdAt?.seconds
-            ? new Date(b.createdAt.seconds * 1000)
-            : new Date(b.id);
-          return bDate.getTime() - aDate.getTime();
-        })[0];
+        if (!symptomsSnap.empty) {
+          latest = symptomsSnap.docs
+            .map((doc) => ({ id: doc.id, ...doc.data() }))
+            .sort((a, b) => (a.id > b.id ? -1 : 1))[0];
+        }
 
-      const realSleepHours = latestSleep?.hours ?? null;
+        // 3. Sleep
+        const sleepRef = collection(db, "users", uid, "sleep");
+        const sleepSnap = await getDocs(sleepRef);
+        const latestSleep = sleepSnap.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...(doc.data() as { createdAt?: any; hours?: number }),
+          }))
+          .sort((a, b) => {
+            const aDate = a.createdAt?.seconds
+              ? new Date(a.createdAt.seconds * 1000)
+              : new Date(a.id);
+            const bDate = b.createdAt?.seconds
+              ? new Date(b.createdAt.seconds * 1000)
+              : new Date(b.id);
+            return bDate.getTime() - aDate.getTime();
+          })[0];
 
-      // 4. Diet
-      const dietRef = collection(db, "users", uid, "diet");
-      const dietSnap = await getDocs(dietRef);
-      const dietToday = dietSnap.docs.find(doc => doc.id === todayStr);
-      const dietStatus = dietToday ? "Completed" : "Pending";
+        const realSleepHours = latestSleep?.hours ?? null;
 
-      // Final update
-      setSummary({
-        nextMedication: nextMed,
-        sleep: (latest as any)?.sonno || null,
-        mood: (latest as any)?.umore || null,
-        fatigue: (latest as any)?.affaticamentoMuscolare ?? null,
-        dietStatus,
-        realSleepHours,
-      });
-    };
+        // 4. Diet
+        const dietRef = collection(db, "users", uid, "diet");
+        const dietSnap = await getDocs(dietRef);
+        const dietToday = dietSnap.docs.find((doc) => doc.id === todayStr);
+        const dietStatus = dietToday ? "Completato" : "Da compilare";
 
-    fetchSummary();
-  }, [])
-);
+        // Final update
+        setSummary({
+          nextMedication: nextMed,
+          sleep: (latest as any)?.sonno || null,
+          mood: (latest as any)?.umore || null,
+          fatigue: (latest as any)?.affaticamentoMuscolare ?? null,
+          dietStatus,
+          realSleepHours,
+        });
+      };
+
+      fetchSummary();
+    }, [])
+  );
 
   return (
     <View style={{ flex: 1 }}>
-    <ScrollView style={styles.container}>
-  <View style={styles.headerRow}>
-    <Text style={FontStyles.variants.mainTitle}>Summary</Text>
-    <Link href="/profilenew" asChild>
-    <Pressable>
-    <Image source={require("../assets/images/avatar-ios.jpg")} style={styles.avatar} />
-    </Pressable>
-    </Link>
-  </View>
+      <ScrollView style={styles.container}>
+        <View style={styles.headerRow}>
+          <Text style={FontStyles.variants.mainTitle}>Sommario</Text>
+          <Link href="/profilenew" asChild>
+            <Pressable>
+              <Image
+                source={require("../assets/images/avatar-ios.jpg")}
+                style={styles.avatar}
+              />
+            </Pressable>
+          </Link>
+        </View>
 
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, FontStyles.variants.bodySemibold]}>Today</Text>
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, FontStyles.variants.bodySemibold]}>
+            Oggi
+          </Text>
 
-        <Animatable.View animation="fadeInUp" delay={100}>
-          <PressableScaleWithRef
-            onPress={() => router.push("/mymedicationnew")}
-            activeScale={0.96}
-            weight="light"
-            style={styles.card}
-          >
-            <View style={styles.cardHeader}>
-              <View style={styles.cardRow}>
-                <Ionicons name="medkit" size={20} color={Colors.turquoise} />
-                <Text style={[FontStyles.variants.sectionTitle, { color: Colors.turquoise }]}>
-                  Medication
-                </Text>
+          <Animatable.View animation="fadeInUp" delay={100}>
+            <PressableScaleWithRef
+              onPress={() => router.push("/mymedicationnew")}
+              activeScale={0.96}
+              weight="light"
+              style={styles.card}
+            >
+              <View style={styles.cardHeader}>
+                <View style={styles.cardRow}>
+                  <Ionicons name="medkit" size={20} color={Colors.turquoise} />
+                  <Text
+                    style={[
+                      FontStyles.variants.sectionTitle,
+                      { color: Colors.turquoise },
+                    ]}
+                  >
+                    Farmaci Prescritti
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={Colors.light3}
+                />
               </View>
-              <Ionicons name="chevron-forward" size={18} color={Colors.light3} />
-            </View>
-            <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
-              {summary.nextMedication || "No meds today"}
-            </Text>
-            <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
-              Next Dose
-            </Text>
-          </PressableScaleWithRef>
-        </Animatable.View>
+              <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
+                {summary.nextMedication || "Nessun farmaco oggi"}
+              </Text>
+              <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
+                Prossima dose
+              </Text>
+            </PressableScaleWithRef>
+          </Animatable.View>
 
-        <Animatable.View animation="fadeInUp" delay={200}>
+          <Animatable.View animation="fadeInUp" delay={200}>
             <PressableScaleWithRef
               onPress={() => router.push("/sleeptrackingnew")}
               activeScale={0.96}
               weight="light"
               style={styles.card}
             >
-            <View style={styles.cardHeader}>
-              <View style={styles.cardRow}>
-                <Ionicons name="bed" size={20} color={Colors.green} />
-                <Text style={[FontStyles.variants.sectionTitle, { color: Colors.green }]}>
-                  Sleep
-                </Text>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardRow}>
+                  <Ionicons name="bed" size={20} color={Colors.green} />
+                  <Text
+                    style={[
+                      FontStyles.variants.sectionTitle,
+                      { color: Colors.green },
+                    ]}
+                  >
+                    Monitoraggio del sonno
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={Colors.light3}
+                />
               </View>
-              <Ionicons name="chevron-forward" size={18} color={Colors.light3} />
-            </View>
 
-            <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
-              {summary.realSleepHours !== null
-                ? formatSleepDuration(summary.realSleepHours)
-                : "Not set"}
-            </Text>
-            <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
-              Time Asleep
-            </Text>
-          </PressableScaleWithRef>
-        </Animatable.View>
+              <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
+                {summary.realSleepHours !== null
+                  ? formatSleepDuration(summary.realSleepHours)
+                  : "Non impostato"}
+              </Text>
+              <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
+                Tempo di sonno
+              </Text>
+            </PressableScaleWithRef>
+          </Animatable.View>
 
-        {/* Fatigue (era la card Mood, ora mostra la fatigue in blu) */}
-        <Animatable.View animation="fadeInUp" delay={300}>
-          <PressableScaleWithRef
-            onPress={() => router.push("/trackingnew")}
-            activeScale={0.96}
-            weight="light"
-            style={styles.card}
-          >
-            <View style={styles.cardHeader}>
-              <View style={styles.cardRow}>
-                <Ionicons name="barbell" size={20} color={Colors.blue} />
-                <Text style={[FontStyles.variants.sectionTitle, { color: Colors.blue }]}>
-                  Fatigue
-                </Text>
+          {/* Fatigue (era la card Mood, ora mostra la fatigue in blu) */}
+          <Animatable.View animation="fadeInUp" delay={300}>
+            <PressableScaleWithRef
+              onPress={() => router.push("/trackingnew")}
+              activeScale={0.96}
+              weight="light"
+              style={styles.card}
+            >
+              <View style={styles.cardHeader}>
+                <View style={styles.cardRow}>
+                  <Ionicons name="barbell" size={20} color={Colors.blue} />
+                  <Text
+                    style={[
+                      FontStyles.variants.sectionTitle,
+                      { color: Colors.blue },
+                    ]}
+                  >
+                    Monitoraggio sintomi
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={Colors.light3}
+                />
               </View>
-              <Ionicons name="chevron-forward" size={18} color={Colors.light3} />
-            </View>
-            <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
-              {summary.fatigue !== null ? `${summary.fatigue}/10` : "Not set"}
-            </Text>
-            <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
-              Perceived Fatigue
-            </Text>
-          </PressableScaleWithRef>
-        </Animatable.View>
+              <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
+                {summary.fatigue !== null ? `${summary.fatigue}/10` : "Non impostato"}
+              </Text>
+              <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
+                Affaticamento percepito
+              </Text>
+            </PressableScaleWithRef>
+          </Animatable.View>
 
-        {/* Work card (al posto della vecchia Fatigue, colore rosso, va alla pagina lavoro) */}
-        <Animatable.View animation="fadeInUp" delay={400}>
-          <PressableScaleWithRef
-            onPress={() => router.push("/WorkStatusScreen")}
-            activeScale={0.96}
-            weight="light"
-            style={styles.card}
-          >
-            <View style={styles.cardHeader}>
-              <View style={styles.cardRow}>
-                <Ionicons name="briefcase" size={20} color={Colors.red} />
-                <Text style={[FontStyles.variants.sectionTitle, { color: Colors.red }]}>
-                  Work & Social
-                </Text>
+          {/* Work card (al posto della vecchia Fatigue, colore rosso, va alla pagina lavoro) */}
+          <Animatable.View animation="fadeInUp" delay={400}>
+            <PressableScaleWithRef
+              onPress={() => router.push("/WorkStatusScreen")}
+              activeScale={0.96}
+              weight="light"
+              style={styles.card}
+            >
+              <View style={styles.cardHeader}>
+                <View style={styles.cardRow}>
+                  <Ionicons name="briefcase" size={20} color={Colors.red} />
+                  <Text
+                    style={[
+                      FontStyles.variants.sectionTitle,
+                      { color: Colors.red },
+                    ]}
+                  >
+                    Lavoro & impatto sociale
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={Colors.light3}
+                />
               </View>
-              <Ionicons name="chevron-forward" size={18} color={Colors.light3} />
-            </View>
-            <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
-              Working status
-            </Text>
-            <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
-              Employment status
-            </Text>
-          </PressableScaleWithRef>
-        </Animatable.View>
+              <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
+                Stato lavorativo
+              </Text>
+              <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
+                Situazione occupazionale
+              </Text>
+            </PressableScaleWithRef>
+          </Animatable.View>
 
-        <Animatable.View animation="fadeInUp" delay={500}>
-          <PressableScaleWithRef
-            onPress={() => router.push("/diettrackernew")}
-            activeScale={0.96}
-            weight="light"
-            style={styles.card}
-          >
-            <View style={styles.cardHeader}>
-              <View style={styles.cardRow}>
-                <Ionicons name="nutrition" size={20} color={Colors.orange} />
-                <Text style={[FontStyles.variants.sectionTitle, { color: Colors.orange }]}>
-                  Diet
-                </Text>
+          <Animatable.View animation="fadeInUp" delay={500}>
+            <PressableScaleWithRef
+              onPress={() => router.push("/diettrackernew")}
+              activeScale={0.96}
+              weight="light"
+              style={styles.card}
+            >
+              <View style={styles.cardHeader}>
+                <View style={styles.cardRow}>
+                  <Ionicons name="nutrition" size={20} color={Colors.orange} />
+                  <Text
+                    style={[
+                      FontStyles.variants.sectionTitle,
+                      { color: Colors.orange },
+                    ]}
+                  >
+                    Alimentazione
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={Colors.light3}
+                />
               </View>
-              <Ionicons name="chevron-forward" size={18} color={Colors.light3} />
-            </View>
-            <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
-              {summary.dietStatus === "Completed" ? "All meals tracked" : "Pending"}
-            </Text>
-            <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
-              Daily Meals
-            </Text>
-          </PressableScaleWithRef>
-        </Animatable.View>
-
-      </View>
-    </ScrollView>
-    <BottomNavigation />
-  </View>
+              <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
+                {summary.dietStatus === "Completato"
+                  ? "Tutti i pasti tracciati"
+                  : "Da compilare"}
+              </Text>
+              <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
+                Pasti giornalieri
+              </Text>
+            </PressableScaleWithRef>
+          </Animatable.View>
+        </View>
+      </ScrollView>
+      <BottomNavigation />
+    </View>
   );
 }
 
@@ -335,43 +382,42 @@ const styles = StyleSheet.create({
     color: "#3A3A3C",
   },
   headerRow: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginTop: 50,
-  marginBottom: 4,
-},
-profilePic: {
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-},
-favorites: {
-  fontSize: 16,
-  fontWeight: "600",
-  color: "#3A3A3C",
-  marginBottom: 16,
-},
-cardRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  gap: 8,
-  marginBottom: 4,
-},
-cardSub: {
-  fontSize: 14,
-  color: "#888",
-},
-cardHeader: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: 6,
-},
-avatar: {
-  width: 32,
-  height: 32,
-  borderRadius: 16,
-},
-
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 50,
+    marginBottom: 4,
+  },
+  profilePic: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
+  favorites: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#3A3A3C",
+    marginBottom: 16,
+  },
+  cardRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
+  },
+  cardSub: {
+    fontSize: 14,
+    color: "#888",
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  avatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
 });

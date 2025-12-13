@@ -1,5 +1,12 @@
 import React, { useEffect, useState, useLayoutEffect } from "react";
-import { View, Text, Image, Pressable, ActivityIndicator, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  Pressable,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
 import { auth, db } from "../firebaseconfig";
 import { getDoc, doc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
@@ -35,137 +42,151 @@ export default function Profile() {
   }, [navigation]);
 
   useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      const userDocRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
 
-      if (userDoc.exists()) {
-        setUserData(userDoc.data() as UserData);
+        if (userDoc.exists()) {
+          setUserData(userDoc.data() as UserData);
+        } else {
+          console.log("User document does not exist");
+          setUserData(null);
+        }
       } else {
-        console.log("User document does not exist");
         setUserData(null);
       }
-    } else {
-      setUserData(null);
-    }
-    setLoading(false);
-  });
+      setLoading(false);
+    });
 
-  return () => unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   const handleLogout = async () => {
-  await signOut(auth);
-  setUserData(null);
-  router.replace("/sign-in"); // meglio di push per evitare che si possa tornare indietro
+    await signOut(auth);
+    setUserData(null);
+    router.replace("/sign-in"); // meglio di push per evitare che si possa tornare indietro
   };
 
   if (loading) {
-    return <ActivityIndicator size="large" color="#2C3E50" style={{ flex: 1 }} />;
+    return (
+      <ActivityIndicator
+        size="large"
+        color="#2C3E50"
+        style={{ flex: 1 }}
+      />
+    );
   }
 
   return (
-  <View style={styles.wrapper}>
-    <Animatable.View animation="fadeIn" duration={600} style={styles.container}>
-
-      {/* Informazioni base */}
-      <View style={styles.profileHeader}>
-        <Image
+    <View style={styles.wrapper}>
+      <Animatable.View animation="fadeIn" duration={600} style={styles.container}>
+        {/* Informazioni base */}
+        <View style={styles.profileHeader}>
+          <Image
             source={require("../assets/images/avatar-ios.jpg")}
             style={styles.avatar}
-        />
-        <Text style={FontStyles.variants.mainTitle}>
+          />
+          <Text style={FontStyles.variants.mainTitle}>
             {userData?.firstName} {userData?.lastName}
-        </Text>
-        <Text style={FontStyles.variants.bodySemibold}>{userData?.email}</Text>
+          </Text>
+          <Text style={FontStyles.variants.bodySemibold}>{userData?.email}</Text>
         </View>
 
-      {/* Info card */}
-      <View style={styles.cardGroup}>
-        {[
+        {/* Info card */}
+        <View style={styles.cardGroup}>
+          {[
             {
-            icon: "calendar",
-            label: "Date of birth",
-            value: userData?.age || "Not provided",
-            color: Colors.purple,
+              icon: "calendar",
+              label: "Data di nascita",
+              value: userData?.age || "Non fornita",
+              color: Colors.purple,
             },
             {
-            icon: "location",
-            label: "City",
-            value: userData?.city || "Not provided",
-            color: Colors.orange,
+              icon: "location",
+              label: "Città",
+              value: userData?.city || "Non fornita",
+              color: Colors.orange,
             },
             {
-            icon: "call",
-            label: "Phone",
-            value: userData?.phone || "Not provided",
-            color: Colors.blue,
+              icon: "call",
+              label: "Telefono",
+              value: userData?.phone || "Non fornito",
+              color: Colors.blue,
             },
             {
-            icon: "resize",
-            label: "Height",
-            value: userData?.height || "Not provided",
-            color: Colors.green,
+              icon: "resize",
+              label: "Altezza",
+              value: userData?.height || "Non fornita",
+              color: Colors.green,
             },
             {
-            icon: "barbell",
-            label: "Weight",
-            value: userData?.weight || "Not provided",
-            color: Colors.red,
+              icon: "barbell",
+              label: "Peso",
+              value: userData?.weight || "Non fornito",
+              color: Colors.red,
             },
-        ].map((item, index) => (
+          ].map((item, index) => (
             <Animatable.View
-            key={item.label}
-            animation="fadeInUp"
-            delay={300 + index * 100}
+              key={item.label}
+              animation="fadeInUp"
+              delay={300 + index * 100}
             >
-            <PressableScaleWithRef
+              <PressableScaleWithRef
                 weight="light"
                 activeScale={0.96}
                 style={styles.miniCard}
-            >
+              >
                 <Ionicons
-                name={item.icon as any}
-                size={20}
-                color={item.color}
-                style={styles.iconLeft}
+                  name={item.icon as any}
+                  size={20}
+                  color={item.color}
+                  style={styles.iconLeft}
                 />
                 <View style={{ flex: 1 }}>
-                <Text style={[FontStyles.variants.sectionTitle, { color: item.color }]}>
+                  <Text
+                    style={[
+                      FontStyles.variants.sectionTitle,
+                      { color: item.color },
+                    ]}
+                  >
                     {item.label}
-                </Text>
-                <Text style={FontStyles.variants.body}>{item.value}</Text>
+                  </Text>
+                  <Text style={FontStyles.variants.body}>{item.value}</Text>
                 </View>
-            </PressableScaleWithRef>
+              </PressableScaleWithRef>
             </Animatable.View>
-        ))}
+          ))}
         </View>
 
-    <Animatable.View animation="fadeInUp" delay={700} style={styles.buttonColumn}>
-    <PressableScaleWithRef
-    onPress={() => router.push("/editprofilenew")}
-    weight="light"
-    activeScale={0.96}
-    style={[styles.fullButton, styles.editButton]}
-    >
-    <Text style={styles.fullButtonText}>Edit Profile</Text>
-    </PressableScaleWithRef>
+        <Animatable.View
+          animation="fadeInUp"
+          delay={700}
+          style={styles.buttonColumn}
+        >
+          <PressableScaleWithRef
+            onPress={() => router.push("/editprofilenew")}
+            weight="light"
+            activeScale={0.96}
+            style={[styles.fullButton, styles.editButton]}
+          >
+            <Text style={styles.fullButtonText}>Modifica profilo</Text>
+          </PressableScaleWithRef>
 
-    <PressableScaleWithRef
-    onPress={handleLogout}
-    weight="light"
-    activeScale={0.96}
-    style={[styles.fullButton, styles.logoutButton]}
-    >
-    <Text style={styles.fullButtonText}>Logout</Text>
-    </PressableScaleWithRef>
-    </Animatable.View>
+          <PressableScaleWithRef
+            onPress={handleLogout}
+            weight="light"
+            activeScale={0.96}
+            style={[styles.fullButton, styles.logoutButton]}
+          >
+            <Text style={styles.fullButtonText}>Logout</Text>
+          </PressableScaleWithRef>
+        </Animatable.View>
+      </Animatable.View>
 
-  </Animatable.View>
-    <BottomNavigation />
-  </View>
-);
+      <BottomNavigation />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -182,7 +203,7 @@ const styles = StyleSheet.create({
   profileHeader: {
     alignItems: "center",
     marginBottom: 20,
-    paddingTop : 40,
+    paddingTop: 40,
   },
   avatar: {
     width: 120,
@@ -224,7 +245,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#FFF",
   },
-    coverContainer: {
+  coverContainer: {
     position: "relative",
     width: "100%",
     height: 140,
@@ -253,11 +274,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   avatarContainer: {
-  position: "absolute",
-  bottom: -50,
-  alignItems: "center",
-  justifyContent: "center",
-  zIndex: 3,
+    position: "absolute",
+    bottom: -50,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 3,
   },
   cardGroup: {
     width: "90%",
@@ -281,16 +302,16 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   editProfileButton: {
-  backgroundColor: "#5DADE2",
-  paddingVertical: 14,
-  paddingHorizontal: 30,
-  borderRadius: 12,
-  alignItems: "center",
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.1,
-  shadowRadius: 4,
-  elevation: 3,
+    backgroundColor: "#5DADE2",
+    paddingVertical: 14,
+    paddingHorizontal: 30,
+    borderRadius: 12,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   editProfileText: {
     fontSize: 16,
@@ -304,7 +325,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   fullButton: {
-    backgroundColor: "#007AFF", 
+    backgroundColor: "#007AFF",
     paddingVertical: 14,
     borderRadius: 20,
     alignItems: "center",
@@ -342,13 +363,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-    elevation: 3, 
+    elevation: 3,
   },
   emojiIcon: {
     fontSize: 20,
     marginRight: 10,
   },
   iconLeft: {
-  marginRight: 12,
-},
+    marginRight: 12,
+  },
 });
