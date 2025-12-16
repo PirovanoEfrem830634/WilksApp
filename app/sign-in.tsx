@@ -24,6 +24,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { Ionicons } from "@expo/vector-icons";
+import { setPatientDocId } from "../utils/session";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -135,6 +136,7 @@ export default function SignIn() {
       }
 
       const patientDoc = snap.docs[0];
+      await setPatientDocId(patientDoc.id);
       const patientRef = patientDoc.ref;
       const data = patientDoc.data() || {};
 

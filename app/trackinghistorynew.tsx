@@ -10,6 +10,7 @@ import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import { Ionicons } from "@expo/vector-icons";
 import * as Animatable from "react-native-animatable";
+import { getPatientDocId } from "../utils/session";
 
 export default function SymptomCalendar() {
   const [items, setItems] = useState<Record<string, { name: string; description: string }[]>>({});
@@ -34,7 +35,10 @@ export default function SymptomCalendar() {
     const uid = auth.currentUser?.uid;
     if (!uid) return;
 
-    const ref = collection(db, "users", uid, "symptoms");
+    const patientId = await getPatientDocId();
+    if (!patientId) return;
+
+    const ref = collection(db, "users", patientId, "symptoms");
     const snapshot = await getDocs(ref);
 
     const loadedItems: any = {};

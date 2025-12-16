@@ -21,6 +21,8 @@ import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { LinearGradient } from "expo-linear-gradient";
+import { getPatientDocId } from "../utils/session";
+
 
 export default function EditProfile() {
   const router = useRouter();
@@ -45,7 +47,9 @@ export default function EditProfile() {
         setLoading(true);
         try {
           if (auth.currentUser) {
-            const userRef = doc(db, "users", auth.currentUser.uid);
+            const patientId = await getPatientDocId();
+            if (!patientId) return;
+            const userRef = doc(db, "users", patientId);
             const snapshot = await getDoc(userRef);
             if (snapshot.exists()) {
               const data = snapshot.data() as any;
@@ -117,7 +121,12 @@ export default function EditProfile() {
     }
 
     try {
-      const userRef = doc(db, "users", auth.currentUser!.uid);
+      const patientId = await getPatientDocId();
+      if (!patientId) {
+        Alert.alert("Errore", "Sessione paziente non trovata. Rifai login.");
+        return;
+      }
+      const userRef = doc(db, "users", patientId);
       await updateDoc(userRef, {
         ...formData,
         age: parseInt(formData.age, 10),

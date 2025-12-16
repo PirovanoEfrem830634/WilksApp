@@ -20,6 +20,7 @@ import BottomNavigation from "../components/bottomnavigationnew";
 import { LinearGradient } from "expo-linear-gradient";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import Toast from "react-native-toast-message";
+import { getPatientDocId } from "../utils/session";
 
 type BaselineWorkStatus = {
   currentlyWorking: boolean | null;
@@ -46,7 +47,12 @@ export default function WorkStatusScreen() {
       }
 
       try {
-        const ref = doc(db, "users", user.uid, "work_status", "baseline");
+        const patientId = await getPatientDocId();
+        if (!patientId) {
+          setLoading(false);
+          return;
+        }
+        const ref = doc(db, "users", patientId, "work_status", "baseline");
         const snap = await getDoc(ref);
 
         if (snap.exists()) {
@@ -108,7 +114,12 @@ export default function WorkStatusScreen() {
 
     try {
       setSaving(true);
-      const ref = doc(db, "users", user.uid, "work_status", "baseline");
+      const patientId = await getPatientDocId();
+      if (!patientId) {
+        Alert.alert("Errore", "Sessione paziente non trovata. Rifai login.");
+        return;
+      }
+      const ref = doc(db, "users", patientId, "work_status", "baseline");
 
       await setDoc(
         ref,

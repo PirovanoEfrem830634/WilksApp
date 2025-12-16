@@ -14,6 +14,7 @@ import { Link } from "expo-router";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
+import { getPatientDocId } from "../utils/session";
 
 export default function homenew() {
   const [summary, setSummary] = useState<SummaryData>({
@@ -49,14 +50,15 @@ export default function homenew() {
         const user = auth.currentUser;
         if (!user) return;
 
-        const uid = user.uid;
+        const patientId = await getPatientDocId();
+        if (!patientId) return;
         const today = new Date();
         const todayStr = today.toISOString().split("T")[0];
         const currentMinutes = today.getHours() * 60 + today.getMinutes();
         const dayName = today.toLocaleString("en-US", { weekday: "short" });
 
         // 1. Medications
-        const medsRef = collection(db, "users", uid, "medications");
+        const medsRef = collection(db, "users", patientId, "medications");
         const medsSnap = await getDocs(medsRef);
         let nextMed = null;
         const upcomingMeds: { name: string; time: string }[] = [];
@@ -84,7 +86,7 @@ export default function homenew() {
         }
 
         // 2. Symptoms (last entry)
-        const symptomsRef = collection(db, "users", uid, "symptoms");
+        const symptomsRef = collection(db, "users", patientId, "symptoms");
         const symptomsSnap = await getDocs(symptomsRef);
         let latest = null;
 
@@ -95,7 +97,7 @@ export default function homenew() {
         }
 
         // 3. Sleep
-        const sleepRef = collection(db, "users", uid, "sleep");
+        const sleepRef = collection(db, "users", patientId, "sleep");
         const sleepSnap = await getDocs(sleepRef);
         const latestSleep = sleepSnap.docs
           .map((doc) => ({
@@ -115,7 +117,7 @@ export default function homenew() {
         const realSleepHours = latestSleep?.hours ?? null;
 
         // 4. Diet
-        const dietRef = collection(db, "users", uid, "diet");
+        const dietRef = collection(db, "users", patientId, "diet");
         const dietSnap = await getDocs(dietRef);
         const dietToday = dietSnap.docs.find((doc) => doc.id === todayStr);
         const dietStatus = dietToday ? "Completato" : "Da compilare";

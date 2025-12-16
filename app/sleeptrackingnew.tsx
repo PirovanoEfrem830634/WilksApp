@@ -35,6 +35,7 @@ import {
   Check,
   X,
 } from "lucide-react-native";
+import { getPatientDocId } from "../utils/session";
 
 export default function SleepTracking() {
   const [quality, setQuality] = useState("");
@@ -69,8 +70,19 @@ export default function SleepTracking() {
       return;
     }
 
+    const patientId = await getPatientDocId();
+    if (!patientId) {
+      Toast.show({
+        type: "error",
+        text1: "Sessione paziente non trovata",
+        text2: "Rifai login.",
+        position: "top",
+      });
+      return;
+    }
+
     const today = new Date().toISOString().split("T")[0];
-    const ref = doc(db, "users", user.uid, "sleep", today);
+    const ref = doc(db, "users", patientId, "sleep", today);
 
     const sleepData = {
       quality,

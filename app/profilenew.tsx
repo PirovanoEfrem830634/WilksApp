@@ -19,6 +19,7 @@ import FontStyles from "../Styles/fontstyles";
 import { TouchableOpacity } from "react-native";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { onAuthStateChanged } from "firebase/auth";
+import { clearPatientDocId, getPatientDocId } from "../utils/session";
 
 interface UserData {
   firstName: string;
@@ -44,13 +45,26 @@ export default function Profile() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
+        const patientId = await getPatientDocId();
+        if (!patientId) {
+          console.log("patientDocId mancante: rifai login/attivazione");
+          setUserData(null);
+          setLoading(false);
+          return;
+        }
 
-        if (userDoc.exists()) {
-          setUserData(userDoc.data() as UserData);
-        } else {
-          console.log("User document does not exist");
+        try {
+          const userDocRef = doc(db, "users", patientId);
+          const userDoc = await getDoc(userDocRef);
+
+          if (userDoc.exists()) {
+            setUserData(userDoc.data() as UserData);
+          } else {
+            console.log("User document does not exist");
+            setUserData(null);
+          }
+        } catch (e) {
+          console.log("Errore lettura profilo:", e);
           setUserData(null);
         }
       } else {
@@ -65,6 +79,7 @@ export default function Profile() {
   const handleLogout = async () => {
     await signOut(auth);
     setUserData(null);
+    await clearPatientDocId();
     router.replace("/sign-in"); // meglio di push per evitare che si possa tornare indietro
   };
 

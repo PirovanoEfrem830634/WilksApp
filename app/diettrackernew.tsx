@@ -29,6 +29,7 @@ import {
 } from "lucide-react-native";
 import { Ionicons } from "@expo/vector-icons";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
+import { getPatientDocId } from "../utils/session";
 
 const meals = ["breakfast", "lunch", "dinner", "snack"];
 
@@ -55,8 +56,12 @@ export default function DietTracker() {
     const user = auth.currentUser;
     if (!user) return;
 
+    const patientId = await getPatientDocId();
+    if (!patientId) return;
+
     const todayKey = getDateKey();
-    const ref = doc(db, "users", user.uid, "diet", todayKey);
+    const ref = doc(db, "users", patientId, "diet", todayKey);
+
     const snap = await getDoc(ref);
     if (snap.exists()) {
       setDiet(snap.data() as Record<string, string>);
@@ -89,16 +94,25 @@ export default function DietTracker() {
     const user = auth.currentUser;
     if (!user) return;
 
+    const patientId = await getPatientDocId();
+    if (!patientId) return;
+
     const todayKey = getDateKey();
-    await setDoc(doc(db, "users", user.uid, "diet", todayKey), {
-      ...diet,
-      createdAt: Timestamp.now(),
-    });
+
+    await setDoc(
+      doc(db, "users", patientId, "diet", todayKey),
+      {
+        ...diet,
+        createdAt: Timestamp.now(),
+      },
+      { merge: true }
+    );
 
     showToast();
     setEditingMeal(null);
     setInput("");
   };
+
 
   return (
     <View style={styles.container}>
