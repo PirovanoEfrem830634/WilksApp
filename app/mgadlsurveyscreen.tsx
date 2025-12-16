@@ -16,6 +16,7 @@ import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { Ionicons } from "@expo/vector-icons";
+import { getPatientDocId } from "../utils/session";
 
 // ===== MG-ADL (paziente) =====
 const MGADL_ITEMS = [
@@ -108,8 +109,8 @@ export default function MGADLSurvey() {
   );
 
   const totalScore = useMemo(
-   () => answers.reduce((sum, v) => sum + v, 0),
-   [answers]
+    () => answers.reduce((sum, v) => sum + v, 0),
+    [answers]
   );
 
   const toastAnim = useRef(new Animated.Value(0)).current;
@@ -118,18 +119,16 @@ export default function MGADLSurvey() {
   const showToast = (message: string) => {
     setToastMessage(message);
     Animated.sequence([
-      Animated.timing(toastAnim, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }),
+      Animated.timing(toastAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
       Animated.delay(2000),
-      Animated.timing(toastAnim, {
-        toValue: 0,
-        duration: 400,
-        useNativeDriver: true,
-      }),
+      Animated.timing(toastAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
     ]).start(() => setToastMessage(null));
+  };
+
+  const handleAnswer = (index: number, value: number) => {
+    const newAnswers = [...answers];
+    newAnswers[index] = value;
+    setAnswers(newAnswers);
   };
 
   const saveSurvey = async () => {
@@ -138,26 +137,31 @@ export default function MGADLSurvey() {
       Alert.alert("Error", "User not logged in");
       return;
     }
-    const uid = user.uid;
 
-    // 🔹 SALVA sul doc del paziente, non su quello dei clinici
-    const docRef = doc(db, `users/${uid}/clinical_surveys/mg_adl_paziente`);
+    const patientId = await getPatientDocId();
+    if (!patientId) {
+      showToast("❌ Profilo paziente non trovato (session)");
+      return;
+    }
+
+    const docRef = doc(db, "users", patientId, "clinical_surveys", "mg_adl_paziente");
 
     try {
-      await setDoc(docRef, {
-        answers,             // array numerico 0–3
-        lastCompiledAt: Timestamp.now(),
-      });
-      showToast("✅ Survey saved successfully");
+      await setDoc(
+        docRef,
+        {
+          answers, // array numerico 0–3
+          totalScore, // utile lato CDSS/analytics
+          lastCompiledAt: Timestamp.now(),
+          source: "patient_app",
+        },
+        { merge: true }
+      );
+      showToast("✅ Survey salvata correttamente");
     } catch (err: any) {
-      showToast("❌ Error: " + err.message);
+      console.log("❌ MG-ADL save error:", err?.message || err);
+      showToast("❌ Error: " + (err?.message ?? "Save failed"));
     }
-  };
-
-  const handleAnswer = (index: number, value: number) => {
-    const newAnswers = [...answers];
-    newAnswers[index] = value;
-    setAnswers(newAnswers);
   };
 
   return (
@@ -170,31 +174,18 @@ export default function MGADLSurvey() {
           style={styles.gradientBackground}
         />
 
-                <View style={styles.mainHeader}>
-          <Ionicons
-            name="list"
-            size={48}
-            color={Colors.red}
-            style={{ marginBottom: 10 }}
-          />
+        <View style={styles.mainHeader}>
+          <Ionicons name="list" size={48} color={Colors.red} style={{ marginBottom: 10 }} />
           <Text style={FontStyles.variants.mainTitle}>MG-ADL</Text>
-          <Text
-            style={[
-              FontStyles.variants.sectionTitle,
-              { textAlign: "center", color: Colors.gray3, marginTop: 6 },
-            ]}
-          >
+          <Text style={[FontStyles.variants.sectionTitle, styles.subtitle]}>
             Indichi il livello per ciascun item MG-ADL
           </Text>
 
-          {/* 🔹 Disclaimer ultimi 7 giorni */}
           <Text style={styles.disclaimer}>
-            Le risposte devono riflettere come 
-            <br></br>si è sentito negli{" "}
+            Le risposte devono riflettere come{"\n"}si è sentito negli{" "}
             <Text style={{ fontWeight: "700" }}>ultimi 7 giorni</Text>.
           </Text>
 
-          {/* 🔹 Badge punteggio totale */}
           <View style={styles.badgeRow}>
             <View style={styles.badge}>
               <Text style={styles.badgeLabel}>Punteggio totale</Text>
@@ -207,23 +198,13 @@ export default function MGADLSurvey() {
           {MGADL_ITEMS.map((item, index) => {
             const selected = answers[index]; // 0–3
             return (
-              <Animatable.View
-                key={item.label}
-                animation="fadeInUp"
-                delay={index * 40}
-              >
+              <Animatable.View key={item.label} animation="fadeInUp" delay={index * 40}>
                 <View style={styles.card}>
                   <View style={styles.questionRow}>
-                    <Ionicons
-                      name={item.icon}
-                      size={18}
-                      color={Colors.red}
-                      style={{ marginRight: 8 }}
-                    />
+                    <Ionicons name={item.icon} size={18} color={Colors.red} style={{ marginRight: 8 }} />
                     <Text style={styles.questionText}>{item.label}</Text>
                   </View>
 
-                  {/* Opzioni full-width come EQ-5D-5L */}
                   <View style={styles.optionColumn}>
                     {item.levels.map((levelText, lvlIndex) => (
                       <PressableScaleWithRef
@@ -266,16 +247,8 @@ export default function MGADLSurvey() {
       {toastMessage && (
         <Animated.View
           style={[
+            styles.toast,
             {
-              position: "absolute",
-              top: 60,
-              left: 20,
-              right: 20,
-              backgroundColor: "#007AFF",
-              padding: 14,
-              borderRadius: 12,
-              alignItems: "center",
-              zIndex: 10,
               opacity: toastAnim,
               transform: [
                 {
@@ -285,17 +258,10 @@ export default function MGADLSurvey() {
                   }),
                 },
               ],
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 5,
             },
           ]}
         >
-          <Text style={{ color: "#fff", fontWeight: "600" }}>
-            {toastMessage}
-          </Text>
+          <Text style={{ color: "#fff", fontWeight: "600" }}>{toastMessage}</Text>
         </Animated.View>
       )}
 
@@ -305,10 +271,7 @@ export default function MGADLSurvey() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light1,
-  },
+  container: { flex: 1, backgroundColor: Colors.light1 },
   gradientBackground: {
     position: "absolute",
     top: 0,
@@ -317,16 +280,16 @@ const styles = StyleSheet.create({
     height: 160,
     zIndex: -1,
   },
-  scrollView: {
-    padding: 20,
-    paddingBottom: 100,
-  },
+  scrollView: { padding: 20, paddingBottom: 100 },
+
   mainHeader: {
     alignItems: "center",
     marginTop: 32,
     marginBottom: 20,
     paddingHorizontal: 20,
   },
+  subtitle: { textAlign: "center", color: Colors.gray3, marginTop: 6 },
+
   card: {
     backgroundColor: Colors.white,
     borderRadius: 20,
@@ -352,12 +315,8 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     flexWrap: "wrap",
   },
-  // Colonna come EQ-5D-5L
-  optionColumn: {
-    flexDirection: "column",
-    alignItems: "stretch",
-    gap: 8,
-  },
+
+  optionColumn: { flexDirection: "column", alignItems: "stretch", gap: 8 },
   optionFull: {
     backgroundColor: Colors.light2,
     borderRadius: 14,
@@ -367,17 +326,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 8,
   },
-  optionSelected: {
-    backgroundColor: Colors.red,
-  },
-  optionText: {
-    color: Colors.gray1,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  optionTextSelected: {
-    color: "#fff",
-  },
+  optionSelected: { backgroundColor: Colors.red },
+  optionText: { color: Colors.gray1, fontWeight: "600", textAlign: "center" },
+  optionTextSelected: { color: "#fff" },
+
   submitButton: {
     backgroundColor: Colors.red,
     padding: 15,
@@ -390,22 +342,16 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
   },
-  submitButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-    disclaimer: {
+  submitButtonText: { fontSize: 16, fontWeight: "600", color: "#FFFFFF" },
+
+  disclaimer: {
     marginTop: 10,
     fontSize: 13,
     color: Colors.gray3,
     textAlign: "center",
   },
-  badgeRow: {
-    marginTop: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+
+  badgeRow: { marginTop: 14, alignItems: "center", justifyContent: "center" },
   badge: {
     paddingHorizontal: 14,
     paddingVertical: 6,
@@ -415,14 +361,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  badgeLabel: {
-    fontSize: 12,
-    color: Colors.gray3,
-    fontWeight: "500",
-  },
-  badgeValue: {
-    fontSize: 14,
-    color: Colors.red,
-    fontWeight: "700",
+  badgeLabel: { fontSize: 12, color: Colors.gray3, fontWeight: "500" },
+  badgeValue: { fontSize: 14, color: Colors.red, fontWeight: "700" },
+
+  toast: {
+    position: "absolute",
+    top: 60,
+    left: 20,
+    right: 20,
+    backgroundColor: Colors.red,
+    padding: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    zIndex: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });

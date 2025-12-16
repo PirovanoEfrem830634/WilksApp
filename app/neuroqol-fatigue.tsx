@@ -16,6 +16,7 @@ import { doc, setDoc, Timestamp } from "firebase/firestore";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import BottomNavigation from "../components/bottomnavigationnew";
+import { getPatientDocId } from "../utils/session";
 
 /** Neuro-QoL Item Bank v1.0 – Fatigue (Italiano)
  * Scala: 1=Mai, 2=Raramente, 3=Qualche volta, 4=Spesso, 5=Sempre
@@ -107,17 +108,9 @@ export default function NeuroQoLFatigueScreen() {
     setToastMessage(message);
     setToastColor(color);
     Animated.sequence([
-      Animated.timing(toastAnim, {
-        toValue: 1,
-        duration: 350,
-        useNativeDriver: true,
-      }),
+      Animated.timing(toastAnim, { toValue: 1, duration: 350, useNativeDriver: true }),
       Animated.delay(1800),
-      Animated.timing(toastAnim, {
-        toValue: 0,
-        duration: 350,
-        useNativeDriver: true,
-      }),
+      Animated.timing(toastAnim, { toValue: 0, duration: 350, useNativeDriver: true }),
     ]).start(() => setToastMessage(null));
   };
 
@@ -126,25 +119,40 @@ export default function NeuroQoLFatigueScreen() {
   };
 
   const saveSurvey = async () => {
-    const uid = auth.currentUser?.uid;
-    if (!uid) {
+    const firebaseUid = auth.currentUser?.uid;
+    if (!firebaseUid) {
       Alert.alert("Error", "User not logged in");
       return;
     }
+
+    // 🔥 FIX: patientDocId (come symptoms, eq5d5l, ecc.)
+    const patientId = await getPatientDocId();
+    if (!patientId) {
+      showToast("❌ Profilo paziente non trovato (session)", Colors.red);
+      return;
+    }
+
     if (Object.keys(answers).length !== NEUROQOL_ITEMS.length) {
       showToast("❌ Completa tutte le domande", Colors.red);
       return;
     }
 
-    const ref = doc(db, `users/${uid}/clinical_surveys/neuro_qol_fatigue`);
+    const ref = doc(db, "users", patientId, "clinical_surveys", "neuro_qol_fatigue");
+
     try {
-      await setDoc(ref, {
-        lastCompiledAt: Timestamp.now(),
-        responses: answers, // TESTUALE ("Mai", "Raramente", ...)
-        totalScore, // numerico per analisi CDSS
-      });
-      showToast("✅ Survey saved successfully", Colors.blue);
-    } catch (e) {
+      await setDoc(
+        ref,
+        {
+          lastCompiledAt: Timestamp.now(),
+          responses: answers, // TESTUALE ("Mai", "Raramente", ...)
+          totalScore,         // numerico per analisi CDSS
+          source: "patient_app",
+        },
+        { merge: true }
+      );
+      showToast("✅ Survey salvata correttamente", Colors.blue);
+    } catch (e: any) {
+      console.log("❌ NeuroQoL save error:", e?.message || e);
       showToast("❌ Save failed", Colors.red);
     }
   };
@@ -159,36 +167,19 @@ export default function NeuroQoLFatigueScreen() {
           style={styles.gradientBackground}
         />
 
-        {/* HEADER allineato a MG-ADL / EQ-5D-5L */}
         <View style={styles.header}>
-          <Ionicons
-            name="flash"
-            size={48}
-            color={Colors.blue}
-            style={{ marginBottom: 10 }}
-          />
+          <Ionicons name="flash" size={48} color={Colors.blue} style={{ marginBottom: 10 }} />
           <Text style={FontStyles.variants.mainTitle}>Neuro-QoL Fatigue</Text>
-          <Text
-            style={[
-              FontStyles.variants.sectionTitle,
-              styles.subtitle,
-            ]}
-          >
-            Negli ultimi 7 giorni, indica quanto ciascuna affermazione è stata
-            vera per te.
+          <Text style={[FontStyles.variants.sectionTitle, styles.subtitle]}>
+            Negli ultimi 7 giorni, indica quanto ciascuna affermazione è stata vera per te.
           </Text>
 
-          {/* Progress bar */}
           <View style={styles.progressWrap}>
             <View style={styles.progressBg}>
               <View
                 style={[
                   styles.progressFill,
-                  {
-                    width: `${
-                      (answeredCount / NEUROQOL_ITEMS.length) * 100
-                    }%`,
-                  },
+                  { width: `${(answeredCount / NEUROQOL_ITEMS.length) * 100}%` },
                 ]}
               />
             </View>
@@ -197,7 +188,6 @@ export default function NeuroQoLFatigueScreen() {
             </Text>
           </View>
 
-          {/* Badge punteggio totale (stile MG-ADL) */}
           <View style={styles.badgeRow}>
             <View style={styles.badge}>
               <Text style={styles.badgeLabel}>Punteggio totale</Text>
@@ -208,23 +198,13 @@ export default function NeuroQoLFatigueScreen() {
 
         <ScrollView contentContainerStyle={styles.scrollView}>
           {NEUROQOL_ITEMS.map((item, idx) => (
-            <Animatable.View
-              key={item.code}
-              animation="fadeInUp"
-              delay={idx * 40}
-            >
+            <Animatable.View key={item.code} animation="fadeInUp" delay={idx * 40}>
               <View style={styles.card}>
                 <View style={styles.questionRow}>
-                  <Ionicons
-                    name="help-circle"
-                    size={18}
-                    color={Colors.blue}
-                    style={{ marginRight: 8 }}
-                  />
+                  <Ionicons name="help-circle" size={18} color={Colors.blue} style={{ marginRight: 8 }} />
                   <Text style={styles.questionText}>{item.text}</Text>
                 </View>
 
-                {/* Opzioni full-width in colonna (come EQ-5D-5L / MG-ADL) */}
                 <View style={styles.optionColumn}>
                   {SCALE.map((label) => {
                     const selected = answers[item.code] === label;
@@ -234,17 +214,9 @@ export default function NeuroQoLFatigueScreen() {
                         onPress={() => handleSelect(item.code, label)}
                         weight="light"
                         activeScale={0.96}
-                        style={[
-                          styles.optionFull,
-                          selected && styles.optionSelected,
-                        ]}
+                        style={[styles.optionFull, selected && styles.optionSelected]}
                       >
-                        <Text
-                          style={[
-                            styles.optionText,
-                            selected && styles.optionTextSelected,
-                          ]}
-                        >
+                        <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
                           {label}
                         </Text>
                       </PressableScaleWithRef>
@@ -304,7 +276,6 @@ const styles = StyleSheet.create({
     zIndex: -1,
   },
 
-  // Header centrato come gli altri questionari
   header: {
     alignItems: "center",
     marginTop: 32,
@@ -317,7 +288,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
 
-  // Progress
   progressWrap: { width: "90%", marginTop: 12, alignItems: "center" },
   progressBg: {
     width: "100%",
@@ -329,12 +299,7 @@ const styles = StyleSheet.create({
   progressFill: { height: "100%", backgroundColor: Colors.blue },
   progressText: { fontSize: 12, color: Colors.gray3, marginTop: 6 },
 
-  // Badge punteggio
-  badgeRow: {
-    marginTop: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  badgeRow: { marginTop: 10, alignItems: "center", justifyContent: "center" },
   badge: {
     paddingHorizontal: 14,
     paddingVertical: 6,
@@ -344,16 +309,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  badgeLabel: {
-    fontSize: 12,
-    color: Colors.gray3,
-    fontWeight: "500",
-  },
-  badgeValue: {
-    fontSize: 14,
-    color: Colors.blue,
-    fontWeight: "700",
-  },
+  badgeLabel: { fontSize: 12, color: Colors.gray3, fontWeight: "500" },
+  badgeValue: { fontSize: 14, color: Colors.blue, fontWeight: "700" },
 
   scrollView: { padding: 20, paddingBottom: 120 },
 
@@ -369,7 +326,6 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 
-  // Domanda centrata come MG-ADL / EQ-5D-5L
   questionRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -385,12 +341,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  // Opzioni full-width in colonna
-  optionColumn: {
-    flexDirection: "column",
-    alignItems: "stretch",
-    gap: 8,
-  },
+  optionColumn: { flexDirection: "column", alignItems: "stretch", gap: 8 },
   optionFull: {
     backgroundColor: Colors.light2,
     borderRadius: 14,
@@ -401,11 +352,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   optionSelected: { backgroundColor: Colors.blue },
-  optionText: {
-    color: Colors.gray1,
-    fontWeight: "600",
-    textAlign: "center",
-  },
+  optionText: { color: Colors.gray1, fontWeight: "600", textAlign: "center" },
   optionTextSelected: { color: Colors.white },
 
   submitButton: {

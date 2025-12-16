@@ -9,6 +9,7 @@ import { doc, setDoc, Timestamp } from "firebase/firestore";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import BottomNavigation from "../components/bottomnavigationnew";
+import { getPatientDocId } from "../utils/session";
 
 // ===== MG-QoL15r =====
 // Scala: 0=Per niente, 1=Abbastanza, 2=Molto (compilato dal paziente)
@@ -70,27 +71,40 @@ export default function MGQoL15Survey() {
       Alert.alert("Error", "User not logged in");
       return;
     }
+
     if (Object.keys(answers).length !== QUESTIONS.length) {
       showToast("❌ Completa tutte le domande");
       return;
     }
 
-    const totalScore = (Object.values(answers) as ScaleLabel[]).reduce(
+    const patientId = await getPatientDocId();
+    if (!patientId) {
+      showToast("❌ Profilo paziente non trovato (session)");
+      return;
+    }
+
+    const score = (Object.values(answers) as ScaleLabel[]).reduce(
       (sum, label) => sum + labelToValue[label],
       0
     );
 
-    const uid = user.uid;
-    const docRef = doc(db, `users/${uid}/clinical_surveys/mg_qol15`);
+    const docRef = doc(db, "users", patientId, "clinical_surveys", "mg_qol15");
+
     try {
-      await setDoc(docRef, {
-        lastCompiledAt: Timestamp.now(),
-        responses: answers, // testuale ("Per niente", "Abbastanza", "Molto")
-        totalScore,         // numerico (0–30)
-      });
-      showToast("✅ Survey saved successfully");
+      await setDoc(
+        docRef,
+        {
+          lastCompiledAt: Timestamp.now(),
+          responses: answers, // testuale ("Per niente", "Abbastanza", "Molto")
+          totalScore: score, // numerico (0–30)
+          source: "patient_app",
+        },
+        { merge: true }
+      );
+      showToast("✅ Survey salvata correttamente");
     } catch (err: any) {
-      showToast("❌ Error: " + err.message);
+      console.log("❌ MG-QoL15 save error:", err?.message || err);
+      showToast("❌ Error: " + (err?.message ?? "Save failed"));
     }
   };
 
@@ -104,21 +118,13 @@ export default function MGQoL15Survey() {
           style={styles.gradientBackground}
         />
 
-        {/* HEADER allineato agli altri questionari */}
         <View style={styles.mainHeader}>
-          <Ionicons
-            name="heart"
-            size={48}
-            color={Colors.purple}
-            style={{ marginBottom: 10 }}
-          />
+          <Ionicons name="heart" size={48} color={Colors.purple} style={{ marginBottom: 10 }} />
           <Text style={FontStyles.variants.mainTitle}>MG-QoL15r</Text>
           <Text style={[FontStyles.variants.sectionTitle, styles.subtitle]}>
-            Indichi in quale misura ogni affermazione è risultata vera per lei
-            nelle ultime settimane.
+            Indichi in quale misura ogni affermazione è risultata vera per lei nelle ultime settimane.
           </Text>
 
-          {/* Progress bar */}
           <View style={styles.progressWrap}>
             <View style={styles.progressBg}>
               <View
@@ -133,7 +139,6 @@ export default function MGQoL15Survey() {
             </Text>
           </View>
 
-          {/* Badge punteggio totale */}
           <View style={styles.badgeRow}>
             <View style={styles.badge}>
               <Text style={styles.badgeLabel}>Punteggio totale</Text>
@@ -151,16 +156,10 @@ export default function MGQoL15Survey() {
               <Animatable.View key={qKey} animation="fadeInUp" delay={index * 40}>
                 <View style={styles.card}>
                   <View style={styles.questionRow}>
-                    <Ionicons
-                      name="help-circle"
-                      size={18}
-                      color={Colors.purple}
-                      style={{ marginRight: 8 }}
-                    />
+                    <Ionicons name="help-circle" size={18} color={Colors.purple} style={{ marginRight: 8 }} />
                     <Text style={styles.questionText}>{q}</Text>
                   </View>
 
-                  {/* Opzioni full-width in colonna (come gli altri) */}
                   <View style={styles.optionColumn}>
                     {SCALE.map((label) => (
                       <PressableScaleWithRef
@@ -257,12 +256,7 @@ const styles = StyleSheet.create({
   progressFill: { height: "100%", backgroundColor: Colors.purple },
   progressText: { fontSize: 12, color: Colors.gray3, marginTop: 6 },
 
-  // Badge punteggio totale
-  badgeRow: {
-    marginTop: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  badgeRow: { marginTop: 10, alignItems: "center", justifyContent: "center" },
   badge: {
     paddingHorizontal: 14,
     paddingVertical: 6,
@@ -272,16 +266,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  badgeLabel: {
-    fontSize: 12,
-    color: Colors.gray3,
-    fontWeight: "500",
-  },
-  badgeValue: {
-    fontSize: 14,
-    color: Colors.purple,
-    fontWeight: "700",
-  },
+  badgeLabel: { fontSize: 12, color: Colors.gray3, fontWeight: "500" },
+  badgeValue: { fontSize: 14, color: Colors.purple, fontWeight: "700" },
 
   card: {
     backgroundColor: Colors.white,
@@ -295,7 +281,6 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 
-  // Titoli centrati
   questionRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -311,12 +296,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
 
-  // Opzioni in colonna full-width
-  optionColumn: {
-    flexDirection: "column",
-    alignItems: "stretch",
-    gap: 8,
-  },
+  optionColumn: { flexDirection: "column", alignItems: "stretch", gap: 8 },
   optionFull: {
     backgroundColor: Colors.light2,
     borderRadius: 14,
@@ -327,11 +307,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   optionSelected: { backgroundColor: Colors.purple },
-  optionText: {
-    color: Colors.gray1,
-    fontWeight: "600",
-    textAlign: "center",
-  },
+  optionText: { color: Colors.gray1, fontWeight: "600", textAlign: "center" },
   optionTextSelected: { color: "#fff" },
 
   submitButton: {

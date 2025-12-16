@@ -33,6 +33,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Modal } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
+import { getPatientDocId } from "../utils/session";
 
 type FormDataType = {
   debolezzaMuscolare: boolean;
@@ -118,33 +119,31 @@ export default function TrackingNew() {
 
   const saveSymptoms = async () => {
     const user = auth.currentUser;
-    console.log("🔍 USER:", user?.uid);
 
     if (!user) {
       showToast("❌ Utente non autenticato");
       return;
     }
 
-    const uid = user.uid;
+    const patientId = await getPatientDocId();
+    if (!patientId) {
+      showToast("❌ Sessione paziente non trovata (rifai login)");
+      return;
+    }
+
     const today = new Date().toISOString().split("T")[0];
-    const symptomsDocRef = doc(db, "users", uid, "symptoms", today);
+    const symptomsDocRef = doc(db, "users", patientId, "symptoms", today);
 
     const dataToSave = {
       ...formData,
       dataInserimento: Timestamp.now(),
     };
 
-    console.log("📝 Tentativo salvataggio dati:", dataToSave);
-    console.log("📄 Path Firestore:", `users/${uid}/symptoms/${today}`);
-
     try {
-      await setDoc(symptomsDocRef, dataToSave);
+      await setDoc(symptomsDocRef, dataToSave, { merge: true });
       showToast("✅ Sintomi salvati correttamente!");
 
-      // 🔄 Autoscroll verso l'alto dopo il salvataggio
-      if (scrollViewRef.current) {
-        scrollViewRef.current.scrollTo({ y: 0, animated: true });
-      }
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
     } catch (error: any) {
       console.error("❌ Error saving symptoms:", error);
       showToast("❌ Errore: " + (error.message || "Errore durante il salvataggio."));

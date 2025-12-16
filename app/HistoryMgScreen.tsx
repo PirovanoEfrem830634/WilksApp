@@ -23,6 +23,7 @@ import FontStyles from "../Styles/fontstyles";
 import { auth, db } from "../firebaseconfig";
 import { doc, setDoc, Timestamp, getDoc } from "firebase/firestore";
 import { Check, X, Lock } from "lucide-react-native";
+import { getPatientDocId } from "../utils/session";
 
 // helper per testo leggibile dell’onset category
 const getOnsetCategoryLabel = (ageAtOnset: string): string => {
@@ -85,7 +86,10 @@ export default function HistoryMgScreen() {
         if (!user) return;
 
         try {
-          const ref = doc(db, "users", user.uid, "history", "mg");
+          const patientId = await getPatientDocId();
+          if (!patientId) return;
+
+          const ref = doc(db, "users", patientId, "history", "mg");
           const snap = await getDoc(ref);
           if (!snap.exists()) return;
 
@@ -336,7 +340,18 @@ export default function HistoryMgScreen() {
     // data timectomia
     const parsedThDate = parseThymectomyDate(thymectomyDateText);
 
-    const ref = doc(db, "users", user.uid, "history", "mg");
+    const patientId = await getPatientDocId();
+    if (!patientId) {
+      Toast.show({
+        type: "error",
+        text1: "Sessione paziente non trovata",
+        text2: "Rifai login.",
+        position: "top",
+      });
+      return;
+    }
+
+    const ref = doc(db, "users", patientId, "history", "mg");
 
     const payload: any = {
       onsetType,

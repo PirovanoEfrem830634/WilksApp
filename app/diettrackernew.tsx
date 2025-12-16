@@ -127,7 +127,7 @@ export default function DietTracker() {
         <View style={styles.iconWrapper}>
           <Ionicons name="nutrition" size={48} color={Colors.orange} />
         </View>
-        <Text style={FontStyles.variants.mainTitle}>Alimentazione</Text>
+        <Text style={FontStyles.variants.mainTitle}>Monitoraggio alimentazione</Text>
         <Text style={FontStyles.variants.sectionTitle}>
           Registra rapidamente cosa hai mangiato oggi
         </Text>

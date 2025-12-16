@@ -13,6 +13,7 @@ import moment from "moment";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { useFocusEffect } from "@react-navigation/native";
+import { getPatientDocId } from "../utils/session";
 
 // ------------------------------------------------------
 // TYPES
@@ -42,9 +43,11 @@ export default function ClinicalSurveysScreen() {
     eq5d5l: { status: "todo" },
     mg_adl_paziente: { status: "todo" },
   });
+
   const [showQuarterBanner, setShowQuarterBanner] = useState(false);
   const [nextDueDate, setNextDueDate] = useState<string | null>(null);
   const [daysRemaining, setDaysRemaining] = useState<number | null>(null);
+
   const router = useRouter();
 
   const surveys: Survey[] = [
@@ -54,79 +57,17 @@ export default function ClinicalSurveysScreen() {
       label: "MG-ADL",
       icon: "list",
       color: Colors.red,
-      href: "/mgadlsurveyscreen", // 🔹 Adatta questo path al nome reale della route Expo Router
+      href: "/mgadlsurveyscreen",
     },
     { key: "neuro_qol_fatigue", label: "Neuro-QoL Fatigue", icon: "flash", color: Colors.blue, href: "/neuroqol-fatigue" },
     { key: "eq5d5l", label: "EQ-5D-5L", icon: "fitness", color: Colors.orange, href: "/eq5d5l" },
   ];
 
   // ------------------------------------------------------
-  // FETCH FIRESTORE & CALCOLO ALERT
-  // ------------------------------------------------------
-  useFocusEffect(
-    useCallback(() => {
-      const fetchData = async () => {
-        const uid = auth.currentUser?.uid;
-        if (!uid) return;
-
-        const result: Record<SurveyKey, SurveyStatus> = { ...statuses };
-        for (const survey of surveys) {
-          const ref = doc(db, `users/${uid}/clinical_surveys/${survey.key}`);
-          const snap = await getDoc(ref);
-          if (snap.exists()) {
-            const data = snap.data() as any;
-            const last = data.lastCompiledAt?.seconds
-              ? data.lastCompiledAt.seconds * 1000
-              : null;
-            if (last) {
-              const lastDate = moment(last).format("YYYY-MM-DD");
-              const todayDate = moment().format("YYYY-MM-DD");
-              result[survey.key] =
-                lastDate === todayDate
-                  ? { status: "completed", date: moment(last).format("DD/MM/YYYY") }
-                  : { status: "todo" };
-            }
-          }
-        }
-        setStatuses(result);
-
-        // --- Calcola alert trimestrale globale ---
-        const allDocs = await getDocs(collection(db, `users/${uid}/clinical_surveys`));
-        let latest: Date | null = null;
-        allDocs.forEach((docSnap) => {
-          const data = docSnap.data() as any;
-          const ts = data.lastCompiledAt?.toDate?.();
-          if (ts && (!latest || ts > latest)) latest = ts;
-        });
-
-        if (!latest) return;
-
-        const last = moment(latest);
-        const now = moment();
-        const diffMonths = now.diff(last, "months", true);
-        const nextDue = last.clone().add(3, "months");
-        const remaining = nextDue.diff(now, "days");
-
-        setNextDueDate(nextDue.format("DD MMM YYYY"));
-        setDaysRemaining(remaining);
-
-        if (diffMonths >= 3 || remaining <= 7) {
-          setShowQuarterBanner(true);
-          await triggerTherapyNotification(); // invia notifica solo su mobile
-        } else {
-          setShowQuarterBanner(false);
-        }
-      };
-
-      fetchData();
-    }, [])
-  );
-
-  // ------------------------------------------------------
   // NOTIFICA (solo mobile, silenziosa su web)
   // ------------------------------------------------------
   const triggerTherapyNotification = async () => {
-    if (Platform.OS === "web") return; // evita crash su browser
+    if (Platform.OS === "web") return;
 
     try {
       if (!Device.isDevice) return;
@@ -140,7 +81,7 @@ export default function ClinicalSurveysScreen() {
           sound: true,
         },
         trigger: {
-          seconds: 5, // solo per test interno, cambierà in produzione
+          seconds: 5, // test
           repeats: false,
         } as Notifications.TimeIntervalTriggerInput,
       });
@@ -148,6 +89,97 @@ export default function ClinicalSurveysScreen() {
       console.log("Notification error:", err);
     }
   };
+
+  // ------------------------------------------------------
+  // FETCH FIRESTORE & CALCOLO ALERT (FIX: patientDocId)
+  // ------------------------------------------------------
+  useFocusEffect(
+    useCallback(() => {
+      const fetchData = async () => {
+        const firebaseUid = auth.currentUser?.uid;
+        if (!firebaseUid) return;
+
+        // 🔥 FIX: usa il patientDocId (come fai già per symptoms)
+        const patientId = await getPatientDocId();
+        if (!patientId) {
+          console.log("❌ patientId non trovato (session).");
+          return;
+        }
+
+        try {
+          // --- Status per singolo survey ---
+          const result: Record<SurveyKey, SurveyStatus> = {
+            mg_qol15: { status: "todo" },
+            neuro_qol_fatigue: { status: "todo" },
+            eq5d5l: { status: "todo" },
+            mg_adl_paziente: { status: "todo" },
+          };
+
+          for (const survey of surveys) {
+            const ref = doc(db, "users", patientId, "clinical_surveys", survey.key);
+            const snap = await getDoc(ref);
+
+            if (snap.exists()) {
+              const data = snap.data() as any;
+              const lastMs = data.lastCompiledAt?.toDate?.()
+                ? data.lastCompiledAt.toDate().getTime()
+                : (data.lastCompiledAt?.seconds ? data.lastCompiledAt.seconds * 1000 : null);
+
+              if (lastMs) {
+                const lastDate = moment(lastMs).format("YYYY-MM-DD");
+                const todayDate = moment().format("YYYY-MM-DD");
+                result[survey.key] =
+                  lastDate === todayDate
+                    ? { status: "completed", date: moment(lastMs).format("DD/MM/YYYY") }
+                    : { status: "todo" };
+              }
+            }
+          }
+
+          setStatuses(result);
+
+          // --- Alert trimestrale globale ---
+          const allDocsSnap = await getDocs(collection(db, "users", patientId, "clinical_surveys"));
+
+          let latest: Date | null = null;
+          allDocsSnap.forEach((docSnap) => {
+            const data = docSnap.data() as any;
+            const ts = data.lastCompiledAt?.toDate?.();
+            if (ts && (!latest || ts > latest)) latest = ts;
+          });
+
+          if (!latest) {
+            setShowQuarterBanner(false);
+            setNextDueDate(null);
+            setDaysRemaining(null);
+            return;
+          }
+
+          const last = moment(latest);
+          const now = moment();
+          const diffMonths = now.diff(last, "months", true);
+          const nextDue = last.clone().add(3, "months");
+          const remaining = nextDue.diff(now, "days");
+
+          setNextDueDate(nextDue.format("DD MMM YYYY"));
+          setDaysRemaining(remaining);
+
+          if (diffMonths >= 3 || remaining <= 7) {
+            setShowQuarterBanner(true);
+            await triggerTherapyNotification();
+          } else {
+            setShowQuarterBanner(false);
+          }
+        } catch (e: any) {
+          console.log("❌ fetchData surveys error:", e?.message || e);
+          // Se qui continua a dare “insufficient permissions” allora è 100% rules/path
+          // (ma con patientId di solito si risolve)
+        }
+      };
+
+      fetchData();
+    }, [])
+  );
 
   // ------------------------------------------------------
   // COUNTDOWN dinamico (aggiorna ogni giorno)
@@ -163,31 +195,17 @@ export default function ClinicalSurveysScreen() {
   // ------------------------------------------------------
   // UI
   // ------------------------------------------------------
-  const completedCount = Object.values(statuses).filter(
-    (s) => s.status === "completed"
-  ).length;
+  const completedCount = Object.values(statuses).filter((s) => s.status === "completed").length;
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
-        {/* ===== Banner trimestrale ===== */}
         {showQuarterBanner && (
-          <Animatable.View
-            animation="fadeInDown"
-            duration={700}
-            style={styles.bannerContainer}
-          >
-            <Ionicons
-              name="time-outline"
-              size={24}
-              color={Colors.orange}
-              style={{ marginRight: 10 }}
-            />
+          <Animatable.View animation="fadeInDown" duration={700} style={styles.bannerContainer}>
+            <Ionicons name="time-outline" size={24} color={Colors.orange} style={{ marginRight: 10 }} />
             <View style={{ flex: 1 }}>
               <Text style={styles.bannerTitle}>Aggiornamento terapia trimestrale</Text>
-              <Text style={styles.bannerText}>
-                È il momento di rivedere la terapia con il tuo clinico.
-              </Text>
+              <Text style={styles.bannerText}>È il momento di rivedere la terapia con il tuo clinico.</Text>
               {nextDueDate && (
                 <Text style={styles.bannerSub}>
                   {daysRemaining && daysRemaining > 0
@@ -199,46 +217,29 @@ export default function ClinicalSurveysScreen() {
           </Animatable.View>
         )}
 
-        {/* ===== Header ===== */}
         <View style={styles.headerCentered}>
-          <Ionicons
-            name="clipboard"
-            size={42}
-            color={Colors.blue}
-            style={{ marginBottom: 10 }}
-          />
+          <Ionicons name="clipboard" size={42} color={Colors.blue} style={{ marginBottom: 10 }} />
           <Text style={FontStyles.variants.mainTitle}>Valutazioni cliniche</Text>
           <Text style={styles.description}>
-            Compila regolarmente i questionari clinici per monitorare la tua condizione e
-            supportare i clinici.
+            Compila regolarmente i questionari clinici per monitorare la tua condizione e supportare i clinici.
           </Text>
         </View>
 
-        {/* ===== Progress bar ===== */}
         <View style={styles.progressContainer}>
           <View style={styles.progressBarBackground}>
-            <View
-              style={[
-                styles.progressBarFill,
-                { width: `${(completedCount / surveys.length) * 100}%` },
-              ]}
-            />
+            <View style={[styles.progressBarFill, { width: `${(completedCount / surveys.length) * 100}%` }]} />
           </View>
           <Text style={styles.progressText}>
             {completedCount}/{surveys.length} completati
           </Text>
         </View>
 
-        {/* ===== Survey cards ===== */}
         {surveys.map((survey, index) => {
           const status = statuses[survey.key]?.status;
           const date = statuses[survey.key]?.date;
+
           return (
-            <Animatable.View
-              animation="fadeInUp"
-              delay={index * 100}
-              key={survey.key}
-            >
+            <Animatable.View animation="fadeInUp" delay={index * 100} key={survey.key}>
               <PressableScaleWithRef
                 onPress={() => router.push(survey.href)}
                 activeScale={0.96}
@@ -248,17 +249,13 @@ export default function ClinicalSurveysScreen() {
                 <View style={styles.cardHeader}>
                   <View style={styles.cardRow}>
                     <Ionicons name={survey.icon} size={20} color={survey.color} />
-                    <Text
-                      style={[
-                        FontStyles.variants.sectionTitle,
-                        { color: survey.color },
-                      ]}
-                    >
+                    <Text style={[FontStyles.variants.sectionTitle, { color: survey.color }]}>
                       {survey.label}
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={Colors.light3} />
                 </View>
+
                 <View style={styles.statusRow}>
                   <Ionicons
                     name={status === "completed" ? "checkmark-circle" : "reload-circle"}
@@ -266,12 +263,8 @@ export default function ClinicalSurveysScreen() {
                     color={status === "completed" ? Colors.green : Colors.red}
                     style={{ marginRight: 6 }}
                   />
-                  <Text
-                    style={[FontStyles.variants.cardDescription, styles.cardSub]}
-                  >
-                    {status === "completed"
-                      ? `Completato (${date})`
-                      : "Da completare"}
+                  <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
+                    {status === "completed" ? `Completato (${date})` : "Da completare"}
                   </Text>
                 </View>
               </PressableScaleWithRef>
@@ -285,9 +278,6 @@ export default function ClinicalSurveysScreen() {
   );
 }
 
-// ------------------------------------------------------
-// STILI
-// ------------------------------------------------------
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.light1 },
   bannerContainer: {
@@ -308,6 +298,7 @@ const styles = StyleSheet.create({
   bannerTitle: { fontSize: 15, fontWeight: "600", color: Colors.orange },
   bannerText: { fontSize: 13, color: Colors.gray3 },
   bannerSub: { fontSize: 12, color: Colors.secondary, marginTop: 2 },
+
   headerCentered: {
     alignItems: "center",
     justifyContent: "center",
@@ -320,6 +311,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     textAlign: "center",
   },
+
   progressContainer: { marginBottom: 20, alignItems: "center" },
   progressBarBackground: {
     width: "100%",
@@ -331,6 +323,7 @@ const styles = StyleSheet.create({
   },
   progressBarFill: { height: "100%", backgroundColor: Colors.green },
   progressText: { fontSize: 12, color: Colors.gray3 },
+
   card: {
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
@@ -344,11 +337,6 @@ const styles = StyleSheet.create({
   },
   cardRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
   cardSub: { fontSize: 14, color: "#888" },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 6,
-  },
+  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
   statusRow: { flexDirection: "row", alignItems: "center", marginTop: 4 },
 });

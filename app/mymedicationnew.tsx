@@ -1,9 +1,8 @@
 // MyMedications.tsx (paziente: sola lettura, niente add/delete)
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, FlatList, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
-import { Pill, Clock3, CalendarDays, BriefcaseMedical, Lock } from "lucide-react-native";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import { BriefcaseMedical, CalendarDays, Clock3, Lock, Pill } from "lucide-react-native";
+import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { auth, db } from "../firebaseconfig";
 import BottomNavigation from "../components/bottomnavigationnew";
 import * as Animatable from "react-native-animatable";
@@ -11,19 +10,22 @@ import FontStyles from "../Styles/fontstyles";
 import Colors from "../Styles/color";
 import { LinearGradient } from "expo-linear-gradient";
 
+// ✅ helper: recupera patientDocId salvato in sessione (come per symptoms)
+import { getPatientDocId } from "../utils/session";
+
 type Medication = {
   id: string;
   name: string;
   dose: string;
-  days: string[];   // es. ["Lun","Mar","Mer"] oppure ["Mon","Tue","Wed"]
-  times: string[];  // es. ["08:00","13:30"]
+  days: string[];
+  times: string[];
   createdAt?: any;
 };
 
 type NextDoseInfo = {
   date: Date | null;
-  minutesDiff: number | null; // minuti da "adesso" (>=0)
-  label: string;              // es. "in 25 min", "tra 2 h", "domani 08:00"
+  minutesDiff: number | null;
+  label: string;
   tone: "red" | "orange" | "blue" | "gray";
 };
 
@@ -37,14 +39,14 @@ const DAY_MAP: Record<string, number> = {
   ven: 5, venerdì: 5, venerdi: 5, friday: 5, fri: 5,
   sab: 6, sabato: 6, saturday: 6, sat: 6,
 };
-const WEEK_LABELS = ["D", "L", "M", "M", "G", "V", "S"]; // IT compact (Dom→Sab)
+const WEEK_LABELS = ["D", "L", "M", "M", "G", "V", "S"];
 
 const toDayIndex = (d: string): number | null => {
   const k = (d || "").trim().toLowerCase();
   return DAY_MAP[k] ?? null;
 };
 
-const parseTimeToday = (hhmm: string, base: Date) => {
+const parseTimeOnDate = (hhmm: string, base: Date) => {
   const m = /^(\d{1,2}):(\d{2})$/.exec((hhmm || "").trim());
   if (!m) return null;
   const d = new Date(base);
@@ -61,7 +63,6 @@ const fmtLabel = (target: Date, now: Date) => {
   const hrs = Math.floor(mins / 60);
   const rem = mins % 60;
   if (mins < 24 * 60) return rem ? `tra ${hrs} h ${rem} m` : `tra ${hrs} h`;
-  // >= 24h → mostra giorno e ora
   const pad = (n: number) => String(n).padStart(2, "0");
   const days = ["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
   return `${days[target.getDay()]} ${pad(target.getHours())}:${pad(target.getMinutes())}`;
@@ -75,21 +76,20 @@ const computeNextDose = (days: string[], times: string[]): NextDoseInfo => {
     if (idx !== null) activeIdx.add(idx);
   });
 
-  // Se non ci sono giorni definiti, consideriamo "tutti i giorni"
   const considerAllDays = activeIdx.size === 0;
 
-  // Cerca la prossima occorrenza entro 7 giorni
   for (let add = 0; add < 7; add++) {
     const cand = new Date(now);
     cand.setDate(now.getDate() + add);
+
     const dayOk = considerAllDays || activeIdx.has(cand.getDay());
     if (!dayOk) continue;
 
-    // ordina gli orari, poi trova il primo >= adesso (se oggi), altrimenti il primo
     const sortedTimes = [...(times || [])].sort();
     for (const t of sortedTimes) {
-      const occ = parseTimeToday(t, cand);
+      const occ = parseTimeOnDate(t, cand);
       if (!occ) continue;
+
       if (occ.getTime() >= now.getTime()) {
         const mins = minutesBetween(now, occ);
         let tone: NextDoseInfo["tone"] = "gray";
@@ -100,57 +100,74 @@ const computeNextDose = (days: string[], times: string[]): NextDoseInfo => {
       }
     }
   }
-  // Nessuna prossima dose trovata
+
   return { date: null, minutesDiff: null, label: "Nessun orario", tone: "gray" };
 };
 
 // ---------- Component ----------
 export default function MyMedications() {
   const [medications, setMedications] = useState<Medication[]>([]);
-  const router = useRouter();
 
   useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
+    let unsub: (() => void) | null = null;
 
-    const medsRef = collection(db, "users", user.uid, "medications");
-    const q = query(medsRef, orderBy("createdAt", "desc"));
+    const run = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
 
-    const unsub = onSnapshot(
-      q,
-      (snap) => {
-        const meds = snap.docs.map((d) => {
-          const data = d.data() as any;
-          return {
-            id: d.id,
-            name: data?.name || "",
-            dose: data?.dose || "",
-            days: Array.isArray(data?.days) ? data.days : [],
-            times: Array.isArray(data?.times) ? data.times : [],
-            createdAt: data?.createdAt,
-          } as Medication;
-        });
-        setMedications(meds);
-      },
-      (err) => console.error("onSnapshot medications:", err)
-    );
-    return () => unsub();
+      // ✅ usa patientDocId, NON user.uid
+      const patientId = await getPatientDocId();
+      if (!patientId) {
+        // niente sessione: lista vuota (o gestiscilo come preferisci)
+        setMedications([]);
+        return;
+      }
+
+      const medsRef = collection(db, "users", patientId, "medications");
+      const qMeds = query(medsRef, orderBy("createdAt", "desc"));
+
+      unsub = onSnapshot(
+        qMeds,
+        (snap) => {
+          const meds = snap.docs.map((d) => {
+            const data = d.data() as any;
+            return {
+              id: d.id,
+              name: data?.name || "",
+              dose: data?.dose || "",
+              days: Array.isArray(data?.days) ? data.days : [],
+              times: Array.isArray(data?.times) ? data.times : [],
+              createdAt: data?.createdAt,
+            } as Medication;
+          });
+          setMedications(meds);
+        },
+        (err) => console.error("onSnapshot medications:", err)
+      );
+    };
+
+    run();
+
+    return () => {
+      if (unsub) unsub();
+    };
   }, []);
 
-  // Ordina per “prossima dose” imminente (poi fallback createdAt)
-  const ordered = useMemo(() => {
-    const withNext = medications.map((m) => ({ m, next: computeNextDose(m.days, m.times) }));
+  // Pre-calcolo next dose una sola volta
+  const orderedWithNext = useMemo(() => {
+    const withNext = medications.map((m) => ({
+      m,
+      next: computeNextDose(m.days, m.times),
+    }));
+
     withNext.sort((a, b) => {
-      // prima chi ha una prossima dose definita
       if (a.next.date && !b.next.date) return -1;
       if (!a.next.date && b.next.date) return 1;
-      if (a.next.date && b.next.date) {
-        return (a.next.date.getTime() - b.next.date.getTime());
-      }
-      // fallback
+      if (a.next.date && b.next.date) return a.next.date.getTime() - b.next.date.getTime();
       return 0;
     });
-    return withNext.map((x) => x.m);
+
+    return withNext;
   }, [medications]);
 
   const renderDayBar = (days: string[]) => {
@@ -159,7 +176,8 @@ export default function MyMedications() {
       const idx = toDayIndex(d);
       if (idx !== null) active.add(idx);
     });
-    const all = active.size === 0; // nessun giorno → tutti
+    const all = active.size === 0;
+
     return (
       <View style={styles.weekRow}>
         {WEEK_LABELS.map((lbl, idx) => (
@@ -170,10 +188,12 @@ export default function MyMedications() {
               (all || active.has(idx)) && styles.weekDotActive,
             ]}
           >
-            <Text style={[
-              styles.weekDotText,
-              (all || active.has(idx)) && styles.weekDotTextActive,
-            ]}>
+            <Text
+              style={[
+                styles.weekDotText,
+                (all || active.has(idx)) && styles.weekDotTextActive,
+              ]}
+            >
               {lbl}
             </Text>
           </View>
@@ -182,14 +202,18 @@ export default function MyMedications() {
     );
   };
 
-  const renderItem = ({ item }: { item: Medication }) => {
-    const next = computeNextDose(item.days, item.times);
+  const renderItem = ({ item }: { item: { m: Medication; next: NextDoseInfo } }) => {
+    const med = item.m;
+    const next = item.next;
 
     const toneStyle =
-      next.tone === "red" ? styles.badgeRed
-      : next.tone === "orange" ? styles.badgeOrange
-      : next.tone === "blue" ? styles.badgeBlue
-      : styles.badgeGray;
+      next.tone === "red"
+        ? styles.badgeRed
+        : next.tone === "orange"
+        ? styles.badgeOrange
+        : next.tone === "blue"
+        ? styles.badgeBlue
+        : styles.badgeGray;
 
     return (
       <Animatable.View animation="fadeInUp" duration={350} style={styles.card}>
@@ -200,12 +224,10 @@ export default function MyMedications() {
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            {item.name} — {item.dose}
+            {med.name} — {med.dose}
           </Text>
-          {/* Nessuna azione: sola lettura */}
         </View>
 
-        {/* Prossima dose */}
         <View style={styles.row}>
           <Clock3 size={16} color={Colors.secondary} />
           <Text style={styles.label}>Prossima dose</Text>
@@ -214,10 +236,9 @@ export default function MyMedications() {
           </View>
         </View>
 
-        {/* Orari del giorno (chips) */}
-        {item.times?.length > 0 ? (
+        {med.times?.length > 0 ? (
           <View style={styles.timesRow}>
-            {item.times.map((t) => (
+            {med.times.map((t) => (
               <View key={t} style={styles.timeChip}>
                 <Text style={styles.timeChipText}>{t}</Text>
               </View>
@@ -227,12 +248,11 @@ export default function MyMedications() {
           <Text style={styles.sub}>Nessun orario impostato</Text>
         )}
 
-        {/* Calendario settimanale compatto */}
         <View style={[styles.row, { marginTop: 8 }]}>
           <CalendarDays size={16} color={Colors.secondary} />
           <Text style={styles.label}>Giorni</Text>
         </View>
-        {renderDayBar(item.days)}
+        {renderDayBar(med.days)}
       </Animatable.View>
     );
   };
@@ -240,7 +260,12 @@ export default function MyMedications() {
   const EmptyState = () => (
     <View style={styles.emptyWrap}>
       <Lock size={28} color={Colors.secondary} />
-      <Text style={[FontStyles.variants.sectionTitle, { textAlign: "center", marginTop: 8 }]}>
+      <Text
+        style={[
+          FontStyles.variants.sectionTitle,
+          { textAlign: "center", marginTop: 8 },
+        ]}
+      >
         I farmaci sono gestiti dal clinico
       </Text>
       <Text style={[styles.sub, { textAlign: "center", marginTop: 6 }]}>
@@ -270,8 +295,8 @@ export default function MyMedications() {
       </View>
 
       <FlatList
-        data={ordered}
-        keyExtractor={(item) => item.id}
+        data={orderedWithNext}
+        keyExtractor={(item) => item.m.id}
         renderItem={renderItem}
         contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
         ListEmptyComponent={<EmptyState />}
@@ -285,9 +310,19 @@ export default function MyMedications() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.light1 },
   gradientBackground: {
-    position: "absolute", top: 0, left: 0, right: 0, height: 160, zIndex: -1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 160,
+    zIndex: -1,
   },
-  mainHeader: { alignItems: "center", marginTop: 32, marginBottom: 12, paddingHorizontal: 20 },
+  mainHeader: {
+    alignItems: "center",
+    marginTop: 32,
+    marginBottom: 12,
+    paddingHorizontal: 20,
+  },
   iconWrapper: { borderRadius: 60, padding: 5, marginBottom: 10 },
 
   card: {
@@ -300,13 +335,16 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 3,
   },
-  cardHeader: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 8,
+  },
   row: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 },
   label: { color: Colors.secondary, fontSize: 13 },
-
   sub: { color: Colors.secondary },
 
-  // badge prossima dose
   badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   badgeText: { color: Colors.white, fontWeight: "600", fontSize: 12 },
   badgeRed: { backgroundColor: Colors.red },
@@ -314,18 +352,22 @@ const styles = StyleSheet.create({
   badgeBlue: { backgroundColor: Colors.blue },
   badgeGray: { backgroundColor: Colors.gray1 },
 
-  // times chips
   timesRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 },
   timeChip: {
-    paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
     backgroundColor: Colors.light2 || "#F2F4F7",
   },
   timeChipText: { fontSize: 13, color: Colors.gray1 || "#111" },
 
-  // settimana compatta
   weekRow: { flexDirection: "row", gap: 6, marginTop: 6 },
   weekDot: {
-    width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: "#F1F5F9",
   },
   weekDotActive: { backgroundColor: "#E6FAFF" },

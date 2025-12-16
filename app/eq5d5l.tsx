@@ -9,6 +9,7 @@ import { doc, setDoc, Timestamp } from "firebase/firestore";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import BottomNavigation from "../components/bottomnavigationnew";
+import { getPatientDocId } from "../utils/session";
 
 // ===== EQ-5D-5L (Italiano) =====
 const DIMENSIONS = [
@@ -100,33 +101,47 @@ export default function EQ5D5LSurvey() {
   };
 
   const saveSurvey = async () => {
-    const uid = auth.currentUser?.uid;
-    if (!uid) {
+    const firebaseUid = auth.currentUser?.uid;
+    if (!firebaseUid) {
       Alert.alert("Error", "User not logged in");
       return;
     }
+
+    // 🔥 FIX: patientDocId
+    const patientId = await getPatientDocId();
+    if (!patientId) {
+      showToast("❌ Profilo paziente non trovato (session)");
+      return;
+    }
+
     if (Object.keys(answers).length !== DIMENSIONS.length) {
       showToast("❌ Completa tutte le sezioni");
       return;
     }
+
     const vas = Number(vasScore);
     if (!vasScore || isNaN(vas) || vas < 0 || vas > 100) {
       showToast("❌ VAS non valido: inserisci un valore 0–100");
       return;
     }
 
-    const docRef = doc(db, `users/${uid}/clinical_surveys/eq5d5l`);
+    // ✅ Salva sotto users/{patientDocId}/clinical_surveys/eq5d5l
+    const docRef = doc(db, "users", patientId, "clinical_surveys", "eq5d5l");
+
     try {
       await setDoc(docRef, {
         lastCompiledAt: Timestamp.now(),
         responses: {
-          ...answers,     // ✅ TESTUALE per ogni dimensione
-          vasScore: vas,  // ✅ numerico 0–100
+          ...answers,     // testuale per ogni dimensione
+          vasScore: vas,  // numerico 0–100
         },
-      });
-      showToast("✅ Survey saved successfully");
+        source: "patient_app",
+      }, { merge: true });
+
+      showToast("✅ Survey salvata correttamente");
     } catch (err: any) {
-      showToast("❌ Save failed");
+      console.log("❌ EQ5D save error:", err?.message || err);
+      showToast("❌ Salvataggio fallito");
     }
   };
 
@@ -147,14 +162,9 @@ export default function EQ5D5LSurvey() {
             Indichi la sua salute OGGI per ciascuna dimensione e inserisca il valore VAS (0–100).
           </Text>
 
-        <View style={styles.progressWrap}>
+          <View style={styles.progressWrap}>
             <View style={styles.progressBg}>
-              <View
-                style={[
-                  styles.progressFill,
-                  { width: `${(answeredCount / DIMENSIONS.length) * 100}%` },
-                ]}
-              />
+              <View style={[styles.progressFill, { width: `${(answeredCount / DIMENSIONS.length) * 100}%` }]} />
             </View>
             <Text style={styles.progressText}>{answeredCount}/{DIMENSIONS.length} Completati</Text>
           </View>
@@ -171,7 +181,6 @@ export default function EQ5D5LSurvey() {
                     <Text style={styles.questionText}>{dim.label}</Text>
                   </View>
 
-                  {/* ✅ Pill full-width con wrapping del testo */}
                   <View style={styles.optionColumn}>
                     {dim.levels.map((label) => (
                       <PressableScaleWithRef
@@ -192,7 +201,6 @@ export default function EQ5D5LSurvey() {
             );
           })}
 
-          {/* === VAS === */}
           <View style={styles.card}>
             <View style={styles.questionRow}>
               <Ionicons name="speedometer" size={18} color={Colors.orange} style={{ marginRight: 8 }} />
@@ -203,6 +211,7 @@ export default function EQ5D5LSurvey() {
               100 = la migliore salute che può immaginare.{"\n"}
               Inserisca un numero intero tra 0 e 100 che rappresenta come si sente OGGI.
             </Text>
+
             <TextInput
               style={styles.input}
               placeholder="Es. 75"
@@ -213,12 +222,7 @@ export default function EQ5D5LSurvey() {
             />
           </View>
 
-          <PressableScaleWithRef
-            onPress={saveSurvey}
-            weight="light"
-            activeScale={0.96}
-            style={styles.submitButton}
-          >
+          <PressableScaleWithRef onPress={saveSurvey} weight="light" activeScale={0.96} style={styles.submitButton}>
             <Text style={styles.submitButtonText}>Invia</Text>
           </PressableScaleWithRef>
         </ScrollView>
@@ -258,11 +262,8 @@ const styles = StyleSheet.create({
   mainHeader: { alignItems: "center", marginTop: 32, marginBottom: 20, paddingHorizontal: 20 },
   subtitle: { textAlign: "center", color: Colors.gray3, marginTop: 6 },
 
-  // progresso
   progressWrap: { width: "90%", marginTop: 12, alignItems: "center" },
-  progressBg: {
-    width: "100%", height: 10, backgroundColor: Colors.light3, borderRadius: 10, overflow: "hidden",
-  },
+  progressBg: { width: "100%", height: 10, backgroundColor: Colors.light3, borderRadius: 10, overflow: "hidden" },
   progressFill: { height: "100%", backgroundColor: Colors.orange },
   progressText: { fontSize: 12, color: Colors.gray3, marginTop: 6 },
 
@@ -278,13 +279,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 
-  // titoli centrati
-  questionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
+  questionRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 10 },
   questionText: {
     fontSize: 16,
     fontWeight: "600",
@@ -294,12 +289,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
 
-  // ✅ colonna: ogni opzione è full-width e va a capo se lunga
-  optionColumn: {
-    flexDirection: "column",
-    alignItems: "stretch",
-    gap: 8,
-  },
+  optionColumn: { flexDirection: "column", alignItems: "stretch", gap: 8 },
   optionFull: {
     backgroundColor: Colors.light2,
     borderRadius: 14,
@@ -312,7 +302,6 @@ const styles = StyleSheet.create({
   optionText: { color: Colors.gray1, fontWeight: "600", textAlign: "center" },
   optionTextSelected: { color: "#fff" },
 
-  // VAS
   helperText: {
     color: Colors.gray3,
     fontSize: 13,
