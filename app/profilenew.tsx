@@ -113,7 +113,7 @@ export default function Profile() {
           {[
             {
               icon: "calendar",
-              label: "Data di nascita",
+              label: "Età",
               value: userData?.age || "Non fornita",
               color: Colors.purple,
             },
