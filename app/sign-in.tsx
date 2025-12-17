@@ -276,8 +276,16 @@ export default function SignIn() {
               <Text style={styles.linkText}>Forgot Password?</Text>
             </Pressable>
 
-            {/* ❌ RIMOSSO SIGN-UP */}
-            <Text style={styles.footerMsg}>Per attivare l'account contatta il tuo medico.</Text>
+            <Text style={styles.footerMsg}>
+              Hai ricevuto un codice dal medico?{" "}<br></br>
+              <Text
+                style={{ color: "#007AFF", fontWeight: "700" }}
+                onPress={() => router.push("/ActivateAccountScreen")}
+              >
+                Attiva il tuo account
+              </Text>
+            </Text>
+
           </Animated.View>
         </Animated.View>
       </View>

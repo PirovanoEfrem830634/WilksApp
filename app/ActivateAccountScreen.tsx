@@ -44,6 +44,9 @@ export default function ActivateAccountScreen() {
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+
 
   const [loading, setLoading] = useState(false);
 
@@ -53,9 +56,10 @@ export default function ActivateAccountScreen() {
       norm(code).length >= 4 &&
       norm(email).includes("@") &&
       norm(password).length >= 6 &&
+      password === confirmPassword &&
       !loading
     );
-  }, [ticketId, code, email, password, loading]);
+  }, [ticketId, code, email, password, confirmPassword, loading]);
 
   const toast = (
     type: "success" | "error" | "info",
@@ -90,6 +94,11 @@ export default function ActivateAccountScreen() {
     const c = norm(code);
     const e = norm(email).toLowerCase();
     const p = password;
+
+    if (password !== confirmPassword) {
+      toast("error", "Password non coincidenti", "Ricontrolla le password.");
+      return;
+    }
 
     if (!tId || !c || !e || p.length < 6) {
       toast(
@@ -262,17 +271,60 @@ export default function ActivateAccountScreen() {
             keyboardType="email-address"
           />
 
-          <Text style={styles.label}>Password (min 6 caratteri)</Text>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Crea (o inserisci) una password"
-            placeholderTextColor={Colors.secondary}
-            style={styles.input}
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
+         <Text style={styles.label}>Password (min 6 caratteri)</Text>
+          <View style={styles.passwordWrap}>
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Crea (o inserisci) una password"
+              placeholderTextColor={Colors.secondary}
+              style={[styles.input, { flex: 1, borderWidth: 0 }]}
+              secureTextEntry={!showPwd}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <PressableScaleWithRef
+              onPress={() => setShowPwd((v) => !v)}
+              style={styles.eyeBtn}
+            >
+              <Ionicons
+                name={showPwd ? "eye-off-outline" : "eye-outline"}
+                size={18}
+                color={Colors.secondary}
+              />
+            </PressableScaleWithRef>
+          </View>
+
+          <Text style={styles.label}>Conferma password</Text>
+          <View style={styles.passwordWrap}>
+            <TextInput
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholder="Ripeti la password"
+              placeholderTextColor={Colors.secondary}
+              style={[styles.input, { flex: 1, borderWidth: 0 }]}
+              secureTextEntry={!showPwd}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <Ionicons
+              name={
+                confirmPassword.length === 0
+                  ? "help-circle-outline"
+                  : confirmPassword === password
+                  ? "checkmark-circle-outline"
+                  : "close-circle-outline"
+              }
+              size={18}
+              color={
+                confirmPassword.length === 0
+                  ? Colors.secondary
+                  : confirmPassword === password
+                  ? Colors.green
+                  : Colors.red
+              }
+            />
+          </View>
         </Animatable.View>
 
         {/* ACTIONS */}
@@ -426,4 +478,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "center",
   },
+
+  passwordWrap: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: Colors.light1,
+  borderWidth: 1,
+  borderColor: Colors.light2,
+  borderRadius: 14,
+  paddingHorizontal: 2,
+  },
+
+  eyeBtn: {
+    padding: 6,
+    marginLeft: 6,
+  },
+
 });
