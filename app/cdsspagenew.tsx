@@ -14,7 +14,7 @@ import { db } from "../firebaseconfig";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { ChevronDown, ChevronUp, RefreshCw } from "lucide-react-native";
 import { getAuth } from "firebase/auth";
-import { MotiView } from "moti";
+import Animated, { FadeInUp } from "react-native-reanimated";
 import Toast from "react-native-toast-message";
 import { evaluateCDSS, getPersonalizedAdvice } from "../utils/cdssLogic";
 import { useFocusEffect } from "@react-navigation/native";
@@ -164,7 +164,7 @@ const CDSSPage = () => {
     setOpen(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const renderSection = (section: keyof FirestoreData, content: JSX.Element) => {
+  const renderSection = (section: keyof FirestoreData, content: React.ReactNode) => {
   const meta = sectionMeta[section];
 
   return (
@@ -262,13 +262,9 @@ const CDSSPage = () => {
         style={styles.reloadButton}
         >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <MotiView
-            animate={{ rotate: loading ? "360deg" : "0deg" }}
-            transition={{ loop: loading, type: "timing", duration: 1000 }}
-            style={{ width: 20, height: 20 }}
-            >
+            <Animated.View entering={FadeInUp.duration(350)}>
             <RefreshCw size={20} color="#fff" />
-            </MotiView>
+            </Animated.View>
             <Text style={styles.reloadText}>Refresh Data</Text>
         </View>
         </PressableScaleWithRef>

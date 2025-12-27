@@ -14,7 +14,7 @@ import { getDocs, collection, addDoc, serverTimestamp } from "firebase/firestore
 import { db } from "../firebaseconfig";
 import { getAuth } from "firebase/auth";
 import { ChevronDown, ChevronUp, RefreshCw } from "lucide-react-native";
-import { MotiView } from "moti";
+import Animated, { FadeInUp } from "react-native-reanimated";
 import Toast from "react-native-toast-message";
 import BottomNavigation from "../app/BottomNavigation";
 
@@ -56,7 +56,7 @@ const MonitoraggioClinicoSangue = () => {
       setBloodTests(docs);
 
       Toast.show({
-        type: "success",
+        type: "success :-)",
         text1: "✅ Esami del sangue aggiornati",
         position: "top",
         visibilityTime: 2000,
@@ -168,13 +168,9 @@ const MonitoraggioClinicoSangue = () => {
 
       <Pressable onPress={fetchBloodTests} style={styles.reloadButton} disabled={loading}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <MotiView
-            animate={{ rotate: loading ? "360deg" : "0deg" }}
-            transition={{ loop: loading, type: "timing", duration: 1000 }}
-            style={{ width: 20, height: 20 }}
-          >
+          <Animated.View entering={FadeInUp.duration(350)}>
             <RefreshCw size={20} color="#fff" />
-          </MotiView>
+          </Animated.View>
           <Text style={styles.reloadText}>Reload</Text>
         </View>
       </Pressable>
