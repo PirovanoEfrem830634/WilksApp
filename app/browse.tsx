@@ -80,6 +80,7 @@ export default function Browse() {
     },
 
     { label: "Monitoraggio alimentazione", icon: "nutrition", color: Colors.orange, href: "/diettrackernew" },
+    { label: "Piano terapeutico", icon: "newspaper", color: Colors.yellow, href: "/TherapyPlanCurrentScreen" },
 
     // ⛔️ Monthly Recap PDF rimosso dall’elenco delle voci
     // {
