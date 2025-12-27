@@ -277,7 +277,7 @@ export default function SignIn() {
             </Pressable>
 
             <Text style={styles.footerMsg}>
-              Hai ricevuto un codice dal medico?{" "}<br></br>
+              Hai ricevuto un codice dal medico?{" "}{"\n"}
               <Text
                 style={{ color: "#007AFF", fontWeight: "700" }}
                 onPress={() => router.push("/ActivateAccountScreen")}
