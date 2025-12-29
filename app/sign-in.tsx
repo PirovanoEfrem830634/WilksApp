@@ -25,6 +25,7 @@ import {
 } from "firebase/firestore";
 import { Ionicons } from "@expo/vector-icons";
 import { setPatientDocId } from "../utils/session";
+import { TouchableOpacity } from "react-native";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -257,17 +258,14 @@ export default function SignIn() {
             </View>
 
             {/* CTA */}
-            <Pressable
+            <TouchableOpacity
               onPress={handleSignIn}
               disabled={loading}
-              style={({ pressed }) => [
-                styles.button,
-                loading && { opacity: 0.6 },
-                pressed && !loading && { transform: [{ scale: 0.99 }] },
-              ]}
+              activeOpacity={0.9}
+              style={[styles.button, loading && { opacity: 0.7 }]}
             >
-              <Text style={styles.buttonText}>{loading ? "Accesso..." : "Sign In"}</Text>
-            </Pressable>
+              <Text style={styles.buttonText}>{loading ? "Accesso..." : "Accedi"}</Text>
+            </TouchableOpacity>
 
             <Pressable
               onPress={() => router.push("#")}
@@ -399,6 +397,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#007AFF",
     alignItems: "center",
     marginTop: 6,
+    marginBottom: 6,
   },
   buttonText: {
     fontSize: 16,

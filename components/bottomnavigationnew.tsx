@@ -3,35 +3,38 @@ import { View, Text, StyleSheet, Pressable, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { usePathname, Link } from "expo-router";
 import Colors from "../Styles/color";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function BottomNavigation() {
   const pathname = usePathname();
+  const insets = useSafeAreaInsets();
 
   const tabs: {
     name: string;
     icon: React.ComponentProps<typeof Ionicons>["name"];
     path: string;
   }[] = [
-    { name: "Home",       icon: "home",               path: "/homenew" },
-
-    // 🔕 Solo commentato, non rimosso
-    // { name: "Assistente AI", icon: "git-branch-outline", path: "/cdsspagenew" },
-
-    { name: "Questionari", icon: "clipboard",          path: "/clinicalsurveyscreen" },
-    { name: "Esplora",     icon: "apps",               path: "/browse" },
+    { name: "Home", icon: "home", path: "/homenew" },
+    { name: "Questionari", icon: "clipboard", path: "/clinicalsurveyscreen" },
+    { name: "Esplora", icon: "apps", path: "/browse" },
   ];
 
+  const bottomPad = Math.max(insets.bottom, 10);
+
   return (
-    <View style={styles.tabBar}>
+    <View
+      style={[
+        styles.tabBar,
+        {
+          paddingBottom: bottomPad,          // ✅ spinge su contenuto
+          paddingTop: 10,                   // mantiene look
+          height: 56 + bottomPad,           // ✅ altezza totale corretta
+        },
+      ]}
+    >
       {tabs.map((tab, index) => {
         const isActive = pathname === tab.path;
-        return (
-          <TabItem
-            key={index}
-            tab={tab}
-            isActive={isActive}
-          />
-        );
+        return <TabItem key={index} tab={tab} isActive={isActive} />;
       })}
     </View>
   );
@@ -86,11 +89,10 @@ function TabItem({
 }
 
 const styles = StyleSheet.create({
-  tabBar: {
+    tabBar: {
     flexDirection: "row",
     justifyContent: "space-around",
     backgroundColor: "#fff",
-    paddingVertical: 10,
     borderTopWidth: 0.5,
     borderTopColor: Colors.light2,
     position: "absolute",

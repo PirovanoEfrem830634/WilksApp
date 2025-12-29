@@ -22,6 +22,7 @@ import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { Modal, TouchableOpacity } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Activity,
   AlertCircle,
@@ -38,6 +39,15 @@ import {
 import { getPatientDocId } from "../utils/session";
 
 export default function SleepTracking() {
+  const insets = useSafeAreaInsets();
+
+  // stessa logica della tua BottomNavigation
+  const bottomPad = Math.max(insets.bottom, 10);
+  const tabbarHeight = 56 + bottomPad;
+
+  // padding sotto lo scroll per non finire sotto la tabbar
+  const scrollBottomPadding = tabbarHeight + 28;
+
   const [quality, setQuality] = useState("");
   const [frequentWakeups, setFrequentWakeups] = useState(false);
   const [nightmares, setNightmares] = useState(false);
@@ -117,10 +127,11 @@ export default function SleepTracking() {
     <View style={{ flex: 1, backgroundColor: "#F2F2F7" }}>
       {/* HEADER FISSO */}
       <LinearGradient
+        pointerEvents="none"
         colors={["#B2EAB2", Colors.light1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
-        style={styles.gradientBackground}
+        style={[StyleSheet.absoluteFillObject, { height: 180 }]}
       />
 
       <View style={styles.mainHeader}>
@@ -133,7 +144,10 @@ export default function SleepTracking() {
         </Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollView}>
+      <ScrollView
+        contentContainerStyle={[styles.scrollView, { paddingBottom: scrollBottomPadding }]}
+        showsVerticalScrollIndicator={false}
+      >
         <PressableScaleWithRef
           onPress={() => setShowPicker("quality")}
           style={[styles.card, quality ? styles.cardSelected : null]}
@@ -166,7 +180,7 @@ export default function SleepTracking() {
             <Text style={styles.cardLabel}>Durata del sonno</Text>
             <View style={{ flex: 1 }} />
             <Text style={styles.cardRightValue}>
-              {hours !== null ? `${hours} h` : "Seleziona"}
+              {hours ? `${hours} h` : "Seleziona"}
             </Text>
             <Ionicons
               name="chevron-forward-outline"
@@ -384,7 +398,13 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
     elevation: 2,
+    borderWidth: 1,
+    borderColor: Colors.light2,
   },
   label: {
     fontSize: 16,
@@ -510,14 +530,6 @@ const styles = StyleSheet.create({
   pillTextSelected: {
     color: "#FFFFFF",
   },
-  gradientBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 160,
-    zIndex: -1,
-  },
   mainHeader: {
     alignItems: "center",
     marginTop: 32,
@@ -543,7 +555,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     padding: 20,
-    paddingBottom: 100,
   },
   modalOverlay: {
     flex: 1,
@@ -585,7 +596,6 @@ const styles = StyleSheet.create({
   },
   cardSelected: {
     borderColor: Colors.green,
-    borderWidth: 2,
   },
   cardHeader: {
     flexDirection: "row",

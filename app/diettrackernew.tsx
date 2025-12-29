@@ -8,6 +8,7 @@ import {
   ScrollView,
   Animated,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getDoc, doc, setDoc, Timestamp } from "firebase/firestore";
 import { auth, db } from "../firebaseconfig";
 import BottomNavigation from "../components/bottomnavigationnew";
@@ -46,6 +47,13 @@ export default function DietTracker() {
   const [input, setInput] = useState<string>("");
   const [editingMeal, setEditingMeal] = useState<string | null>(null);
   const toastAnim = useRef(new Animated.Value(0)).current;
+  
+  const insets = useSafeAreaInsets();
+  const bottomPad = Math.max(insets.bottom, 10);
+  const tabbarHeight = 56 + bottomPad;
+
+// spazio extra per far vedere bene bottone + respiro
+const scrollBottomPadding = tabbarHeight + 24;
 
   const getDateKey = () => {
     const today = new Date();
@@ -117,10 +125,14 @@ export default function DietTracker() {
   return (
     <View style={styles.container}>
       <LinearGradient
+        pointerEvents="none"
         colors={["#FFD6BE", Colors.light1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
-        style={styles.gradientBackground}
+        style={[
+          StyleSheet.absoluteFillObject,
+          { height: 180 }
+        ]}
       />
 
       <View style={styles.mainHeader}>
@@ -133,9 +145,12 @@ export default function DietTracker() {
         </Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.mealContainer}>
+      <ScrollView
+        contentContainerStyle={[styles.mealContainer, { paddingBottom: scrollBottomPadding }]}
+        showsVerticalScrollIndicator={false}
+      >
         {meals.map((meal) => {
-          const icons: Record<string, JSX.Element> = {
+          const icons: Record<string, React.ReactNode> = {
             breakfast: <Ionicons name="cafe" size={20} color="#EC6330" />,
             lunch: <Ionicons name="restaurant" size={20} color="#EC6330" />,
             dinner: <Ionicons name="pizza" size={20} color="#EC6330" />,
@@ -218,16 +233,18 @@ export default function DietTracker() {
             </View>
           );
         })}
-      </ScrollView>
 
-      <PressableScaleWithRef
-        onPress={handleSave}
-        weight="light"
-        activeScale={0.96}
-        style={styles.globalSaveButton}
-      >
-        <Text style={styles.globalSaveText}>Salva alimentazione</Text>
-      </PressableScaleWithRef>
+        <View style={{ marginTop: 6 }}>
+            <PressableScaleWithRef
+              onPress={handleSave}
+              weight="light"
+              activeScale={0.96}
+              style={styles.globalSaveButton}
+            >
+              <Text style={styles.globalSaveText}>Salva alimentazione</Text>
+            </PressableScaleWithRef>
+          </View>
+      </ScrollView>
 
       {/* Toast visivo animato */}
       <Animated.View
@@ -260,6 +277,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light1,
+    position: "relative",
   },
   title: {
     fontSize: 24,
@@ -338,8 +356,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     borderRadius: 15,
     alignItems: "center",
-    marginHorizontal: 20,
-    marginBottom: 80,
+    marginHorizontal: 0,   // opzionale
+    marginBottom: 0,       // ✅
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
@@ -446,14 +464,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
     fontSize: 15,
-  },
-  gradientBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 160,
-    zIndex: -1,
   },
   mainHeader: {
     alignItems: "center",
