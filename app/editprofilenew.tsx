@@ -22,10 +22,11 @@ import FontStyles from "../Styles/fontstyles";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { LinearGradient } from "expo-linear-gradient";
 import { getPatientDocId } from "../utils/session";
-
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function EditProfile() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
 
   const toastAnim = useRef(new Animated.Value(0)).current;
@@ -41,6 +42,11 @@ export default function EditProfile() {
     weight: "",
   });
 
+  // stessa logica di SleepTracking / BottomNavigation
+  const bottomPad = Math.max(insets.bottom, 10);
+  const tabbarHeight = 56 + bottomPad;
+  const scrollBottomPadding = tabbarHeight + 28;
+
   useFocusEffect(
     useCallback(() => {
       const loadUserData = async () => {
@@ -49,6 +55,7 @@ export default function EditProfile() {
           if (auth.currentUser) {
             const patientId = await getPatientDocId();
             if (!patientId) return;
+
             const userRef = doc(db, "users", patientId);
             const snapshot = await getDoc(userRef);
             if (snapshot.exists()) {
@@ -152,7 +159,6 @@ export default function EditProfile() {
     keyboard: KeyboardTypeOptions;
     icon: keyof typeof Ionicons.glyphMap;
     color: string;
-    required?: boolean;
   }[] = [
     {
       key: "firstName",
@@ -161,7 +167,6 @@ export default function EditProfile() {
       keyboard: "default",
       icon: "person",
       color: Colors.blue,
-      required: true,
     },
     {
       key: "lastName",
@@ -170,7 +175,6 @@ export default function EditProfile() {
       keyboard: "default",
       icon: "person",
       color: Colors.purple,
-      required: true,
     },
     {
       key: "age",
@@ -179,7 +183,6 @@ export default function EditProfile() {
       keyboard: "numeric",
       icon: "calendar",
       color: Colors.orange,
-      required: true,
     },
     {
       key: "city",
@@ -222,15 +225,15 @@ export default function EditProfile() {
 
   return (
     <View style={styles.container}>
-      {/* Gradient header */}
+      {/* ✅ STESSO METODO SleepTracking: niente zIndex, pointerEvents none */}
       <LinearGradient
+        pointerEvents="none"
         colors={["#D1E9FF", Colors.light1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
-        style={styles.gradientBackground}
+        style={[StyleSheet.absoluteFillObject, { height: 180 }]}
       />
 
-      {/* Main header (SleepTracking-like) */}
       <View style={styles.mainHeader}>
         <View style={styles.iconWrapper}>
           <Ionicons name="create" size={48} color={Colors.blue} />
@@ -242,8 +245,12 @@ export default function EditProfile() {
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollView,
+          { paddingBottom: scrollBottomPadding },
+        ]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {fields.map((f) => (
           <PressableScaleWithRef
@@ -278,7 +285,7 @@ export default function EditProfile() {
         </PressableScaleWithRef>
       </ScrollView>
 
-      {/* Toast top */}
+      {/* Toast top (come tua versione) */}
       {toastMessage && (
         <Animated.View
           style={[
@@ -308,14 +315,6 @@ export default function EditProfile() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.light1 },
 
-  gradientBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 160,
-    zIndex: -1,
-  },
   mainHeader: {
     alignItems: "center",
     marginTop: 32,
@@ -330,10 +329,8 @@ const styles = StyleSheet.create({
 
   scrollView: {
     padding: 20,
-    paddingBottom: 100,
   },
 
-  // Card Apple-like con bordo sottile
   card: {
     backgroundColor: Colors.white,
     borderRadius: 16,
@@ -360,7 +357,6 @@ const styles = StyleSheet.create({
     color: Colors.gray1,
   },
 
-  // highlight molto sottile (come richiesto)
   cardSelectedBlue: {
     borderColor: Colors.blue,
     borderWidth: 1,
@@ -405,7 +401,7 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 16,
     alignItems: "center",
-    zIndex: 10,
+    // niente zIndex
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,

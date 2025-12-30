@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -11,15 +11,14 @@ import {
   Animated,
   TextInput,
 } from "react-native";
-import { ChevronDown, ChevronUp, Search } from "lucide-react-native";
-import { useRouter } from "expo-router";
+import { ChevronDown, ChevronUp, Search, Info } from "lucide-react-native";
 import BottomNavigation from "../components/bottomnavigationnew";
 import * as Animatable from "react-native-animatable";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import { LinearGradient } from "expo-linear-gradient";
-import { BriefcaseMedical, Info } from "lucide-react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 if (Platform.OS === "android") {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
@@ -105,9 +104,14 @@ export default function SymptomInfo() {
   const [searchTerm, setSearchTerm] = useState("");
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
+  const insets = useSafeAreaInsets();
+  const bottomPad = Math.max(insets.bottom, 10);
+  const tabbarHeight = 56 + bottomPad;
+  const scrollBottomPadding = tabbarHeight + 28;
+
   const toggleCard = (key: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpanded(expanded === key ? null : key);
+    setExpanded((prev) => (prev === key ? null : key));
   };
 
   useEffect(() => {
@@ -118,61 +122,66 @@ export default function SymptomInfo() {
     }).start();
   }, []);
 
-  const filteredSymptoms = symptoms.filter((symptom) =>
-    symptom.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredSymptoms = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return symptoms;
+    return symptoms.filter((s) => s.title.toLowerCase().includes(q));
+  }, [searchTerm]);
 
   return (
     <View style={styles.wrapper}>
-      <Animatable.View
-        animation="fadeInUp"
-        duration={500}
-        style={styles.scrollWrapper}
-      >
+      {/* ✅ gradient senza zIndex, come SleepTracking */}
+      <LinearGradient
+        pointerEvents="none"
+        colors={["#E3D7FF", Colors.light1]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={[StyleSheet.absoluteFillObject, { height: 180 }]}
+      />
+
+      <Animatable.View animation="fadeInUp" duration={500} style={styles.scrollWrapper}>
         <Animated.View style={[styles.headerContainer, { opacity: fadeAnim }]}>
-          <LinearGradient
-            colors={["#E3D7FF", Colors.light1]}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-            style={styles.gradientBackground}
-          />
           <View style={styles.mainHeader}>
             <View style={styles.iconWrapper}>
               <Info size={48} color={Colors.purple} />
             </View>
             <Text style={FontStyles.variants.mainTitle}>Informazioni sui sintomi</Text>
             <Text style={FontStyles.variants.sectionTitle}>
-              Tocca una tab per vedere i consigli
+              Tocca una card per vedere i consigli
             </Text>
           </View>
         </Animated.View>
 
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: scrollBottomPadding },
+          ]}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.searchContainer}>
-            <Search
-              size={20}
-              color={Colors.gray3}
-              style={{ marginRight: 8 }}
-            />
+            <Search size={20} color={Colors.gray3} style={{ marginRight: 8 }} />
             <TextInput
-              style={FontStyles.variants.smallLabelBold}
+              style={styles.searchInput}
               placeholder="Cerca un sintomo..."
               value={searchTerm}
               onChangeText={setSearchTerm}
               placeholderTextColor={Colors.gray3}
+              returnKeyType="search"
             />
           </View>
 
           {filteredSymptoms.map((symptom) => {
             const isExpanded = expanded === symptom.key;
+
             return (
               <Animated.View key={symptom.key} style={{ opacity: fadeAnim }}>
                 <Pressable
                   onPress={() => toggleCard(symptom.key)}
-                  style={[styles.card, isExpanded && styles.cardExpanded]}
+                  style={[
+                    styles.card,
+                    isExpanded && styles.cardExpanded,
+                  ]}
                 >
                   <View style={styles.cardHeader}>
                     <View style={styles.iconTitleContainer}>
@@ -228,56 +237,64 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 100,
   },
   headerContainer: {
-    marginBottom: 20,
+    marginBottom: 8,
     alignItems: "center",
   },
-  pageTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: Colors.gray1,
-    marginBottom: 6,
-    textAlign: "center",
+  mainHeader: {
+    alignItems: "center",
+    marginTop: 32,
+    marginBottom: 12,
+    paddingHorizontal: 20,
   },
-  subtitle: {
-    fontSize: 15,
-    color: Colors.gray3,
-    textAlign: "center",
+  iconWrapper: {
+    borderRadius: 60,
+    padding: 5,
     marginBottom: 10,
   },
+
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.white,
     borderRadius: 12,
-    borderColor: Colors.gray3,
+    borderColor: Colors.light2,
     borderWidth: 1,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 20,
+    paddingVertical: 10,
+    marginBottom: 16,
   },
   searchInput: {
     flex: 1,
     fontSize: 15,
     color: Colors.gray1,
+    paddingVertical: 0,
   },
+
+  // ✅ Card: borderWidth fisso (mai cambiare)
   card: {
     backgroundColor: Colors.white,
     borderRadius: 20,
     padding: 16,
     marginBottom: 16,
-    shadowColor: Colors.black,
+    borderWidth: 1,
+    borderColor: Colors.light2,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
+
+  // ✅ Expanded: cambia SOLO borderColor (e volendo shadowOpacity), NO borderWidth
   cardExpanded: {
     borderColor: Colors.purple,
-    borderWidth: 2,
+    // opzionale: piccolo boost senza “quadretti”
+    shadowOpacity: 0.08,
+    elevation: 3,
   },
+
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -289,16 +306,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: Colors.gray1,
-  },
-  description: {
-    fontSize: 15,
-    color: Colors.gray2,
-    lineHeight: 20,
-  },
+
   actionContainer: {
     marginTop: 10,
   },
@@ -314,24 +322,5 @@ const styles = StyleSheet.create({
     color: Colors.gray1,
     marginLeft: 8,
     marginBottom: 4,
-  },
-  gradientBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 160,
-    zIndex: -1,
-  },
-  mainHeader: {
-    alignItems: "center",
-    marginTop: 32,
-    marginBottom: 20,
-    paddingHorizontal: 20,
-  },
-  iconWrapper: {
-    borderRadius: 60,
-    padding: 5,
-    marginBottom: 10,
   },
 });

@@ -1,7 +1,13 @@
 // MyMedications.tsx (paziente: sola lettura, niente add/delete)
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, FlatList, StyleSheet } from "react-native";
-import { BriefcaseMedical, CalendarDays, Clock3, Lock, Pill } from "lucide-react-native";
+import {
+  BriefcaseMedical,
+  CalendarDays,
+  Clock3,
+  Lock,
+  Pill,
+} from "lucide-react-native";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { auth, db } from "../firebaseconfig";
 import BottomNavigation from "../components/bottomnavigationnew";
@@ -12,6 +18,8 @@ import { LinearGradient } from "expo-linear-gradient";
 
 // ✅ helper: recupera patientDocId salvato in sessione (come per symptoms)
 import { getPatientDocId } from "../utils/session";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 
 type Medication = {
   id: string;
@@ -31,13 +39,39 @@ type NextDoseInfo = {
 
 // ---------- Utils ----------
 const DAY_MAP: Record<string, number> = {
-  dom: 0, domenica: 0, sunday: 0, sun: 0,
-  lun: 1, lunedi: 1, lunedì: 1, monday: 1, mon: 1,
-  mar: 2, martedi: 2, martedì: 2, tuesday: 2, tue: 2,
-  mer: 3, mercoledi: 3, mercoledì: 3, wednesday: 3, wed: 3,
-  gio: 4, giovedì: 4, giovedi: 4, thursday: 4, thu: 4,
-  ven: 5, venerdì: 5, venerdi: 5, friday: 5, fri: 5,
-  sab: 6, sabato: 6, saturday: 6, sat: 6,
+  dom: 0,
+  domenica: 0,
+  sunday: 0,
+  sun: 0,
+  lun: 1,
+  lunedi: 1,
+  lunedì: 1,
+  monday: 1,
+  mon: 1,
+  mar: 2,
+  martedi: 2,
+  martedì: 2,
+  tuesday: 2,
+  tue: 2,
+  mer: 3,
+  mercoledi: 3,
+  mercoledì: 3,
+  wednesday: 3,
+  wed: 3,
+  gio: 4,
+  giovedì: 4,
+  giovedi: 4,
+  thursday: 4,
+  thu: 4,
+  ven: 5,
+  venerdì: 5,
+  venerdi: 5,
+  friday: 5,
+  fri: 5,
+  sab: 6,
+  sabato: 6,
+  saturday: 6,
+  sat: 6,
 };
 const WEEK_LABELS = ["D", "L", "M", "M", "G", "V", "S"];
 
@@ -65,7 +99,9 @@ const fmtLabel = (target: Date, now: Date) => {
   if (mins < 24 * 60) return rem ? `tra ${hrs} h ${rem} m` : `tra ${hrs} h`;
   const pad = (n: number) => String(n).padStart(2, "0");
   const days = ["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
-  return `${days[target.getDay()]} ${pad(target.getHours())}:${pad(target.getMinutes())}`;
+  return `${days[target.getDay()]} ${pad(target.getHours())}:${pad(
+    target.getMinutes()
+  )}`;
 };
 
 const computeNextDose = (days: string[], times: string[]): NextDoseInfo => {
@@ -107,6 +143,12 @@ const computeNextDose = (days: string[], times: string[]): NextDoseInfo => {
 // ---------- Component ----------
 export default function MyMedications() {
   const [medications, setMedications] = useState<Medication[]>([]);
+  const insets = useSafeAreaInsets();
+
+  // stessa logica della BottomNavigation (come SleepTracking)
+  const bottomPad = Math.max(insets.bottom, 10);
+  const tabbarHeight = 56 + bottomPad;
+  const listBottomPadding = tabbarHeight + 28;
 
   useEffect(() => {
     let unsub: (() => void) | null = null;
@@ -118,7 +160,6 @@ export default function MyMedications() {
       // ✅ usa patientDocId, NON user.uid
       const patientId = await getPatientDocId();
       if (!patientId) {
-        // niente sessione: lista vuota (o gestiscilo come preferisci)
         setMedications([]);
         return;
       }
@@ -153,7 +194,6 @@ export default function MyMedications() {
     };
   }, []);
 
-  // Pre-calcolo next dose una sola volta
   const orderedWithNext = useMemo(() => {
     const withNext = medications.map((m) => ({
       m,
@@ -163,7 +203,8 @@ export default function MyMedications() {
     withNext.sort((a, b) => {
       if (a.next.date && !b.next.date) return -1;
       if (!a.next.date && b.next.date) return 1;
-      if (a.next.date && b.next.date) return a.next.date.getTime() - b.next.date.getTime();
+      if (a.next.date && b.next.date)
+        return a.next.date.getTime() - b.next.date.getTime();
       return 0;
     });
 
@@ -202,7 +243,11 @@ export default function MyMedications() {
     );
   };
 
-  const renderItem = ({ item }: { item: { m: Medication; next: NextDoseInfo } }) => {
+  const renderItem = ({
+    item,
+  }: {
+    item: { m: Medication; next: NextDoseInfo };
+  }) => {
     const med = item.m;
     const next = item.next;
 
@@ -277,16 +322,18 @@ export default function MyMedications() {
 
   return (
     <View style={styles.container}>
+      {/* ✅ Gradient “SleepTracking-like”: niente zIndex */}
       <LinearGradient
+        pointerEvents="none"
         colors={["#C2F0FF", Colors.light1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
-        style={styles.gradientBackground}
+        style={[StyleSheet.absoluteFillObject, { height: 180 }]}
       />
 
       <View style={styles.mainHeader}>
         <View style={styles.iconWrapper}>
-          <BriefcaseMedical size={48} color={Colors.turquoise} />
+          <Ionicons name="medkit" size={48} color={Colors.turquoise} />
         </View>
         <Text style={FontStyles.variants.mainTitle}>Farmaci Prescritti</Text>
         <Text style={FontStyles.variants.sectionTitle}>
@@ -298,8 +345,9 @@ export default function MyMedications() {
         data={orderedWithNext}
         keyExtractor={(item) => item.m.id}
         renderItem={renderItem}
-        contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: listBottomPadding }}
         ListEmptyComponent={<EmptyState />}
+        showsVerticalScrollIndicator={false}
       />
 
       <BottomNavigation />
@@ -309,14 +357,7 @@ export default function MyMedications() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.light1 },
-  gradientBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 160,
-    zIndex: -1,
-  },
+
   mainHeader: {
     alignItems: "center",
     marginTop: 32,

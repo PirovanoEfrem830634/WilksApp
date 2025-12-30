@@ -20,6 +20,7 @@ import FontStyles from "../Styles/fontstyles";
 import BottomNavigation from "../components/bottomnavigationnew";
 import Toast from "react-native-toast-message";
 import { getPatientDocId } from "../utils/session";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type TherapyPlanCurrent = {
   regimen?: string;
@@ -33,7 +34,6 @@ type TherapyPlanCurrent = {
 function formatDateIT(input: any): string {
   if (!input) return "—";
 
-  // Firestore Timestamp
   const d: Date =
     typeof input?.toDate === "function"
       ? input.toDate()
@@ -53,6 +53,11 @@ function formatDateIT(input: any): string {
 export default function TherapyPlanCurrentScreen() {
   const [plan, setPlan] = useState<TherapyPlanCurrent | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const insets = useSafeAreaInsets();
+  const bottomPad = Math.max(insets.bottom, 10);
+  const tabbarHeight = 56 + bottomPad;
+  const scrollBottomPadding = tabbarHeight + 28;
 
   const user = auth.currentUser;
 
@@ -143,12 +148,13 @@ export default function TherapyPlanCurrentScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Gradient stile identico a WorkStatus (solo tonalità blu) */}
+      {/* ✅ Gradient SOLIDO: NO zIndex, come SleepTracking */}
       <LinearGradient
-        colors={["#ffe79dff", Colors.light1]}
+        pointerEvents="none"
+        colors={["#FFE79D", Colors.light1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
-        style={styles.gradientBackground}
+        style={[StyleSheet.absoluteFillObject, { height: 180 }]}
       />
 
       {/* Header centrale Apple-style */}
@@ -178,10 +184,9 @@ export default function TherapyPlanCurrentScreen() {
       </Animatable.View>
 
       <ScrollView
-        contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: scrollBottomPadding }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Empty state */}
         {!plan ? (
           <Animatable.View animation="fadeInUp" delay={100} style={styles.card}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -192,10 +197,12 @@ export default function TherapyPlanCurrentScreen() {
               />
               <Text style={styles.cardLabel}>Nessun piano disponibile</Text>
             </View>
+
             <Text style={styles.cardSubtitle}>
               Al momento non risulta un piano terapeutico corrente associato al
               tuo profilo.
             </Text>
+
             <Text style={styles.cardHighlight}>
               Se il medico ha già definito la terapia, riprova più tardi oppure
               contatta l’ambulatorio.
@@ -203,10 +210,13 @@ export default function TherapyPlanCurrentScreen() {
           </Animatable.View>
         ) : (
           <>
-            {/* Card: Piano corrente */}
             <Animatable.View animation="fadeInUp" delay={100} style={styles.card}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <Ionicons name="document-text-outline" size={20} color={Colors.yellow} />
+                <Ionicons
+                  name="document-text-outline"
+                  size={20}
+                  color={Colors.yellow}
+                />
                 <Text style={styles.cardLabel}>Terapia corrente</Text>
               </View>
 
@@ -214,7 +224,6 @@ export default function TherapyPlanCurrentScreen() {
                 Informazioni principali del piano terapeutico attivo.
               </Text>
 
-              {/* Tag stato */}
               {statusTag && (
                 <View style={[styles.statusTag, { backgroundColor: statusTag.bg }]}>
                   <Ionicons
@@ -229,7 +238,6 @@ export default function TherapyPlanCurrentScreen() {
                 </View>
               )}
 
-              {/* Start date */}
               <View style={styles.rowItem}>
                 <Ionicons name="calendar-outline" size={18} color="#6E6E73" />
                 <View style={{ flex: 1 }}>
@@ -238,7 +246,6 @@ export default function TherapyPlanCurrentScreen() {
                 </View>
               </View>
 
-              {/* Regimen */}
               <View style={styles.block}>
                 <Text style={styles.fieldLabel}>Regime / Terapia</Text>
                 <Text style={styles.fieldValue}>
@@ -246,7 +253,6 @@ export default function TherapyPlanCurrentScreen() {
                 </Text>
               </View>
 
-              {/* Notes */}
               <View style={styles.block}>
                 <Text style={styles.fieldLabel}>Note</Text>
                 <Text style={styles.fieldValue}>
@@ -255,7 +261,6 @@ export default function TherapyPlanCurrentScreen() {
               </View>
             </Animatable.View>
 
-            {/* Card: Aggiornamenti e fonte */}
             <Animatable.View animation="fadeInUp" delay={200} style={styles.card}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                 <Ionicons
@@ -309,31 +314,16 @@ export default function TherapyPlanCurrentScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light1,
-  },
-  gradientBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 160,
-    zIndex: -1,
-  },
+  container: { flex: 1, backgroundColor: Colors.light1 },
+
   mainHeader: {
     alignItems: "center",
     marginTop: 32,
     marginBottom: 20,
     paddingHorizontal: 20,
   },
-  iconWrapper: {
-    borderRadius: 60,
-    padding: 5,
-    marginBottom: 10,
-  },
+  iconWrapper: { borderRadius: 60, padding: 5, marginBottom: 10 },
 
-  // Cards stile identico a WorkStatus (bloodmonitoring-like)
   card: {
     backgroundColor: "#fff",
     borderRadius: 20,
@@ -375,9 +365,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 999,
   },
-  statusTagText: {
-    fontSize: 13,
-  },
+  statusTagText: { fontSize: 13 },
 
   rowItem: {
     flexDirection: "row",
@@ -398,9 +386,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  block: {
-    marginTop: 12,
-  },
+  block: { marginTop: 12 },
   fieldLabel: {
     marginBottom: 6,
     color: "#1C1C1E",
@@ -419,8 +405,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  loadingText: {
-    marginTop: 8,
-    color: "#6E6E73",
-  },
+  loadingText: { marginTop: 8, color: "#6E6E73" },
 });

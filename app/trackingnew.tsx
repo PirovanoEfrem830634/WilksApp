@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,8 +7,8 @@ import {
   Pressable,
   Alert,
   Animated,
+  StyleSheet as RNStyleSheet,
 } from "react-native";
-import Slider from "@react-native-community/slider";
 import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
 import BottomNavigation from "../components/bottomnavigationnew";
@@ -32,8 +32,9 @@ import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { LinearGradient } from "expo-linear-gradient";
 import { Modal } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { useCallback } from "react";
 import { getPatientDocId } from "../utils/session";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 
 type FormDataType = {
   debolezzaMuscolare: boolean;
@@ -49,6 +50,13 @@ type FormDataType = {
 };
 
 export default function TrackingNew() {
+  const insets = useSafeAreaInsets();
+
+  // stessa logica della BottomNavigation (come SleepTracking)
+  const bottomPad = Math.max(insets.bottom, 10);
+  const tabbarHeight = 56 + bottomPad;
+  const scrollBottomPadding = tabbarHeight + 28;
+
   const [formData, setFormData] = useState<FormDataType>({
     debolezzaMuscolare: false,
     andamentoSintomi: "",
@@ -66,6 +74,9 @@ export default function TrackingNew() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const scrollViewRef = useRef<ScrollView | null>(null);
+  const router = useRouter();
+
+  const [showPicker, setShowPicker] = useState<null | string>(null);
 
   const showToast = (message: string) => {
     setToastMessage(message);
@@ -101,11 +112,6 @@ export default function TrackingNew() {
     }, [])
   );
 
-  const router = useRouter();
-
-  const [showPicker, setShowPicker] = useState<null | string>(null);
-  const [showFatiguePicker, setShowFatiguePicker] = useState(false);
-
   const handleToggle = (key: keyof FormDataType) => {
     setFormData((prev) => ({ ...prev, [key]: !prev[key] }));
   };
@@ -119,7 +125,6 @@ export default function TrackingNew() {
 
   const saveSymptoms = async () => {
     const user = auth.currentUser;
-
     if (!user) {
       showToast("❌ Utente non autenticato");
       return;
@@ -142,7 +147,6 @@ export default function TrackingNew() {
     try {
       await setDoc(symptomsDocRef, dataToSave, { merge: true });
       showToast("✅ Sintomi salvati correttamente!");
-
       scrollViewRef.current?.scrollTo({ y: 0, animated: true });
     } catch (error: any) {
       console.error("❌ Error saving symptoms:", error);
@@ -150,66 +154,51 @@ export default function TrackingNew() {
     }
   };
 
+  // ✅ niente JSX.Element: React.ReactNode è più robusto
   const symptomFields: {
     key: keyof FormDataType;
     label: string;
-    icon: JSX.Element;
+    icon: React.ReactNode;
   }[] = [
-    {
-      key: "debolezzaMuscolare",
-      label: "Debolezza muscolare",
-      icon: <Activity size={18} color={Colors.blue} />,
-    },
-    {
-      key: "disfagia",
-      label: "Difficoltà di deglutizione",
-      icon: <Droplet size={18} color={Colors.blue} />,
-    },
-    {
-      key: "disartria",
-      label: "Difficoltà nel parlare",
-      icon: <Mic size={18} color={Colors.blue} />,
-    },
-    {
-      key: "ptosi",
-      label: "Ptosi",
-      icon: <Eye size={18} color={Colors.blue} />,
-    },
-    {
-      key: "diplopia",
-      label: "Visione doppia",
-      icon: <Eye size={18} color={Colors.blue} />,
-    },
-    {
-      key: "difficoltaRespiratorie",
-      label: "Difficoltà respiratorie",
-      icon: <Wind size={18} color={Colors.blue} />,
-    },
-    {
-      key: "ansia",
-      label: "Ansia",
-      icon: <AlertCircle size={18} color={Colors.blue} />,
-    },
+    { key: "debolezzaMuscolare", label: "Debolezza muscolare", icon: <Activity size={18} color={Colors.blue} /> },
+    { key: "disfagia", label: "Difficoltà di deglutizione", icon: <Droplet size={18} color={Colors.blue} /> },
+    { key: "disartria", label: "Difficoltà nel parlare", icon: <Mic size={18} color={Colors.blue} /> },
+    { key: "ptosi", label: "Ptosi", icon: <Eye size={18} color={Colors.blue} /> },
+    { key: "diplopia", label: "Visione doppia", icon: <Eye size={18} color={Colors.blue} /> },
+    { key: "difficoltaRespiratorie", label: "Difficoltà respiratorie", icon: <Wind size={18} color={Colors.blue} /> },
+    { key: "ansia", label: "Ansia", icon: <AlertCircle size={18} color={Colors.blue} /> },
   ];
 
   return (
     <View style={styles.container}>
+      {/* ✅ gradient come SleepTracking, no zIndex */}
       <LinearGradient
+        pointerEvents="none"
         colors={["#D1E9FF", Colors.light1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
-        style={styles.gradientBackground}
+        style={[StyleSheet.absoluteFillObject, { height: 180 }]}
       />
+
       <View style={styles.mainHeader}>
         <View style={styles.iconWrapper}>
-          <Activity size={48} color={Colors.blue} />
+          <Ionicons name="analytics" size={48} color={Colors.blue} />
         </View>
         <Text style={FontStyles.variants.mainTitle}>Monitoraggio dei sintomi</Text>
         <Text style={FontStyles.variants.sectionTitle}>
           Tieni traccia dei tuoi sintomi
         </Text>
       </View>
-      <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scrollView}>
+
+      <ScrollView
+        ref={scrollViewRef}
+        contentContainerStyle={[
+          styles.scrollView,
+          { paddingBottom: scrollBottomPadding },
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Modal Umore */}
         <Modal visible={showPicker === "umore"} animationType="slide" transparent>
           <View style={styles.modalOverlay}>
@@ -286,9 +275,9 @@ export default function TrackingNew() {
               <Text style={styles.cardLabel}>{item.label}</Text>
               <View style={{ flex: 1 }} />
               {formData[item.key] ? (
-                <Check size={18} color="#007AFF" />
+                <Check size={18} color={Colors.blue} />
               ) : (
-                <X size={18} color="#C7C7CC" />
+                <X size={18} color={Colors.light3} />
               )}
             </View>
           </PressableScaleWithRef>
@@ -308,10 +297,10 @@ export default function TrackingNew() {
             <Text
               style={[
                 styles.cardRightValue,
-                formData.umore ? { color: "#007AFF" } : null,
+                formData.umore ? { color: Colors.blue } : null,
               ]}
             >
-              {formData.umore ? formData.umore : "Seleziona"}
+              {formData.umore || "Seleziona"}
             </Text>
           </View>
         </PressableScaleWithRef>
@@ -319,10 +308,7 @@ export default function TrackingNew() {
         {/* Andamento sintomi */}
         <PressableScaleWithRef
           onPress={() => setShowPicker("andamentoSintomi")}
-          style={[
-            styles.card,
-            formData.andamentoSintomi ? styles.cardSelected : null,
-          ]}
+          style={[styles.card, formData.andamentoSintomi ? styles.cardSelected : null]}
           weight="light"
           activeScale={0.96}
         >
@@ -333,10 +319,10 @@ export default function TrackingNew() {
             <Text
               style={[
                 styles.cardRightValue,
-                formData.andamentoSintomi ? { color: "#007AFF" } : null,
+                formData.andamentoSintomi ? { color: Colors.blue } : null,
               ]}
             >
-              {formData.andamentoSintomi ? formData.andamentoSintomi : "Seleziona"}
+              {formData.andamentoSintomi || "Seleziona"}
             </Text>
           </View>
         </PressableScaleWithRef>
@@ -344,20 +330,16 @@ export default function TrackingNew() {
         {/* Affaticamento muscolare */}
         <PressableScaleWithRef
           onPress={() => setShowPicker("fatigue")}
-          style={[
-            styles.card,
-            formData.affaticamentoMuscolare > 0 && styles.cardSelected,
-          ]}
+          style={[styles.card, formData.affaticamentoMuscolare > 0 && styles.cardSelected]}
+          weight="light"
+          activeScale={0.96}
         >
           <View style={styles.cardHeader}>
-            <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
-              <Activity size={18} color={Colors.blue} style={{ marginRight: 9 }} />
-              <Text style={styles.cardLabel}>Affaticamento muscolare</Text>
-            </View>
+            <Activity size={18} color={Colors.blue} />
+            <Text style={styles.cardLabel}>Affaticamento muscolare</Text>
+            <View style={{ flex: 1 }} />
             <Text style={styles.cardRightValue}>
-              {formData.affaticamentoMuscolare !== undefined
-                ? `${formData.affaticamentoMuscolare} / 10`
-                : "Seleziona"}
+              {`${formData.affaticamentoMuscolare} / 10`}
             </Text>
           </View>
         </PressableScaleWithRef>
@@ -374,10 +356,7 @@ export default function TrackingNew() {
                 <Picker
                   selectedValue={formData.affaticamentoMuscolare}
                   onValueChange={(value) =>
-                    handleInputChange(
-                      "affaticamentoMuscolare" as keyof FormDataType,
-                      value
-                    )
+                    handleInputChange("affaticamentoMuscolare", value)
                   }
                   style={styles.picker}
                 >
@@ -390,6 +369,8 @@ export default function TrackingNew() {
               <PressableScaleWithRef
                 onPress={() => setShowPicker(null)}
                 style={styles.saveButton}
+                weight="light"
+                activeScale={0.96}
               >
                 <Text style={styles.saveText}>Salva</Text>
               </PressableScaleWithRef>
@@ -408,19 +389,12 @@ export default function TrackingNew() {
         </PressableScaleWithRef>
       </ScrollView>
 
+      {/* ✅ Toast senza zIndex (usa elevation su Android) */}
       {toastMessage && (
         <Animated.View
           style={[
+            styles.toast,
             {
-              position: "absolute",
-              top: 60,
-              left: 20,
-              right: 20,
-              backgroundColor: Colors.blue,
-              padding: 14,
-              borderRadius: 16,
-              alignItems: "center",
-              zIndex: 10,
               opacity: toastAnim,
               transform: [
                 {
@@ -430,19 +404,13 @@ export default function TrackingNew() {
                   }),
                 },
               ],
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 5,
             },
           ]}
         >
-          <Text style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>
-            {toastMessage}
-          </Text>
+          <Text style={styles.toastText}>{toastMessage}</Text>
         </Animated.View>
       )}
+
       <BottomNavigation />
     </View>
   );
@@ -453,18 +421,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.light1,
   },
+
+  mainHeader: {
+    alignItems: "center",
+    marginTop: 32,
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+  iconWrapper: {
+    borderRadius: 60,
+    padding: 5,
+    marginBottom: 10,
+  },
+
+  // ✅ niente paddingBottom fisso
   scrollView: {
     padding: 20,
-    paddingBottom: 100,
   },
-  gradientBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 160,
-    zIndex: -1,
-  },
+
   card: {
     backgroundColor: Colors.white,
     borderRadius: 20,
@@ -475,39 +449,30 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+    borderWidth: 1,
+    borderColor: Colors.light2,
   },
   cardSelected: {
     borderColor: Colors.blue,
     borderWidth: 2,
   },
+
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    marginBottom: 8,
   },
   cardLabel: {
     fontSize: 16,
     fontWeight: "600",
     color: Colors.gray1,
   },
-  cardValue: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#000",
-    textAlign: "left",
+  cardRightValue: {
+    fontSize: 14,
+    color: Colors.light3,
+    fontWeight: "500",
   },
-  pickerWrapper: {
-    backgroundColor: "#F2F2F7",
-    borderRadius: 12,
-    overflow: "hidden",
-    marginBottom: 12,
-  },
-  picker: {
-    backgroundColor: "#F4F4F6",
-    borderRadius: 12,
-    padding: 10,
-  },
+
   submitButton: {
     backgroundColor: Colors.blue,
     padding: 15,
@@ -525,32 +490,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#FFFFFF",
   },
-  mainHeader: {
-    alignItems: "center",
-    marginTop: 32,
-    marginBottom: 20,
-    paddingHorizontal: 20,
-  },
-  iconWrapper: {
-    borderRadius: 60,
-    padding: 5,
-    marginBottom: 10,
-  },
-  mainTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#1C1C1E",
-  },
-  mainSubtitle: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 4,
-  },
-  iconSelected: {
-    backgroundColor: Colors.green,
-    borderRadius: 20,
-    padding: 4,
-  },
+
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.3)",
@@ -584,44 +524,52 @@ const styles = StyleSheet.create({
     color: Colors.red,
     textAlign: "center",
   },
-  cardRightValue: {
-    fontSize: 14,
-    color: "#C7C7CC",
-    fontWeight: "500",
-  },
-  pickerContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    marginTop: 12,
-    padding: 16,
-    elevation: 2,
-  },
-  pickerLabel: {
+
+  label: {
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: "600",
     color: Colors.gray3,
-    marginBottom: 8,
+  },
+  pickerWrapper: {
+    backgroundColor: "#F2F2F7",
+    borderRadius: 12,
+    overflow: "hidden",
+    marginBottom: 12,
+  },
+  picker: {
+    backgroundColor: "#F4F4F6",
   },
   saveButton: {
     marginTop: 12,
     backgroundColor: Colors.blue,
-    paddingVertical: 10,
-    borderRadius: 12,
+    paddingVertical: 12,
+    borderRadius: 14,
     alignItems: "center",
-  },
-  saveButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 16,
   },
   saveText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },
-  label: {
-    fontSize: 16,
+
+  toast: {
+    position: "absolute",
+    top: 60,
+    left: 20,
+    right: 20,
+    backgroundColor: Colors.blue,
+    padding: 14,
+    borderRadius: 16,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 6, // Android stacking senza zIndex
+  },
+  toastText: {
+    color: "#fff",
     fontWeight: "600",
-    color: Colors.gray3,
+    fontSize: 14,
   },
 });
