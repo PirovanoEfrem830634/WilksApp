@@ -1,29 +1,32 @@
-// app/index.tsx
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "../firebaseconfig"; // usa il tuo path
+import { auth } from "../firebaseconfig";
 import { Platform } from "react-native";
+import SplashPage from "./splashpage";
 
 export default function Index() {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [minSplashDone, setMinSplashDone] = useState(false);
 
   useEffect(() => {
-    // 👇 Forza il titolo solo su web
-    if (Platform.OS === "web") {
-      document.title = "WilksApp";
-    }
+    if (Platform.OS === "web") document.title = "WilksApp";
 
+    const t = setTimeout(() => setMinSplashDone(true), 1800); // 1.8s (Apple-like)
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
-      setLoading(false);
+      setAuthLoading(false);
     });
-    return () => unsub();
+
+    return () => {
+      clearTimeout(t);
+      unsub();
+    };
   }, []);
 
-  if (loading) return null; // opzionale: qui puoi renderizzare uno Splash
+  // ✅ finché auth non è pronta o non è passato il tempo minimo → splash
+  if (authLoading || !minSplashDone) return <SplashPage />;
 
-  // ✅ Se loggato → homenew; se no → sign-in
   return <Redirect href={user ? "/homenew" : "/sign-in"} />;
 }

@@ -424,10 +424,11 @@ export default function HistoryMgScreen() {
     <View style={{ flex: 1, backgroundColor: "#F2F2F7" }}>
       {/* HEADER GRADIENT */}
       <LinearGradient
+        pointerEvents="none"
         colors={[Colors.turquoise, Colors.light1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
-        style={styles.gradientBackground}
+        style={[StyleSheet.absoluteFillObject, { height: 180 }]}
       />
 
       <View style={styles.mainHeader}>
@@ -1033,14 +1034,6 @@ export default function HistoryMgScreen() {
 }
 
 const styles = StyleSheet.create({
-  gradientBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 160,
-    zIndex: -1,
-  },
   mainHeader: {
     alignItems: "center",
     marginTop: 32,

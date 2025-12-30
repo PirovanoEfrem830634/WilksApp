@@ -1,48 +1,52 @@
-import React, { useEffect } from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
+import React from "react";
+import { View, Image, StyleSheet } from "react-native";
+import * as Animatable from "react-native-animatable";
+import { LinearGradient } from "expo-linear-gradient";
+
+import Colors from "../Styles/color";
 
 export default function SplashPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      router.push("/sign-in"); // Navigate to sign-in after 3 seconds
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [router]);
-
   return (
-    <View style={styles.container}>
-      <Image source={require("../assets/images/Wilks-splash-icon.png")} style={styles.logo} />
-      <Text style={styles.title}>Welcome to WilksApp</Text>
-      <Text style={styles.subtitle}>Empowering Your Fitness Journey</Text>
+    <View style={styles.root}>
+      {/* Gradient background */}
+      <LinearGradient
+        colors={[Colors.blue, Colors.turquoise]}
+        style={StyleSheet.absoluteFillObject}
+      />
+
+      {/* Logo */}
+      <Animatable.View
+        animation="fadeIn"
+        duration={1100}
+        delay={150}
+        easing="ease-out-cubic"
+        style={styles.logoWrapper}
+      >
+        <Image
+          source={require("../assets/images/splashsecond.png")}
+          style={styles.logo}
+        />
+      </Animatable.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#2C3E50",
+    justifyContent: "center",
+  },
+  logoWrapper: {
+    shadowColor: "#000",
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 12,
   },
   logo: {
-    width: 150,
-    height: 150,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 28,
-    color: "#FDFEFE",
-    fontFamily: "Montserrat-Bold",
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#A9CCE3",
-    marginTop: 8,
-    fontFamily: "OpenSans-Regular",
+    width: 190,   // ⬅️ più grande
+    height: 190,  // ⬅️ più grande
+    resizeMode: "contain",
   },
 });
