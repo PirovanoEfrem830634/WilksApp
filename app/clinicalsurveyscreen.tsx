@@ -10,8 +10,6 @@ import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import { useRouter } from "expo-router";
 import moment from "moment";
-import * as Notifications from "expo-notifications";
-import * as Device from "expo-device";
 import { useFocusEffect } from "@react-navigation/native";
 import { getPatientDocId } from "../utils/session";
 import { LinearGradient } from "expo-linear-gradient";
@@ -78,10 +76,16 @@ export default function ClinicalSurveysScreen() {
   // NOTIFICA (solo mobile, silenziosa su web)
   // ------------------------------------------------------
   const triggerTherapyNotification = async () => {
+    // Expo Go SDK 53+ (Android) non supporta remote push. Disabilitiamo del tutto.
+    if (Platform.OS === "android") return;
     if (Platform.OS === "web") return;
 
     try {
+      const Notifications = await import("expo-notifications");
+      const Device = await import("expo-device");
+
       if (!Device.isDevice) return;
+
       const { status } = await Notifications.requestPermissionsAsync();
       if (status !== "granted") return;
 
@@ -92,12 +96,13 @@ export default function ClinicalSurveysScreen() {
           sound: true,
         },
         trigger: {
-          seconds: 5, // test
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: 5,
           repeats: false,
-        } as Notifications.TimeIntervalTriggerInput,
+        },
       });
     } catch (err) {
-      console.log("Notification error:", err);
+      console.log("Notification disabled or not available:", err);
     }
   };
 
@@ -307,7 +312,7 @@ export default function ClinicalSurveysScreen() {
               <Text style={styles.bannerText}>È il momento di rivedere la terapia con il tuo clinico.</Text>
               {nextDueDate && (
                 <Text style={styles.bannerSub}>
-                  {daysRemaining && daysRemaining > 0
+                  {daysRemaining !== null && daysRemaining > 0 
                     ? `Prossimo controllo tra ${daysRemaining} giorni (${nextDueDate})`
                     : `Prossimo controllo: ${nextDueDate}`}
                 </Text>

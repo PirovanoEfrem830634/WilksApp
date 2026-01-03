@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Pressable, Image } from "react-native";
 import * as Animatable from "react-native-animatable";
 import { auth, db } from "../firebaseconfig";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, getDoc, doc } from "firebase/firestore";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../Styles/color";
@@ -63,8 +63,8 @@ export default function homenew() {
         let nextMed = null;
         const upcomingMeds: { name: string; time: string }[] = [];
 
-        medsSnap.docs.forEach((doc) => {
-          const data = doc.data();
+        medsSnap.docs.forEach((docu) => {
+          const data = docu.data();
           if (data.days?.includes(dayName)) {
             data.times?.forEach((time: string) => {
               const [h, m] = time.split(":").map(Number);
@@ -92,7 +92,7 @@ export default function homenew() {
 
         if (!symptomsSnap.empty) {
           latest = symptomsSnap.docs
-            .map((doc) => ({ id: doc.id, ...doc.data() }))
+            .map((docu) => ({ id: docu.id, ...docu.data() }))
             .sort((a, b) => (a.id > b.id ? -1 : 1))[0];
         }
 
@@ -100,9 +100,9 @@ export default function homenew() {
         const sleepRef = collection(db, "users", patientId, "sleep");
         const sleepSnap = await getDocs(sleepRef);
         const latestSleep = sleepSnap.docs
-          .map((doc) => ({
-            id: doc.id,
-            ...(doc.data() as { createdAt?: any; hours?: number }),
+          .map((docu) => ({
+            id: docu.id,
+            ...(docu.data() as { createdAt?: any; hours?: number }),
           }))
           .sort((a, b) => {
             const aDate = a.createdAt?.seconds
@@ -116,11 +116,29 @@ export default function homenew() {
 
         const realSleepHours = latestSleep?.hours ?? null;
 
-        // 4. Diet
-        const dietRef = collection(db, "users", patientId, "diet");
-        const dietSnap = await getDocs(dietRef);
-        const dietToday = dietSnap.docs.find((doc) => doc.id === todayStr);
-        const dietStatus = dietToday ? "Completato" : "Da compilare";
+        // 4. Diet (FIX: non basta che esista il doc, deve essere completo)
+        const dietDocRef = doc(db, "users", patientId, "diet", todayStr);
+        const dietDocSnap = await getDoc(dietDocRef);
+
+        const isFilled = (v: any) => {
+          if (v == null) return false;
+          const s = String(v).trim();
+          return s.length > 0;
+        };
+
+        let dietStatus: string = "Da compilare";
+
+        if (dietDocSnap.exists()) {
+          const d = dietDocSnap.data() as any;
+
+          const breakfastOk = isFilled(d.breakfast);
+          const lunchOk = isFilled(d.lunch);
+          const dinnerOk = isFilled(d.dinner);
+          const snackOk = isFilled(d.snack);
+
+          const allDone = breakfastOk && lunchOk && dinnerOk && snackOk;
+          dietStatus = allDone ? "Completato" : "Parziale";
+        }
 
         setSummary({
           nextMedication: nextMed,
@@ -156,11 +174,7 @@ export default function homenew() {
           />
 
           {/* Blur overlay (Apple-like) */}
-          <BlurView
-            intensity={35}
-            tint="light"
-            style={StyleSheet.absoluteFillObject}
-          />
+          <BlurView intensity={35} tint="light" style={StyleSheet.absoluteFillObject} />
 
           {/* ✅ Metodo 1: Fade verso lo sfondo pagina (mash) */}
           <LinearGradient
@@ -191,9 +205,7 @@ export default function homenew() {
                 </Link>
               </View>
 
-              <Text style={[styles.todayLabel, FontStyles.variants.bodySemibold]}>
-                Oggi
-              </Text>
+              <Text style={[styles.todayLabel, FontStyles.variants.bodySemibold]}>Oggi</Text>
             </View>
           </SafeAreaView>
         </View>
@@ -325,7 +337,11 @@ export default function homenew() {
               <Ionicons name="chevron-forward" size={18} color={Colors.light3} />
             </View>
             <Text style={[FontStyles.variants.sectionTitle, styles.cardValue]}>
-              {summary.dietStatus === "Completato" ? "Tutti i pasti tracciati" : "Da compilare"}
+              {summary.dietStatus === "Completato"
+                ? "Tutti i pasti tracciati"
+                : summary.dietStatus === "Parziale"
+                ? "Pasti tracciati parzialmente"
+                : "Da compilare"}
             </Text>
             <Text style={[FontStyles.variants.cardDescription, styles.cardSub]}>
               Pasti giornalieri
