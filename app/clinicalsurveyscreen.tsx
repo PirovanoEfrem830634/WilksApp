@@ -14,6 +14,9 @@ import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { useFocusEffect } from "@react-navigation/native";
 import { getPatientDocId } from "../utils/session";
+import { LinearGradient } from "expo-linear-gradient";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { BlurView } from "expo-blur";
 
 // ------------------------------------------------------
 // TYPES
@@ -37,6 +40,8 @@ interface SurveyStatus {
 // COMPONENT
 // ------------------------------------------------------
 export default function ClinicalSurveysScreen() {
+  const insets = useSafeAreaInsets();
+
   const [statuses, setStatuses] = useState<Record<SurveyKey, SurveyStatus>>({
     mg_qol15: { status: "todo" },
     neuro_qol_fatigue: { status: "todo" },
@@ -59,7 +64,13 @@ export default function ClinicalSurveysScreen() {
       color: Colors.red,
       href: "/mgadlsurveyscreen",
     },
-    { key: "neuro_qol_fatigue", label: "Neuro-QoL Fatigue", icon: "flash", color: Colors.blue, href: "/neuroqol-fatigue" },
+    {
+      key: "neuro_qol_fatigue",
+      label: "Neuro-QoL Fatigue",
+      icon: "flash",
+      color: Colors.blue,
+      href: "/neuroqol-fatigue",
+    },
     { key: "eq5d5l", label: "EQ-5D-5L", icon: "fitness", color: Colors.orange, href: "/eq5d5l" },
   ];
 
@@ -99,7 +110,6 @@ export default function ClinicalSurveysScreen() {
         const firebaseUid = auth.currentUser?.uid;
         if (!firebaseUid) return;
 
-        // 🔥 FIX: usa il patientDocId (come fai già per symptoms)
         const patientId = await getPatientDocId();
         if (!patientId) {
           console.log("❌ patientId non trovato (session).");
@@ -123,7 +133,9 @@ export default function ClinicalSurveysScreen() {
               const data = snap.data() as any;
               const lastMs = data.lastCompiledAt?.toDate?.()
                 ? data.lastCompiledAt.toDate().getTime()
-                : (data.lastCompiledAt?.seconds ? data.lastCompiledAt.seconds * 1000 : null);
+                : data.lastCompiledAt?.seconds
+                  ? data.lastCompiledAt.seconds * 1000
+                  : null;
 
               if (lastMs) {
                 const lastDate = moment(lastMs).format("YYYY-MM-DD");
@@ -172,8 +184,6 @@ export default function ClinicalSurveysScreen() {
           }
         } catch (e: any) {
           console.log("❌ fetchData surveys error:", e?.message || e);
-          // Se qui continua a dare “insufficient permissions” allora è 100% rules/path
-          // (ma con patientId di solito si risolve)
         }
       };
 
@@ -197,12 +207,101 @@ export default function ClinicalSurveysScreen() {
   // ------------------------------------------------------
   const completedCount = Object.values(statuses).filter((s) => s.status === "completed").length;
 
+  // padding dinamico per non farsi coprire dal bottom nav
+  const bottomPad = 56 + Math.max(insets.bottom, 10) + 18;
+
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
+    <View style={styles.root}>
+      {/* HEADER full-bleed (stile homenew) */}
+      <View style={styles.headerWrapper}>
+        <View style={styles.headerBleed}>
+          <LinearGradient
+            colors={[
+              "rgba(125, 211, 252, 0.28)",
+              "rgba(168, 85, 247, 0.18)",
+              "rgba(94, 234, 212, 0.16)",
+            ]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFillObject}
+          />
+
+          <BlurView intensity={35} tint="light" style={StyleSheet.absoluteFillObject} />
+
+          {/* Fade verso lo sfondo pagina */}
+          <LinearGradient
+            colors={[
+              "rgba(242,242,247,0)",
+              "rgba(242,242,247,0.65)",
+              "rgba(242,242,247,1)",
+            ]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.headerFade}
+            pointerEvents="none"
+          />
+
+          <SafeAreaView edges={["top"]} style={styles.headerSafe}>
+            <View style={styles.headerInner}>
+              <View style={styles.headerRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={FontStyles.variants.mainTitle}>Valutazioni cliniche</Text>
+                  <Text style={[styles.headerSubtitle, FontStyles.variants.bodySemibold]}>Questionari</Text>
+                </View>
+
+                {/* Apple-like badge icon (ring + glass) */}
+                <View style={styles.headerIconRing}>
+                  <LinearGradient
+                    colors={[
+                      "rgba(125, 211, 252, 0.65)",
+                      "rgba(168, 85, 247, 0.55)",
+                      "rgba(94, 234, 212, 0.55)",
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.headerIconRingGradient}
+                  >
+                    <View style={styles.headerIconGlass}>
+                      <Ionicons name="folder-open-outline" size={18} color={Colors.blue} />
+                    </View>
+                  </LinearGradient>
+                </View>
+              </View>
+
+              <Text style={styles.headerDescription}>
+                Compila regolarmente i questionari clinici per monitorare la tua condizione e supportare i clinici.
+              </Text>
+            </View>
+          </SafeAreaView>
+        </View>
+      </View>
+
+      {/* Progress DOCK (fissa, non scrolla) */}
+      <View style={styles.progressDock}>
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBarBackground}>
+            <View
+              style={[
+                styles.progressBarFill,
+                { width: `${(completedCount / surveys.length) * 100}%` },
+              ]}
+            />
+          </View>
+          <Text style={styles.progressText}>
+            {completedCount}/{surveys.length} completati
+          </Text>
+        </View>
+      </View>
+
+      {/* Scroll SOLO per contenuti */}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]}
+        showsVerticalScrollIndicator={false}
+      >
         {showQuarterBanner && (
           <Animatable.View animation="fadeInDown" duration={700} style={styles.bannerContainer}>
-            <Ionicons name="time-outline" size={24} color={Colors.orange} style={{ marginRight: 10 }} />
+            <Ionicons name="time-outline" size={22} color={Colors.orange} style={{ marginRight: 10 }} />
             <View style={{ flex: 1 }}>
               <Text style={styles.bannerTitle}>Aggiornamento terapia trimestrale</Text>
               <Text style={styles.bannerText}>È il momento di rivedere la terapia con il tuo clinico.</Text>
@@ -216,23 +315,6 @@ export default function ClinicalSurveysScreen() {
             </View>
           </Animatable.View>
         )}
-
-        <View style={styles.headerCentered}>
-          <Ionicons name="clipboard" size={42} color={Colors.blue} style={{ marginBottom: 10 }} />
-          <Text style={FontStyles.variants.mainTitle}>Valutazioni cliniche</Text>
-          <Text style={styles.description}>
-            Compila regolarmente i questionari clinici per monitorare la tua condizione e supportare i clinici.
-          </Text>
-        </View>
-
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBarBackground}>
-            <View style={[styles.progressBarFill, { width: `${(completedCount / surveys.length) * 100}%` }]} />
-          </View>
-          <Text style={styles.progressText}>
-            {completedCount}/{surveys.length} completati
-          </Text>
-        </View>
 
         {surveys.map((survey, index) => {
           const status = statuses[survey.key]?.status;
@@ -249,9 +331,7 @@ export default function ClinicalSurveysScreen() {
                 <View style={styles.cardHeader}>
                   <View style={styles.cardRow}>
                     <Ionicons name={survey.icon} size={20} color={survey.color} />
-                    <Text style={[FontStyles.variants.sectionTitle, { color: survey.color }]}>
-                      {survey.label}
-                    </Text>
+                    <Text style={[FontStyles.variants.sectionTitle, { color: survey.color }]}>{survey.label}</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={Colors.light3} />
                 </View>
@@ -279,14 +359,122 @@ export default function ClinicalSurveysScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.light1 },
+  root: { flex: 1, backgroundColor: Colors.light1 },
+
+  // HEADER (Apple-like)
+  headerWrapper: {
+    backgroundColor: Colors.light1,
+  },
+  headerBleed: {
+    overflow: "hidden",
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.04)",
+  },
+  headerSafe: {
+    backgroundColor: "transparent",
+  },
+  headerInner: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  headerSubtitle: {
+    marginTop: 6,
+    fontSize: 16,
+    color: Colors.gray3,
+  },
+  headerDescription: {
+    marginTop: 10,
+    fontSize: 13,
+    color: Colors.gray3,
+    lineHeight: 18,
+  },
+  headerFade: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 44,
+  },
+
+  // Icon ring + glass
+  headerIconRing: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  headerIconRingGradient: {
+    flex: 1,
+    borderRadius: 19,
+    padding: 2, // ring thickness
+  },
+  headerIconGlass: {
+    flex: 1,
+    borderRadius: 17,
+    backgroundColor: "rgba(255,255,255,0.78)",
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.06)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // Progress fixed dock
+  progressDock: {
+    backgroundColor: Colors.light1,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.04)",
+  },
+  progressContainer: {
+    alignItems: "center",
+  },
+  progressBarBackground: {
+    width: "100%",
+    height: 10,
+    backgroundColor: Colors.light3,
+    borderRadius: 10,
+    overflow: "hidden",
+    marginBottom: 6,
+  },
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: Colors.green,
+  },
+  progressText: {
+    fontSize: 12,
+    color: Colors.gray3,
+  },
+
+  // Scroll
+  scroll: { flex: 1, backgroundColor: Colors.light1 },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+  },
+
+  // Banner
   bannerContainer: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFF9E9",
     borderRadius: 20,
     padding: 14,
-    marginBottom: 18,
+    marginBottom: 14,
     borderWidth: 1,
     borderColor: "#FFE0A3",
     shadowColor: "#000",
@@ -299,31 +487,7 @@ const styles = StyleSheet.create({
   bannerText: { fontSize: 13, color: Colors.gray3 },
   bannerSub: { fontSize: 12, color: Colors.secondary, marginTop: 2 },
 
-  headerCentered: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 20,
-    marginBottom: 20,
-  },
-  description: {
-    fontSize: 14,
-    color: Colors.gray3,
-    marginTop: 6,
-    textAlign: "center",
-  },
-
-  progressContainer: { marginBottom: 20, alignItems: "center" },
-  progressBarBackground: {
-    width: "100%",
-    height: 10,
-    backgroundColor: Colors.light3,
-    borderRadius: 10,
-    overflow: "hidden",
-    marginBottom: 6,
-  },
-  progressBarFill: { height: "100%", backgroundColor: Colors.green },
-  progressText: { fontSize: 12, color: Colors.gray3 },
-
+  // Card
   card: {
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
@@ -337,6 +501,11 @@ const styles = StyleSheet.create({
   },
   cardRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
   cardSub: { fontSize: 14, color: "#888" },
-  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
   statusRow: { flexDirection: "row", alignItems: "center", marginTop: 4 },
 });
