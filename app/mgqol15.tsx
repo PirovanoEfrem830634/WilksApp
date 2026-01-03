@@ -10,10 +10,9 @@ import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { getPatientDocId } from "../utils/session";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ===== MG-QoL15r =====
-// Scala: 0=Per niente, 1=Abbastanza, 2=Molto (compilato dal paziente)
-// Riferimento: MG-QOL15r (ITA).
 const QUESTIONS = [
   "Sono frustrato/a a causa della MG",
   "Ho problemi agli occhi a causa della MG (ad es., visione doppia)",
@@ -41,6 +40,8 @@ const labelToValue: Record<ScaleLabel, number> = {
 };
 
 export default function MGQoL15Survey() {
+  const insets = useSafeAreaInsets();
+
   const [answers, setAnswers] = useState<Record<string, ScaleLabel>>({});
   const answeredCount = useMemo(() => Object.keys(answers).length, [answers]);
 
@@ -95,8 +96,8 @@ export default function MGQoL15Survey() {
         docRef,
         {
           lastCompiledAt: Timestamp.now(),
-          responses: answers, // testuale ("Per niente", "Abbastanza", "Molto")
-          totalScore: score, // numerico (0–30)
+          responses: answers,
+          totalScore: score,
           source: "patient_app",
         },
         { merge: true }
@@ -108,9 +109,15 @@ export default function MGQoL15Survey() {
     }
   };
 
+  // BottomNavigation height (come da pattern progetto)
+  const bottomNavH = 56;
+  const safeBottom = Math.max(insets.bottom, 10);
+  const scrollBottomPad = bottomNavH + safeBottom + 40; // “respiro” extra
+
   return (
     <View style={styles.container}>
       <Animatable.View animation="fadeInUp" duration={600} style={{ flex: 1 }}>
+        {/* Gradient: absolute fill, NO zIndex negativo */}
         <LinearGradient
           colors={["#EFD9FF", Colors.light1]}
           start={{ x: 0.5, y: 0 }}
@@ -147,7 +154,13 @@ export default function MGQoL15Survey() {
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollView}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollView,
+            { paddingBottom: scrollBottomPad },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
           {QUESTIONS.map((q, index) => {
             const qKey = `Q${String(index + 1).padStart(2, "0")}`;
             const selected = answers[qKey];
@@ -156,7 +169,12 @@ export default function MGQoL15Survey() {
               <Animatable.View key={qKey} animation="fadeInUp" delay={index * 40}>
                 <View style={styles.card}>
                   <View style={styles.questionRow}>
-                    <Ionicons name="help-circle" size={18} color={Colors.purple} style={{ marginRight: 8 }} />
+                    <Ionicons
+                      name="help-circle"
+                      size={18}
+                      color={Colors.purple}
+                      style={{ marginRight: 8 }}
+                    />
                     <Text style={styles.questionText}>{q}</Text>
                   </View>
 
@@ -227,15 +245,8 @@ export default function MGQoL15Survey() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.light1 },
-  gradientBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 160,
-    zIndex: -1,
-  },
-  scrollView: { padding: 20, paddingBottom: 100 },
+
+  scrollView: { padding: 20 },
 
   mainHeader: {
     alignItems: "center",
@@ -339,5 +350,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
+  },
+  gradientBackground: {
+    ...StyleSheet.absoluteFillObject,
+    height: 180,      
   },
 });

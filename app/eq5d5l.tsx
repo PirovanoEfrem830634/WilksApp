@@ -1,5 +1,13 @@
 import React, { useRef, useState, useMemo } from "react";
-import { View, Text, StyleSheet, ScrollView, Alert, TextInput, Animated } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  TextInput,
+  Animated,
+} from "react-native";
 import * as Animatable from "react-native-animatable";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,6 +18,7 @@ import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { getPatientDocId } from "../utils/session";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ===== EQ-5D-5L (Italiano) =====
 const DIMENSIONS = [
@@ -79,6 +88,8 @@ type DimKey = typeof DIMENSIONS[number]["key"];
 type Answers = Partial<Record<DimKey, string>>;
 
 export default function EQ5D5LSurvey() {
+  const insets = useSafeAreaInsets();
+
   const [answers, setAnswers] = useState<Answers>({});
   const [vasScore, setVasScore] = useState<string>("");
 
@@ -107,7 +118,6 @@ export default function EQ5D5LSurvey() {
       return;
     }
 
-    // 🔥 FIX: patientDocId
     const patientId = await getPatientDocId();
     if (!patientId) {
       showToast("❌ Profilo paziente non trovato (session)");
@@ -125,18 +135,21 @@ export default function EQ5D5LSurvey() {
       return;
     }
 
-    // ✅ Salva sotto users/{patientDocId}/clinical_surveys/eq5d5l
     const docRef = doc(db, "users", patientId, "clinical_surveys", "eq5d5l");
 
     try {
-      await setDoc(docRef, {
-        lastCompiledAt: Timestamp.now(),
-        responses: {
-          ...answers,     // testuale per ogni dimensione
-          vasScore: vas,  // numerico 0–100
+      await setDoc(
+        docRef,
+        {
+          lastCompiledAt: Timestamp.now(),
+          responses: {
+            ...answers,
+            vasScore: vas,
+          },
+          source: "patient_app",
         },
-        source: "patient_app",
-      }, { merge: true });
+        { merge: true }
+      );
 
       showToast("✅ Survey salvata correttamente");
     } catch (err: any) {
@@ -144,6 +157,11 @@ export default function EQ5D5LSurvey() {
       showToast("❌ Salvataggio fallito");
     }
   };
+
+  // BottomNavigation height (pattern progetto)
+  const bottomNavH = 56;
+  const safeBottom = Math.max(insets.bottom, 10);
+  const scrollBottomPad = bottomNavH + safeBottom + 40;
 
   return (
     <View style={styles.container}>
@@ -164,13 +182,26 @@ export default function EQ5D5LSurvey() {
 
           <View style={styles.progressWrap}>
             <View style={styles.progressBg}>
-              <View style={[styles.progressFill, { width: `${(answeredCount / DIMENSIONS.length) * 100}%` }]} />
+              <View
+                style={[
+                  styles.progressFill,
+                  { width: `${(answeredCount / DIMENSIONS.length) * 100}%` },
+                ]}
+              />
             </View>
-            <Text style={styles.progressText}>{answeredCount}/{DIMENSIONS.length} Completati</Text>
+            <Text style={styles.progressText}>
+              {answeredCount}/{DIMENSIONS.length} Completati
+            </Text>
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollView}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollView,
+            { paddingBottom: scrollBottomPad },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
           {DIMENSIONS.map((dim, idx) => {
             const selected = answers[dim.key];
             return (
@@ -188,9 +219,17 @@ export default function EQ5D5LSurvey() {
                         onPress={() => handleAnswer(dim.key, label)}
                         weight="light"
                         activeScale={0.96}
-                        style={[styles.optionFull, selected === label && styles.optionSelected]}
+                        style={[
+                          styles.optionFull,
+                          selected === label && styles.optionSelected,
+                        ]}
                       >
-                        <Text style={[styles.optionText, selected === label && styles.optionTextSelected]}>
+                        <Text
+                          style={[
+                            styles.optionText,
+                            selected === label && styles.optionTextSelected,
+                          ]}
+                        >
                           {label}
                         </Text>
                       </PressableScaleWithRef>
@@ -206,6 +245,7 @@ export default function EQ5D5LSurvey() {
               <Ionicons name="speedometer" size={18} color={Colors.orange} style={{ marginRight: 8 }} />
               <Text style={styles.questionText}>VAS (0–100) – La sua salute oggi</Text>
             </View>
+
             <Text style={styles.helperText}>
               0 = la peggiore salute che può immaginare{"\n"}
               100 = la migliore salute che può immaginare.{"\n"}
@@ -222,7 +262,12 @@ export default function EQ5D5LSurvey() {
             />
           </View>
 
-          <PressableScaleWithRef onPress={saveSurvey} weight="light" activeScale={0.96} style={styles.submitButton}>
+          <PressableScaleWithRef
+            onPress={saveSurvey}
+            weight="light"
+            activeScale={0.96}
+            style={styles.submitButton}
+          >
             <Text style={styles.submitButtonText}>Invia</Text>
           </PressableScaleWithRef>
         </ScrollView>
@@ -245,7 +290,9 @@ export default function EQ5D5LSurvey() {
             },
           ]}
         >
-          <Text style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>{toastMessage}</Text>
+          <Text style={{ color: "#fff", fontWeight: "600", fontSize: 14 }}>
+            {toastMessage}
+          </Text>
         </Animated.View>
       )}
 
@@ -256,14 +303,31 @@ export default function EQ5D5LSurvey() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.light1 },
-  gradientBackground: { position: "absolute", top: 0, left: 0, right: 0, height: 160, zIndex: -1 },
-  scrollView: { padding: 20, paddingBottom: 100 },
 
-  mainHeader: { alignItems: "center", marginTop: 32, marginBottom: 20, paddingHorizontal: 20 },
+  // Gradient hero top (NO zIndex negativo)
+  gradientBackground: {
+    ...StyleSheet.absoluteFillObject,
+    height: 180, // oppure 160 se vuoi identico alle altre
+  },
+
+  scrollView: { padding: 20 },
+
+  mainHeader: {
+    alignItems: "center",
+    marginTop: 32,
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
   subtitle: { textAlign: "center", color: Colors.gray3, marginTop: 6 },
 
   progressWrap: { width: "90%", marginTop: 12, alignItems: "center" },
-  progressBg: { width: "100%", height: 10, backgroundColor: Colors.light3, borderRadius: 10, overflow: "hidden" },
+  progressBg: {
+    width: "100%",
+    height: 10,
+    backgroundColor: Colors.light3,
+    borderRadius: 10,
+    overflow: "hidden",
+  },
   progressFill: { height: "100%", backgroundColor: Colors.orange },
   progressText: { fontSize: 12, color: Colors.gray3, marginTop: 6 },
 
@@ -279,7 +343,12 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 
-  questionRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 10 },
+  questionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
   questionText: {
     fontSize: 16,
     fontWeight: "600",

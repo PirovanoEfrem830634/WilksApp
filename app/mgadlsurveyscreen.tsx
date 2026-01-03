@@ -17,6 +17,7 @@ import FontStyles from "../Styles/fontstyles";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { Ionicons } from "@expo/vector-icons";
 import { getPatientDocId } from "../utils/session";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ===== MG-ADL (paziente) =====
 const MGADL_ITEMS = [
@@ -103,6 +104,8 @@ const MGADL_ITEMS = [
 ];
 
 export default function MGADLSurvey() {
+  const insets = useSafeAreaInsets();
+
   // 0–3 per ciascun item, default 0 = livello “normale”
   const [answers, setAnswers] = useState<number[]>(
     Array(MGADL_ITEMS.length).fill(0)
@@ -164,6 +167,11 @@ export default function MGADLSurvey() {
     }
   };
 
+  // BottomNavigation height (pattern progetto)
+  const bottomNavH = 56;
+  const safeBottom = Math.max(insets.bottom, 10);
+  const scrollBottomPad = bottomNavH + safeBottom + 40;
+
   return (
     <View style={styles.container}>
       <Animatable.View animation="fadeInUp" duration={600} style={{ flex: 1 }}>
@@ -194,7 +202,13 @@ export default function MGADLSurvey() {
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollView}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollView,
+            { paddingBottom: scrollBottomPad },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
           {MGADL_ITEMS.map((item, index) => {
             const selected = answers[index]; // 0–3
             return (
@@ -272,15 +286,14 @@ export default function MGADLSurvey() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.light1 },
+
+  // Gradient hero top (NO zIndex negativo)
   gradientBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 160,
-    zIndex: -1,
+    ...StyleSheet.absoluteFillObject,
+    height: 180, // puoi rimettere 160 se vuoi identico a prima
   },
-  scrollView: { padding: 20, paddingBottom: 100 },
+
+  scrollView: { padding: 20 },
 
   mainHeader: {
     alignItems: "center",

@@ -17,6 +17,7 @@ import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { getPatientDocId } from "../utils/session";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 /** Neuro-QoL Item Bank v1.0 – Fatigue (Italiano)
  * Scala: 1=Mai, 2=Raramente, 3=Qualche volta, 4=Spesso, 5=Sempre
@@ -92,6 +93,8 @@ const labelToValue: Record<ScaleLabel, number> = {
 };
 
 export default function NeuroQoLFatigueScreen() {
+  const insets = useSafeAreaInsets();
+
   const [answers, setAnswers] = useState<Record<string, ScaleLabel>>({});
   const answeredCount = useMemo(() => Object.keys(answers).length, [answers]);
 
@@ -125,7 +128,6 @@ export default function NeuroQoLFatigueScreen() {
       return;
     }
 
-    // 🔥 FIX: patientDocId (come symptoms, eq5d5l, ecc.)
     const patientId = await getPatientDocId();
     if (!patientId) {
       showToast("❌ Profilo paziente non trovato (session)", Colors.red);
@@ -144,8 +146,8 @@ export default function NeuroQoLFatigueScreen() {
         ref,
         {
           lastCompiledAt: Timestamp.now(),
-          responses: answers, // TESTUALE ("Mai", "Raramente", ...)
-          totalScore,         // numerico per analisi CDSS
+          responses: answers,
+          totalScore,
           source: "patient_app",
         },
         { merge: true }
@@ -156,6 +158,11 @@ export default function NeuroQoLFatigueScreen() {
       showToast("❌ Save failed", Colors.red);
     }
   };
+
+  // BottomNavigation height (pattern progetto)
+  const bottomNavH = 56;
+  const safeBottom = Math.max(insets.bottom, 10);
+  const scrollBottomPad = bottomNavH + safeBottom + 40;
 
   return (
     <View style={styles.container}>
@@ -196,7 +203,13 @@ export default function NeuroQoLFatigueScreen() {
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollView}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollView,
+            { paddingBottom: scrollBottomPad },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
           {NEUROQOL_ITEMS.map((item, idx) => (
             <Animatable.View key={item.code} animation="fadeInUp" delay={idx * 40}>
               <View style={styles.card}>
@@ -267,13 +280,11 @@ export default function NeuroQoLFatigueScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.light1 },
+
+  // Gradient hero top (NO zIndex negativo)
   gradientBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 160,
-    zIndex: -1,
+    ...StyleSheet.absoluteFillObject,
+    height: 180, // (puoi rimettere 160 se vuoi identico alle altre)
   },
 
   header: {
@@ -312,7 +323,7 @@ const styles = StyleSheet.create({
   badgeLabel: { fontSize: 12, color: Colors.gray3, fontWeight: "500" },
   badgeValue: { fontSize: 14, color: Colors.blue, fontWeight: "700" },
 
-  scrollView: { padding: 20, paddingBottom: 120 },
+  scrollView: { padding: 20 },
 
   card: {
     backgroundColor: Colors.white,
