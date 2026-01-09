@@ -10,15 +10,17 @@
     },
     "preview": {
       "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      }
+      "android": { "buildType": "apk" },
+      "env": {
+        "NODE_OPTIONS": "--max_old_space_size=8192",
+        "CI": "true",
+        "EXPO_NO_METRO_WATCHER": "1"
+      },
+      "cache": { "disabled": true }
     },
     "production": {
       "autoIncrement": true
     }
   },
-  "submit": {
-    "production": {}
-  }
+  "submit": { "production": {} }
 }

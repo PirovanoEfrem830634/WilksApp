@@ -13,7 +13,6 @@ const defaultResolveRequest =
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (moduleName === "tslib") {
-    // 🔥 Forza la versione ESM che esporta correttamente __rest/__extends/etc.
     return {
       type: "sourceFile",
       filePath: path.resolve(__dirname, "node_modules", "tslib", "tslib.es6.mjs"),
@@ -22,4 +21,4 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   return defaultResolveRequest(context, moduleName, platform);
 };
 
-module.exports = withNativeWind(config, { input: "./app/global.css" });
+module.exports = withNativeWind(config, { input: "./app/globals.css" });
