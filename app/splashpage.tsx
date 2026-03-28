@@ -45,8 +45,8 @@ const styles = StyleSheet.create({
     elevation: 12,
   },
   logo: {
-    width: 190,   // ⬅️ più grande
-    height: 190,  // ⬅️ più grande
+    width: 190,   
+    height: 190, 
     resizeMode: "contain",
   },
 });

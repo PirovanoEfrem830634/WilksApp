@@ -4,7 +4,7 @@ import { getFirestore } from "firebase/firestore";
 
 // Configurazione Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyDkLKo397p5BeuC6x7cauFbvjuO9QbeMDY",
+  apiKey: "",
   authDomain: "wilksapp.firebaseapp.com",
   projectId: "wilksapp",
   storageBucket: "wilksapp.firebasestorage.app",
