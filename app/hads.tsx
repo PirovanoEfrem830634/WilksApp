@@ -8,8 +8,9 @@ import {
   TouchableOpacity,
   Animated
 } from "react-native";
-import { auth, db } from "../firebaseconfig";
-import { doc, setDoc, Timestamp } from "firebase/firestore";
+import { auth } from "../firebaseconfig";
+import { setDoc, Timestamp } from "firebase/firestore";
+import { surveyEntryRef } from "../utils/clinicalSurveys";
 import * as Animatable from "react-native-animatable";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { LinearGradient } from "expo-linear-gradient";
@@ -80,7 +81,7 @@ export default function HADSSurvey() {
       0
     );
 
-    const docRef = doc(db, `users/${uid}/clinical_surveys/hads`);
+    const docRef = surveyEntryRef(uid, "hads");
     try {
       await setDoc(docRef, {
         lastCompiledAt: Timestamp.now(),

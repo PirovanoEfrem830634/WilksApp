@@ -4,8 +4,9 @@ import * as Animatable from "react-native-animatable";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
-import { auth, db } from "../firebaseconfig";
-import { doc, setDoc, Timestamp } from "firebase/firestore";
+import { auth } from "../firebaseconfig";
+import { setDoc, Timestamp } from "firebase/firestore";
+import { surveyEntryRef } from "../utils/clinicalSurveys";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import BottomNavigation from "../components/bottomnavigationnew";
@@ -89,7 +90,7 @@ export default function MGQoL15Survey() {
       0
     );
 
-    const docRef = doc(db, "users", patientId, "clinical_surveys", "mg_qol15");
+    const docRef = surveyEntryRef(patientId, "mg_qol15");
 
     try {
       await setDoc(

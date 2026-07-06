@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet, Platform } from "react-native";
 import * as Animatable from "react-native-animatable";
-import { auth, db } from "../firebaseconfig";
-import { collection, getDocs, getDoc, doc } from "firebase/firestore";
+import { auth } from "../firebaseconfig";
+import { fetchLatestSurveyEntry } from "../utils/clinicalSurveys";
 import BottomNavigation from "../components/bottomnavigationnew";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { Ionicons } from "@expo/vector-icons";
@@ -122,7 +122,7 @@ export default function ClinicalSurveysScreen() {
         }
 
         try {
-          // --- Status per singolo survey ---
+          // --- Status per singolo survey (ultima entry datata) ---
           const result: Record<SurveyKey, SurveyStatus> = {
             mg_qol15: { status: "todo" },
             neuro_qol_fatigue: { status: "todo" },
@@ -130,12 +130,13 @@ export default function ClinicalSurveysScreen() {
             mg_adl_paziente: { status: "todo" },
           };
 
-          for (const survey of surveys) {
-            const ref = doc(db, "users", patientId, "clinical_surveys", survey.key);
-            const snap = await getDoc(ref);
+          let latest: Date | null = null;
 
-            if (snap.exists()) {
-              const data = snap.data() as any;
+          await Promise.all(
+            surveys.map(async (survey) => {
+              const data = await fetchLatestSurveyEntry(patientId, survey.key);
+              if (!data) return;
+
               const lastMs = data.lastCompiledAt?.toDate?.()
                 ? data.lastCompiledAt.toDate().getTime()
                 : data.lastCompiledAt?.seconds
@@ -149,21 +150,16 @@ export default function ClinicalSurveysScreen() {
                   lastDate === todayDate
                     ? { status: "completed", date: moment(lastMs).format("DD/MM/YYYY") }
                     : { status: "todo" };
+
+                const ts = new Date(lastMs);
+                if (!latest || ts > latest) latest = ts;
               }
-            }
-          }
+            })
+          );
 
           setStatuses(result);
 
-          // --- Alert trimestrale globale ---
-          const allDocsSnap = await getDocs(collection(db, "users", patientId, "clinical_surveys"));
-
-          let latest: Date | null = null;
-          allDocsSnap.forEach((docSnap) => {
-            const data = docSnap.data() as any;
-            const ts = data.lastCompiledAt?.toDate?.();
-            if (ts && (!latest || ts > latest)) latest = ts;
-          });
+          // --- Alert trimestrale globale (ultima compilazione tra i questionari) ---
 
           if (!latest) {
             setShowQuarterBanner(false);

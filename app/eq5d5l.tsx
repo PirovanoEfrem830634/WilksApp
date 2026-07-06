@@ -12,12 +12,13 @@ import * as Animatable from "react-native-animatable";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
-import { auth, db } from "../firebaseconfig";
-import { doc, setDoc, Timestamp } from "firebase/firestore";
+import { auth } from "../firebaseconfig";
+import { setDoc, Timestamp } from "firebase/firestore";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { getPatientDocId } from "../utils/session";
+import { surveyEntryRef } from "../utils/clinicalSurveys";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ===== EQ-5D-5L (Italiano) =====
@@ -135,7 +136,7 @@ export default function EQ5D5LSurvey() {
       return;
     }
 
-    const docRef = doc(db, "users", patientId, "clinical_surveys", "eq5d5l");
+    const docRef = surveyEntryRef(patientId, "eq5d5l");
 
     try {
       await setDoc(

@@ -7,8 +7,9 @@ import {
   Alert,
   Animated,
 } from "react-native";
-import { auth, db } from "../firebaseconfig";
-import { doc, setDoc, Timestamp } from "firebase/firestore";
+import { auth } from "../firebaseconfig";
+import { setDoc, Timestamp } from "firebase/firestore";
+import { surveyEntryRef } from "../utils/clinicalSurveys";
 import * as Animatable from "react-native-animatable";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { LinearGradient } from "expo-linear-gradient";
@@ -147,7 +148,7 @@ export default function MGADLSurvey() {
       return;
     }
 
-    const docRef = doc(db, "users", patientId, "clinical_surveys", "mg_adl_paziente");
+    const docRef = surveyEntryRef(patientId, "mg_adl_paziente");
 
     try {
       await setDoc(

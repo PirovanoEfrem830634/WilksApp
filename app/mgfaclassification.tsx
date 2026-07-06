@@ -1,7 +1,8 @@
 import React, { useState, useRef } from "react";
 import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, Animated } from "react-native";
-import { auth, db } from "../firebaseconfig";
-import { doc, setDoc, Timestamp } from "firebase/firestore";
+import { auth } from "../firebaseconfig";
+import { setDoc, Timestamp } from "firebase/firestore";
+import { surveyEntryRef } from "../utils/clinicalSurveys";
 import * as Animatable from "react-native-animatable";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { LinearGradient } from "expo-linear-gradient";
@@ -74,7 +75,7 @@ export default function MGFAClassificationSurvey() {
       return;
     }
     const uid = user.uid;
-    const docRef = doc(db, `users/${uid}/clinical_surveys/mgfa`);
+    const docRef = surveyEntryRef(uid, "mgfa");
     try {
       await setDoc(docRef, {
         classification: selected,

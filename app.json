@@ -35,7 +35,9 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": false
@@ -43,8 +45,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "d007d4fd-cd5f-4237-b28b-9a3c59863414"
+        "projectId": "4e922049-2acf-4667-9a91-6c856bcb7188"
       }
-    }
+    },
+    "owner": "varisck"
   }
 }

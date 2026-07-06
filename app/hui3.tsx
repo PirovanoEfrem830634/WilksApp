@@ -8,8 +8,9 @@ import {
   TouchableOpacity,
   Animated,
 } from "react-native";
-import { auth, db } from "../firebaseconfig";
-import { doc, setDoc, Timestamp } from "firebase/firestore";
+import { auth } from "../firebaseconfig";
+import { setDoc, Timestamp } from "firebase/firestore";
+import { surveyEntryRef } from "../utils/clinicalSurveys";
 import * as Animatable from "react-native-animatable";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { LinearGradient } from "expo-linear-gradient";
@@ -64,7 +65,7 @@ export default function HUI3Survey() {
       return;
     }
 
-    const docRef = doc(db, `users/${uid}/clinical_surveys/hui3`);
+    const docRef = surveyEntryRef(uid, "hui3");
     try {
       await setDoc(docRef, {
         lastCompiledAt: Timestamp.now(),
