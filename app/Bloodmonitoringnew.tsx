@@ -10,9 +10,8 @@ import {
   Platform,
   TextInput,
 } from "react-native";
-import { getDocs, collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "../firebaseconfig";
-import { getAuth } from "firebase/auth";
+import { useAuth } from "../auth/AuthProvider";
+import { addBloodTest, fetchBloodTests as fetchBloodTestsSvc } from "../services/bloodTests";
 import { ChevronDown, ChevronUp, RefreshCw } from "lucide-react-native";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import Toast from "react-native-toast-message";
@@ -39,6 +38,7 @@ type BloodTest = {
 };
 
 const MonitoraggioClinicoSangue = () => {
+  const { user } = useAuth();
   const [bloodTests, setBloodTests] = useState<BloodTest[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -54,13 +54,10 @@ const [editingField, setEditingField] = useState<null | string>(null);
   const fetchBloodTests = async () => {
     try {
       setLoading(true);
-      const uid = getAuth().currentUser?.uid;
+      const uid = user?.uid;
       if (!uid) throw new Error("Utente non autenticato");
 
-      const snapshot = await getDocs(collection(db, `users/${uid}/blood_tests`));
-      const docs = snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() } as BloodTest))
-        .sort((a, b) => new Date(b.createdAt.seconds * 1000).getTime() - new Date(a.createdAt.seconds * 1000).getTime());
+      const docs = (await fetchBloodTestsSvc(uid)) as BloodTest[];
 
       setBloodTests(docs);
 
@@ -85,7 +82,8 @@ const [editingField, setEditingField] = useState<null | string>(null);
 
   useEffect(() => {
     fetchBloodTests();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const toggleSection = () => {
     LayoutAnimation.easeInEaseOut();
@@ -94,13 +92,10 @@ const [editingField, setEditingField] = useState<null | string>(null);
 
   const handleSubmit = async () => {
     try {
-      const uid = getAuth().currentUser?.uid;
+      const uid = user?.uid;
       if (!uid) throw new Error("User not authenticated");
 
-      await addDoc(collection(db, `users/${uid}/blood_tests`), {
-        ...examData,
-        createdAt: serverTimestamp(),
-        });
+      await addBloodTest(uid, examData);
 
       Toast.show({
         type: "success",

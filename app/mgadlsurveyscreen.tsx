@@ -7,9 +7,8 @@ import {
   Alert,
   Animated,
 } from "react-native";
-import { auth } from "../firebaseconfig";
-import { setDoc, Timestamp } from "firebase/firestore";
-import { surveyEntryRef } from "../utils/clinicalSurveys";
+import { useAuth } from "../auth/AuthProvider";
+import { saveSurveyEntry } from "../services/surveys";
 import * as Animatable from "react-native-animatable";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { LinearGradient } from "expo-linear-gradient";
@@ -106,6 +105,7 @@ const MGADL_ITEMS = [
 
 export default function MGADLSurvey() {
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
 
   // 0–3 per ciascun item, default 0 = livello “normale”
   const [answers, setAnswers] = useState<number[]>(
@@ -136,7 +136,6 @@ export default function MGADLSurvey() {
   };
 
   const saveSurvey = async () => {
-    const user = auth.currentUser;
     if (!user) {
       Alert.alert("Error", "User not logged in");
       return;
@@ -148,15 +147,13 @@ export default function MGADLSurvey() {
       return;
     }
 
-    const docRef = surveyEntryRef(patientId, "mg_adl_paziente");
-
     try {
-      await setDoc(
-        docRef,
+      await saveSurveyEntry(
+        patientId,
+        "mg_adl_paziente",
         {
           answers, // array numerico 0–3
           totalScore, // utile lato CDSS/analytics
-          lastCompiledAt: Timestamp.now(),
           source: "patient_app",
         },
         { merge: true }

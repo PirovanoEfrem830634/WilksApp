@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, Alert } from "react-native";
-import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "../firebaseconfig";
+import { sendPasswordReset } from "../services/auth";
 import { useRouter } from "expo-router";
 
 export default function RecoverPassword() {
@@ -10,7 +9,7 @@ export default function RecoverPassword() {
 
   const handlePasswordReset = async () => {
     try {
-      await sendPasswordResetEmail(auth, email);
+      await sendPasswordReset(email);
       Alert.alert("Success", "Password reset email sent!");
       router.push("/sign-in");
     } catch (error) {

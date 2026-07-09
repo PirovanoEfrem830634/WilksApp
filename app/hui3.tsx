@@ -8,9 +8,8 @@ import {
   TouchableOpacity,
   Animated,
 } from "react-native";
-import { auth } from "../firebaseconfig";
-import { setDoc, Timestamp } from "firebase/firestore";
-import { surveyEntryRef } from "../utils/clinicalSurveys";
+import { useAuth } from "../auth/AuthProvider";
+import { saveSurveyEntry } from "../services/surveys";
 import * as Animatable from "react-native-animatable";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { LinearGradient } from "expo-linear-gradient";
@@ -31,6 +30,7 @@ const hui3Attributes = [
 ];
 
 export default function HUI3Survey() {
+  const { user } = useAuth();
   const [answers, setAnswers] = useState<number[]>(Array(8).fill(1));
   const toastAnim = useRef(new Animated.Value(0)).current;
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -59,16 +59,14 @@ export default function HUI3Survey() {
   };
 
   const saveSurvey = async () => {
-    const uid = auth.currentUser?.uid;
+    const uid = user?.uid;
     if (!uid) {
       showToast("❌ User not logged in");
       return;
     }
 
-    const docRef = surveyEntryRef(uid, "hui3");
     try {
-      await setDoc(docRef, {
-        lastCompiledAt: Timestamp.now(),
+      await saveSurveyEntry(uid, "hui3", {
         responses: {
           vision: answers[0],
           hearing: answers[1],

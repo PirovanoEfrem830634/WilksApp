@@ -11,8 +11,8 @@ import {
   Animated,
   Platform,
 } from "react-native";
-import { auth, db } from "../firebaseconfig";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { useAuth } from "../auth/AuthProvider";
+import { fetchPatient, updatePatientProfile } from "../services/patientProfile";
 import { useRouter } from "expo-router";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { useFocusEffect } from "@react-navigation/native";
@@ -27,6 +27,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function EditProfile() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
 
   const toastAnim = useRef(new Animated.Value(0)).current;
@@ -52,14 +53,12 @@ export default function EditProfile() {
       const loadUserData = async () => {
         setLoading(true);
         try {
-          if (auth.currentUser) {
+          if (user) {
             const patientId = await getPatientDocId();
             if (!patientId) return;
 
-            const userRef = doc(db, "users", patientId);
-            const snapshot = await getDoc(userRef);
-            if (snapshot.exists()) {
-              const data = snapshot.data() as any;
+            const data = (await fetchPatient(patientId)) as any;
+            if (data) {
               setFormData({
                 firstName: data.firstName || "",
                 lastName: data.lastName || "",
@@ -89,7 +88,7 @@ export default function EditProfile() {
           weight: "",
         });
       };
-    }, [])
+    }, [user])
   );
 
   const handleChange = (key: keyof typeof formData, value: string) => {
@@ -133,8 +132,7 @@ export default function EditProfile() {
         Alert.alert("Errore", "Sessione paziente non trovata. Rifai login.");
         return;
       }
-      const userRef = doc(db, "users", patientId);
-      await updateDoc(userRef, {
+      await updatePatientProfile(patientId, {
         ...formData,
         age: parseInt(formData.age, 10),
       });

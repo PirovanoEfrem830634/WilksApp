@@ -4,9 +4,8 @@ import * as Animatable from "react-native-animatable";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
-import { auth } from "../firebaseconfig";
-import { setDoc, Timestamp } from "firebase/firestore";
-import { surveyEntryRef } from "../utils/clinicalSurveys";
+import { useAuth } from "../auth/AuthProvider";
+import { saveSurveyEntry } from "../services/surveys";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import BottomNavigation from "../components/bottomnavigationnew";
@@ -42,6 +41,7 @@ const labelToValue: Record<ScaleLabel, number> = {
 
 export default function MGQoL15Survey() {
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
 
   const [answers, setAnswers] = useState<Record<string, ScaleLabel>>({});
   const answeredCount = useMemo(() => Object.keys(answers).length, [answers]);
@@ -68,7 +68,6 @@ export default function MGQoL15Survey() {
   };
 
   const saveSurvey = async () => {
-    const user = auth.currentUser;
     if (!user) {
       Alert.alert("Error", "User not logged in");
       return;
@@ -90,13 +89,11 @@ export default function MGQoL15Survey() {
       0
     );
 
-    const docRef = surveyEntryRef(patientId, "mg_qol15");
-
     try {
-      await setDoc(
-        docRef,
+      await saveSurveyEntry(
+        patientId,
+        "mg_qol15",
         {
-          lastCompiledAt: Timestamp.now(),
           responses: answers,
           totalScore: score,
           source: "patient_app",

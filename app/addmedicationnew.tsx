@@ -12,8 +12,8 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Clock3, Bell, CalendarPlus } from "lucide-react-native";
-import { auth, db } from "../firebaseconfig";
-import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { useAuth } from "../auth/AuthProvider";
+import { addMedication } from "../services/medications";
 import { useRouter } from "expo-router";
 import BottomNavigation from "../components/bottomnavigationnew";
 import Colors from "../Styles/color";
@@ -25,6 +25,7 @@ import { LinearGradient } from "expo-linear-gradient";
 const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export default function AddMedication() {
+  const { user } = useAuth();
   const [name, setName] = useState("");
   const [dose, setDose] = useState("");
   const [notes, setNotes] = useState("");
@@ -55,7 +56,6 @@ export default function AddMedication() {
 
   const saveMedication = async () => {
     console.log("[DEBUG] Submitting medication…");
-    const user = auth.currentUser;
     console.log("[DEBUG] Current user uid/email:", user?.uid, user?.email);
 
     console.log("[DEBUG] Form state:", {
@@ -82,7 +82,6 @@ export default function AddMedication() {
 
     try {
       const path = `users/${user.uid}/medications`;
-      const colRef = collection(db, "users", user.uid, "medications");
       const payload = {
         name: name.trim(),
         dose: dose.trim(),
@@ -90,15 +89,13 @@ export default function AddMedication() {
         times: times.map((t) => t.trim()),
         notes: notes.trim(),
         notifications: !!notifications,
-        createdAt: Timestamp.now(),
-        createdBy: user.uid,
       };
 
       console.log("[DEBUG] Writing to:", path);
       console.log("[DEBUG] Payload:", payload);
 
-      const res = await addDoc(colRef, payload);
-      console.log("[DEBUG] Saved doc id:", res.id);
+      const newId = await addMedication(user.uid, payload, user.uid);
+      console.log("[DEBUG] Saved doc id:", newId);
 
       Alert.alert("Success", "Medication saved successfully");
       router.back();

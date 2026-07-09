@@ -9,8 +9,8 @@ import {
   Animated,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getDoc, doc, setDoc, Timestamp } from "firebase/firestore";
-import { auth, db } from "../firebaseconfig";
+import { useAuth } from "../auth/AuthProvider";
+import { fetchDailyDiet, saveDailyDiet } from "../services/tracking";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../Styles/color";
@@ -43,6 +43,7 @@ const mealLabels: Record<string, string> = {
 };
 
 export default function DietTracker() {
+  const { user } = useAuth();
   const [diet, setDiet] = useState<Record<string, string>>({});
   const [input, setInput] = useState<string>("");
   const [editingMeal, setEditingMeal] = useState<string | null>(null);
@@ -61,26 +62,19 @@ const scrollBottomPadding = tabbarHeight + 24;
   };
 
   const fetchDiet = async () => {
-    const user = auth.currentUser;
     if (!user) return;
 
     const patientId = await getPatientDocId();
     if (!patientId) return;
 
-    const todayKey = getDateKey();
-    const ref = doc(db, "users", patientId, "diet", todayKey);
-
-    const snap = await getDoc(ref);
-    if (snap.exists()) {
-      setDiet(snap.data() as Record<string, string>);
-    } else {
-      setDiet({});
-    }
+    const data = await fetchDailyDiet(patientId, getDateKey());
+    setDiet(data ? (data as Record<string, string>) : {});
   };
 
   useEffect(() => {
     fetchDiet();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const showToast = () => {
     Animated.sequence([
@@ -99,22 +93,12 @@ const scrollBottomPadding = tabbarHeight + 24;
   };
 
   const handleSave = async () => {
-    const user = auth.currentUser;
     if (!user) return;
 
     const patientId = await getPatientDocId();
     if (!patientId) return;
 
-    const todayKey = getDateKey();
-
-    await setDoc(
-      doc(db, "users", patientId, "diet", todayKey),
-      {
-        ...diet,
-        createdAt: Timestamp.now(),
-      },
-      { merge: true }
-    );
+    await saveDailyDiet(patientId, diet, getDateKey());
 
     showToast();
     setEditingMeal(null);

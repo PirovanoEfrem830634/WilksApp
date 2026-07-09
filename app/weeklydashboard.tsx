@@ -3,8 +3,8 @@ import { View, ScrollView, Text, Dimensions, StyleSheet } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import { LineChart } from 'react-native-chart-kit';
 import { Ionicons } from '@expo/vector-icons';
-import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
-import { auth, db } from "../firebaseconfig";
+import { useAuth } from "../auth/AuthProvider";
+import { fetchEntriesInRange } from "../services/tracking";
 import { getStartOfWeek, getEndOfWeek } from '../utils/dateutils';
 import FontStyles from "../Styles/fontstyles";
 import Colors from "../Styles/color";
@@ -19,6 +19,7 @@ const formatWeekRange = (start: Date, end: Date): string => {
   };
 
 const WeeklyDashboard = () => {
+  const { user } = useAuth();
   const [sleepData, setSleepData] = useState<number[]>([]);
   const [averageSleep, setAverageSleep] = useState<number>(0);
   const startOfWeek = getStartOfWeek();
@@ -32,22 +33,19 @@ const WeeklyDashboard = () => {
   const [missedCount, setMissedCount] = useState<number>(0);
 
   const fetchSleepData = async () => {
-    const userId = auth.currentUser?.uid;
+    const userId = user?.uid;
     if (!userId) return;
 
     const startOfWeek = getStartOfWeek();
     const endOfWeek = getEndOfWeek();
 
-    const q = query(
-    collection(db, `users/${userId}/sleep`),
-    where('dataInserimento', '>=', Timestamp.fromDate(startOfWeek)),
-    where('dataInserimento', '<=', Timestamp.fromDate(endOfWeek))
+    const entriesInWeek = await fetchEntriesInRange(
+      userId, "sleep", "dataInserimento", startOfWeek, endOfWeek
     );
-    const snapshot = await getDocs(q);
     const data: number[] = [];
 
-    snapshot.forEach(doc => {
-      const { durationHours } = doc.data();
+    entriesInWeek.forEach((entry: any) => {
+      const { durationHours } = entry;
       if (durationHours) data.push(durationHours);
     });
 
@@ -57,22 +55,17 @@ const WeeklyDashboard = () => {
   };
 
   const fetchSymptomData = async () => {
-    const userId = auth.currentUser?.uid;
+    const userId = user?.uid;
     if (!userId) return;
 
-    const q = query(
-    collection(db, `users/${userId}/symptoms`),
-    where('dataInserimento', '>=', Timestamp.fromDate(startOfWeek)),
-    where('dataInserimento', '<=', Timestamp.fromDate(endOfWeek))
+    const weekEntries = await fetchEntriesInRange(
+      userId, "symptoms", "dataInserimento", startOfWeek, endOfWeek
     );
-
-    const snapshot = await getDocs(q);
     const entries: any[] = [];
     let fatigueSum = 0;
     let fatigueCount = 0;
 
-    snapshot.forEach(doc => {
-        const data = doc.data();
+    weekEntries.forEach((data: any) => {
         entries.push(data);
         if (data.affaticamento !== undefined) {
         fatigueSum += Number(data.affaticamento);
@@ -85,21 +78,16 @@ const WeeklyDashboard = () => {
     };
 
     const fetchDietData = async () => {
-    const userId = auth.currentUser?.uid;
+    const userId = user?.uid;
     if (!userId) return;
 
-    const q = query(
-    collection(db, `users/${userId}/diet`),
-    where('dataInserimento', '>=', Timestamp.fromDate(startOfWeek)),
-    where('dataInserimento', '<=', Timestamp.fromDate(endOfWeek))
+    const weekEntries = await fetchEntriesInRange(
+      userId, "diet", "dataInserimento", startOfWeek, endOfWeek
     );
-
-    const snapshot = await getDocs(q);
     const entries: any[] = [];
     let completedMeals = 0;
 
-    snapshot.forEach(doc => {
-        const data = doc.data();
+    weekEntries.forEach((data: any) => {
         entries.push(data);
         if (data.colazione) completedMeals++;
         if (data.pranzo) completedMeals++;
@@ -111,21 +99,16 @@ const WeeklyDashboard = () => {
     };
 
     const fetchMedicationData = async () => {
-    const userId = auth.currentUser?.uid;
+    const userId = user?.uid;
     if (!userId) return;
 
-    const q = query(
-    collection(db, `users/${userId}/medications`),
-    where('dataInserimento', '>=', Timestamp.fromDate(startOfWeek)),
-    where('dataInserimento', '<=', Timestamp.fromDate(endOfWeek))
+    const weekEntries = await fetchEntriesInRange(
+      userId, "medications", "dataInserimento", startOfWeek, endOfWeek
     );
-
-    const snapshot = await getDocs(q);
     const logs: any[] = [];
     let missed = 0;
 
-    snapshot.forEach(doc => {
-        const data = doc.data();
+    weekEntries.forEach((data: any) => {
         logs.push(data);
         if (data.assunto === false) missed++;
     });
@@ -139,7 +122,8 @@ const WeeklyDashboard = () => {
     fetchSymptomData();
     fetchDietData();
     fetchMedicationData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const screenWidth = Dimensions.get('window').width;
 

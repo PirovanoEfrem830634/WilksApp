@@ -20,8 +20,8 @@ import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 
-import { auth, db } from "../firebaseconfig";
-import { doc, setDoc, Timestamp, getDoc } from "firebase/firestore";
+import { useAuth } from "../auth/AuthProvider";
+import { fetchMgHistory, saveMgHistory } from "../services/mgHistory";
 import { Check, X, Lock } from "lucide-react-native";
 import { getPatientDocId } from "../utils/session";
 
@@ -38,6 +38,7 @@ const getOnsetCategoryLabel = (ageAtOnset: string): string => {
 };
 
 export default function HistoryMgScreen() {
+  const { user } = useAuth();
   // 🔹 Stati collegati 1:1 ai campi Firestore
   const [ageAtOnset, setAgeAtOnset] = useState("");
   const [onsetType, setOnsetType] = useState("");
@@ -82,18 +83,14 @@ export default function HistoryMgScreen() {
   useFocusEffect(
     React.useCallback(() => {
       const loadHistory = async () => {
-        const user = auth.currentUser;
         if (!user) return;
 
         try {
           const patientId = await getPatientDocId();
           if (!patientId) return;
 
-          const ref = doc(db, "users", patientId, "history", "mg");
-          const snap = await getDoc(ref);
-          if (!snap.exists()) return;
-
-          const data: any = snap.data();
+          const data: any = await fetchMgHistory(patientId);
+          if (!data) return;
 
           // 🔐 blocco se il campo è presente
           if (data.patientHistoryLocked === true) {
@@ -172,7 +169,7 @@ export default function HistoryMgScreen() {
             setPreviousTherapies(data.previousTherapies);
           else setPreviousTherapies("");
 
-          if (data.thymectomyDate instanceof Timestamp) {
+          if (typeof data.thymectomyDate?.toDate === "function") {
             const d = data.thymectomyDate.toDate();
             setThymectomyDateText(d.toLocaleDateString("it-IT"));
           } else {
@@ -185,7 +182,7 @@ export default function HistoryMgScreen() {
 
       loadHistory();
       return () => {};
-    }, [])
+    }, [user])
   );
 
   const toggleInArray = (
@@ -254,7 +251,6 @@ export default function HistoryMgScreen() {
 
   // 💾 salvataggio effettivo dopo conferma
   const performSave = async () => {
-    const user = auth.currentUser;
     if (!user) {
       Toast.show({
         type: "error",
@@ -351,8 +347,6 @@ export default function HistoryMgScreen() {
       return;
     }
 
-    const ref = doc(db, "users", patientId, "history", "mg");
-
     const payload: any = {
       onsetType,
       onsetCategory: onsetCategory || null,
@@ -366,7 +360,6 @@ export default function HistoryMgScreen() {
       comorbidities,
       notes,
       previousTherapies,
-      lastUpdatedAt: Timestamp.now(),
       source: "patient_app",
       // 🔐 blocco dopo il primo invio
       patientHistoryLocked: true,
@@ -377,11 +370,11 @@ export default function HistoryMgScreen() {
     }
 
     if (parsedThDate) {
-      payload.thymectomyDate = Timestamp.fromDate(parsedThDate);
+      payload.thymectomyDate = parsedThDate; // Date → Timestamp (conversione nel service)
     }
 
     try {
-      await setDoc(ref, payload, { merge: true });
+      await saveMgHistory(patientId, payload);
       setShowConfirmModal(false);
       setIsLocked(true); // blocca localmente subito
 

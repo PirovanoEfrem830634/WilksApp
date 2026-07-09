@@ -7,8 +7,8 @@ import {
   ScrollView,
 } from "react-native";
 import { Calendar } from "react-native-calendars";
-import { collection, getDocs } from "firebase/firestore";
-import { auth, db } from "../firebaseconfig";
+import { useAuth } from "../auth/AuthProvider";
+import { fetchAllSymptoms } from "../services/tracking";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { DateData } from "react-native-calendars";
 import { LinearGradient } from "expo-linear-gradient";
@@ -20,6 +20,7 @@ import { getPatientDocId } from "../utils/session";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function SymptomCalendar() {
+  const { user } = useAuth();
   const [items, setItems] = useState<
     Record<string, { name: string; description: string }[]>
   >({});
@@ -68,21 +69,19 @@ export default function SymptomCalendar() {
   };
 
   const fetchSymptoms = async () => {
-    const uid = auth.currentUser?.uid;
+    const uid = user?.uid;
     if (!uid) return;
 
     const patientId = await getPatientDocId();
     if (!patientId) return;
 
-    const ref = collection(db, "users", patientId, "symptoms");
-    const snapshot = await getDocs(ref);
+    const records = await fetchAllSymptoms(patientId);
 
     const loadedItems: any = {};
     const marks: any = {};
 
-    snapshot.docs.forEach((docSnap) => {
-      const data: any = docSnap.data();
-      const date = docSnap.id;
+    records.forEach((data: any) => {
+      const date = data.id;
 
       const sintomiAttivi = Object.entries(data)
         .filter(([key, value]) => {
@@ -116,7 +115,8 @@ export default function SymptomCalendar() {
 
   useEffect(() => {
     fetchSymptoms();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // marked + selected
   const calendarMarked = useMemo(() => {

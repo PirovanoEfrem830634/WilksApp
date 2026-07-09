@@ -12,8 +12,8 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Animatable from "react-native-animatable";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { auth, db } from "../firebaseconfig";
-import { doc, getDoc } from "firebase/firestore";
+import { useAuth } from "../auth/AuthProvider";
+import { fetchTherapyPlan } from "../services/therapy";
 
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
@@ -59,7 +59,7 @@ export default function TherapyPlanCurrentScreen() {
   const tabbarHeight = 56 + bottomPad;
   const scrollBottomPadding = tabbarHeight + 28;
 
-  const user = auth.currentUser;
+  const { user } = useAuth();
 
   useEffect(() => {
     const loadPlan = async () => {
@@ -75,11 +75,10 @@ export default function TherapyPlanCurrentScreen() {
           return;
         }
 
-        const ref = doc(db, "users", patientId, "therapy_plan", "current");
-        const snap = await getDoc(ref);
+        const loaded = await fetchTherapyPlan(patientId);
 
-        if (snap.exists()) {
-          const data = snap.data() as TherapyPlanCurrent;
+        if (loaded) {
+          const data = loaded as TherapyPlanCurrent;
           setPlan({
             regimen: typeof data.regimen === "string" ? data.regimen : "",
             notes: typeof data.notes === "string" ? data.notes : "",

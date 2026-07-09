@@ -14,9 +14,8 @@ import { BlurView } from "expo-blur";
 
 /* Import PDF Function */
 import { generateMonthlyPDF } from "../utils/generateMonthlyPDF";
-import { getAuth } from "firebase/auth";
-import { db } from "../firebaseconfig";
-import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { getCurrentUser } from "../services/auth";
+import { fetchEntriesInRange } from "../services/tracking";
 /* End Of Import PDF Function */
 
 type BrowseSection = {
@@ -38,28 +37,18 @@ export default function Browse() {
   const generateAndDownloadPDF = async () => {
     try {
       setGenerating(true);
-      const uid = getAuth().currentUser?.uid;
+      const uid = getCurrentUser()?.uid;
       if (!uid) throw new Error("Utente non autenticato");
 
       const now = new Date();
       const start = new Date(now.getFullYear(), now.getMonth(), 1);
       const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-      const startTimestamp = Timestamp.fromDate(start);
-      const endTimestamp = Timestamp.fromDate(end);
-
       const collections = ["blood_tests", "diet", "sleep", "symptoms", "medications"];
       const results: any = {};
 
       for (const col of collections) {
-        const ref = collection(db, `users/${uid}/${col}`);
-        const q = query(
-          ref,
-          where("createdAt", ">=", startTimestamp),
-          where("createdAt", "<=", endTimestamp)
-        );
-        const snapshot = await getDocs(q);
-        results[col] = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        results[col] = await fetchEntriesInRange(uid, col, "createdAt", start, end);
       }
 
       await generateMonthlyPDF(results);

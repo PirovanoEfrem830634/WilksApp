@@ -11,8 +11,8 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Animatable from "react-native-animatable";
 import { PressableScale } from "react-native-pressable-scale";
 
-import { auth, db } from "../firebaseconfig";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { useAuth } from "../auth/AuthProvider";
+import { fetchWorkBaseline, saveWorkBaseline } from "../services/workStatus";
 
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
@@ -37,7 +37,7 @@ export default function WorkStatusScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const user = auth.currentUser;
+  const { user } = useAuth();
 
   useEffect(() => {
     const loadBaseline = async () => {
@@ -52,11 +52,10 @@ export default function WorkStatusScreen() {
           setLoading(false);
           return;
         }
-        const ref = doc(db, "users", patientId, "work_status", "baseline");
-        const snap = await getDoc(ref);
+        const loaded = await fetchWorkBaseline(patientId);
 
-        if (snap.exists()) {
-          const data = snap.data() as BaselineWorkStatus;
+        if (loaded) {
+          const data = loaded as BaselineWorkStatus;
           setBaseline({
             currentlyWorking:
               typeof data.currentlyWorking === "boolean"
@@ -119,21 +118,13 @@ export default function WorkStatusScreen() {
         Alert.alert("Errore", "Sessione paziente non trovata. Rifai login.");
         return;
       }
-      const ref = doc(db, "users", patientId, "work_status", "baseline");
-
-      await setDoc(
-        ref,
-        {
-          currentlyWorking: baseline.currentlyWorking,
-          notWorkingDueToMG:
-            baseline.currentlyWorking === false
-              ? baseline.notWorkingDueToMG
-              : null,
-          compiledAt: new Date(),
-          compiledBy: "patient",
-        },
-        { merge: true }
-      );
+      await saveWorkBaseline(patientId, {
+        currentlyWorking: baseline.currentlyWorking,
+        notWorkingDueToMG:
+          baseline.currentlyWorking === false
+            ? baseline.notWorkingDueToMG
+            : null,
+      });
 
       Toast.show({
         type: "success",

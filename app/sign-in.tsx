@@ -12,17 +12,9 @@ import {
   Animated,
   Easing,
 } from "react-native";
-import { signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { db, auth } from "../firebaseconfig";
+import { signIn, logout } from "../services/auth";
+import { findPatientByEmail, linkMobileAccount } from "../services/patientProfile";
 import { useRouter, useNavigation } from "expo-router";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  updateDoc,
-  serverTimestamp,
-} from "firebase/firestore";
 import { Ionicons } from "@expo/vector-icons";
 import { setPatientDocId } from "../utils/session";
 import { TouchableOpacity } from "react-native";
@@ -52,7 +44,7 @@ export default function SignIn() {
 
   // 🔐 AUTO-LOGOUT: ogni volta che entro nella schermata SignIn
   useEffect(() => {
-    signOut(auth)
+    logout()
       .then(() => console.log("Auto-logout eseguito all'avvio di SignIn"))
       .catch((err) => {
         console.log("Errore durante l'auto-logout (puoi ignorarlo in dev):", err);
@@ -118,7 +110,7 @@ export default function SignIn() {
       setLoading(true);
 
       // 1) Login su Firebase Auth
-      const { user } = await signInWithEmailAndPassword(auth, safeEmail, safePwd);
+      const user = await signIn(safeEmail, safePwd);
 
       if (!user.email) {
         setError("L'account non ha un'email valida.");
@@ -126,28 +118,20 @@ export default function SignIn() {
       }
 
       // 2) Cerca il documento paziente tramite EMAIL
-      const q = query(collection(db, "users"), where("email", "==", user.email));
-      const snap = await getDocs(q);
+      const patientDoc = await findPatientByEmail(user.email);
 
-      if (snap.empty) {
+      if (!patientDoc) {
         setError(
           "Non risulta alcun profilo paziente associato a questa email. Contatta il tuo medico."
         );
         return;
       }
 
-      const patientDoc = snap.docs[0];
       await setPatientDocId(patientDoc.id);
-      const patientRef = patientDoc.ref;
-      const data = patientDoc.data() || {};
 
       // 3) Se firebase_uid è vuoto → collega l'account
-      if (!data.firebase_uid) {
-        await updateDoc(patientRef, {
-          firebase_uid: user.uid,
-          has_mobile_account: true,
-          mobile_linked_at: serverTimestamp(),
-        });
+      if (!patientDoc.firebase_uid) {
+        await linkMobileAccount(patientDoc.id, user.uid);
       }
 
       // 4) Login OK → vai in home

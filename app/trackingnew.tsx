@@ -12,8 +12,8 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
 import BottomNavigation from "../components/bottomnavigationnew";
-import { doc, setDoc, Timestamp } from "firebase/firestore";
-import { auth, db } from "../firebaseconfig";
+import { useAuth } from "../auth/AuthProvider";
+import { saveDailySymptoms } from "../services/tracking";
 import {
   Activity,
   AlertCircle,
@@ -51,6 +51,7 @@ type FormDataType = {
 
 export default function TrackingNew() {
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
 
   // stessa logica della BottomNavigation (come SleepTracking)
   const bottomPad = Math.max(insets.bottom, 10);
@@ -124,7 +125,6 @@ export default function TrackingNew() {
   };
 
   const saveSymptoms = async () => {
-    const user = auth.currentUser;
     if (!user) {
       showToast("❌ Utente non autenticato");
       return;
@@ -136,16 +136,8 @@ export default function TrackingNew() {
       return;
     }
 
-    const today = new Date().toISOString().split("T")[0];
-    const symptomsDocRef = doc(db, "users", patientId, "symptoms", today);
-
-    const dataToSave = {
-      ...formData,
-      dataInserimento: Timestamp.now(),
-    };
-
     try {
-      await setDoc(symptomsDocRef, dataToSave, { merge: true });
+      await saveDailySymptoms(patientId, formData);
       showToast("✅ Sintomi salvati correttamente!");
       scrollViewRef.current?.scrollTo({ y: 0, animated: true });
     } catch (error: any) {

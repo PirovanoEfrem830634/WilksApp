@@ -12,13 +12,12 @@ import * as Animatable from "react-native-animatable";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
-import { auth } from "../firebaseconfig";
-import { setDoc, Timestamp } from "firebase/firestore";
+import { useAuth } from "../auth/AuthProvider";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { getPatientDocId } from "../utils/session";
-import { surveyEntryRef } from "../utils/clinicalSurveys";
+import { saveSurveyEntry } from "../services/surveys";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ===== EQ-5D-5L (Italiano) =====
@@ -90,6 +89,7 @@ type Answers = Partial<Record<DimKey, string>>;
 
 export default function EQ5D5LSurvey() {
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
 
   const [answers, setAnswers] = useState<Answers>({});
   const [vasScore, setVasScore] = useState<string>("");
@@ -113,7 +113,7 @@ export default function EQ5D5LSurvey() {
   };
 
   const saveSurvey = async () => {
-    const firebaseUid = auth.currentUser?.uid;
+    const firebaseUid = user?.uid;
     if (!firebaseUid) {
       Alert.alert("Error", "User not logged in");
       return;
@@ -136,13 +136,11 @@ export default function EQ5D5LSurvey() {
       return;
     }
 
-    const docRef = surveyEntryRef(patientId, "eq5d5l");
-
     try {
-      await setDoc(
-        docRef,
+      await saveSurveyEntry(
+        patientId,
+        "eq5d5l",
         {
-          lastCompiledAt: Timestamp.now(),
           responses: {
             ...answers,
             vasScore: vas,

@@ -1,8 +1,13 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Pressable, Image } from "react-native";
 import * as Animatable from "react-native-animatable";
-import { auth, db } from "../firebaseconfig";
-import { collection, getDocs, getDoc, doc } from "firebase/firestore";
+import { useAuth } from "../auth/AuthProvider";
+import { fetchMedications } from "../services/medications";
+import {
+  fetchAllSleep,
+  fetchAllSymptoms,
+  fetchDailyDiet,
+} from "../services/tracking";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../Styles/color";
@@ -18,6 +23,7 @@ import { BlurView } from "expo-blur";
 
 export default function homenew() {
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
 
   const [summary, setSummary] = useState<SummaryData>({
     nextMedication: null,
@@ -46,7 +52,6 @@ export default function homenew() {
   useFocusEffect(
     useCallback(() => {
       const fetchSummary = async () => {
-        const user = auth.currentUser;
         if (!user) return;
 
         const patientId = await getPatientDocId();
@@ -58,13 +63,11 @@ export default function homenew() {
         const dayName = today.toLocaleString("en-US", { weekday: "short" });
 
         // 1. Medications
-        const medsRef = collection(db, "users", patientId, "medications");
-        const medsSnap = await getDocs(medsRef);
+        const meds = await fetchMedications(patientId);
         let nextMed = null;
         const upcomingMeds: { name: string; time: string }[] = [];
 
-        medsSnap.docs.forEach((docu) => {
-          const data = docu.data();
+        meds.forEach((data: any) => {
           if (data.days?.includes(dayName)) {
             data.times?.forEach((time: string) => {
               const [h, m] = time.split(":").map(Number);
@@ -86,24 +89,18 @@ export default function homenew() {
         }
 
         // 2. Symptoms (last entry)
-        const symptomsRef = collection(db, "users", patientId, "symptoms");
-        const symptomsSnap = await getDocs(symptomsRef);
+        const symptomRecords = await fetchAllSymptoms(patientId);
         let latest = null;
 
-        if (!symptomsSnap.empty) {
-          latest = symptomsSnap.docs
-            .map((docu) => ({ id: docu.id, ...docu.data() }))
-            .sort((a, b) => (a.id > b.id ? -1 : 1))[0];
+        if (symptomRecords.length > 0) {
+          latest = [...symptomRecords].sort((a, b) => (a.id > b.id ? -1 : 1))[0];
         }
 
         // 3. Sleep
-        const sleepRef = collection(db, "users", patientId, "sleep");
-        const sleepSnap = await getDocs(sleepRef);
-        const latestSleep = sleepSnap.docs
-          .map((docu) => ({
-            id: docu.id,
-            ...(docu.data() as { createdAt?: any; hours?: number }),
-          }))
+        const sleepRecords = (await fetchAllSleep(patientId)) as Array<
+          { id: string; createdAt?: any; hours?: number }
+        >;
+        const latestSleep = [...sleepRecords]
           .sort((a, b) => {
             const aDate = a.createdAt?.seconds
               ? new Date(a.createdAt.seconds * 1000)
@@ -117,8 +114,7 @@ export default function homenew() {
         const realSleepHours = latestSleep?.hours ?? null;
 
         // 4. Diet (FIX: non basta che esista il doc, deve essere completo)
-        const dietDocRef = doc(db, "users", patientId, "diet", todayStr);
-        const dietDocSnap = await getDoc(dietDocRef);
+        const dietDoc = await fetchDailyDiet(patientId, todayStr);
 
         const isFilled = (v: any) => {
           if (v == null) return false;
@@ -128,8 +124,8 @@ export default function homenew() {
 
         let dietStatus: string = "Da compilare";
 
-        if (dietDocSnap.exists()) {
-          const d = dietDocSnap.data() as any;
+        if (dietDoc) {
+          const d = dietDoc as any;
 
           const breakfastOk = isFilled(d.breakfast);
           const lunchOk = isFilled(d.lunch);
@@ -151,7 +147,7 @@ export default function homenew() {
       };
 
       fetchSummary();
-    }, [])
+    }, [user])
   );
 
   // Bottom padding dinamico per evitare che BottomNavigation copra l’ultima card

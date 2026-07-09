@@ -1,8 +1,7 @@
 import React, { useState, useRef } from "react";
 import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, Animated } from "react-native";
-import { auth } from "../firebaseconfig";
-import { setDoc, Timestamp } from "firebase/firestore";
-import { surveyEntryRef } from "../utils/clinicalSurveys";
+import { useAuth } from "../auth/AuthProvider";
+import { saveSurveyEntry } from "../services/surveys";
 import * as Animatable from "react-native-animatable";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { LinearGradient } from "expo-linear-gradient";
@@ -47,6 +46,7 @@ const classifications = [
 ];
 
 export default function MGFAClassificationSurvey() {
+  const { user } = useAuth();
   const [selected, setSelected] = useState<string | null>(null);
   const toastAnim = useRef(new Animated.Value(0)).current;
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -69,17 +69,13 @@ export default function MGFAClassificationSurvey() {
   };
 
   const saveSurvey = async () => {
-    const user = auth.currentUser;
     if (!user) {
       Alert.alert("Error", "User not logged in");
       return;
     }
-    const uid = user.uid;
-    const docRef = surveyEntryRef(uid, "mgfa");
     try {
-      await setDoc(docRef, {
+      await saveSurveyEntry(user.uid, "mgfa", {
         classification: selected,
-        lastCompiledAt: Timestamp.now(),
       });
       showToast("✅ Classification saved successfully");
     } catch (err: any) {

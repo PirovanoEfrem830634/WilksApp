@@ -8,19 +8,37 @@ import {
   limit,
   orderBy,
   query,
+  setDoc,
+  Timestamp,
 } from "firebase/firestore";
-import { db } from "../firebaseconfig";
+import { db } from "./firebase";
 
 export type SurveyEntry = { entryDate?: string } & Record<string, any>;
 
 export const todayId = () => new Date().toISOString().split("T")[0];
 
 // Riferimento al documento del giorno per un questionario
-export const surveyEntryRef = (
+const surveyEntryRef = (
   patientId: string,
   surveyKey: string,
   dayId: string = todayId()
 ) => doc(db, "users", patientId, "clinical_surveys", surveyKey, "entries", dayId);
+
+// Salva la compilazione del giorno; lastCompiledAt è gestito qui
+// (sovrascrivibile passandolo in `data`).
+export async function saveSurveyEntry(
+  patientId: string,
+  surveyKey: string,
+  data: Record<string, any>,
+  { merge = false, dayId = todayId() }: { merge?: boolean; dayId?: string } = {}
+) {
+  const payload = { lastCompiledAt: Timestamp.now(), ...data };
+  if (merge) {
+    await setDoc(surveyEntryRef(patientId, surveyKey, dayId), payload, { merge: true });
+  } else {
+    await setDoc(surveyEntryRef(patientId, surveyKey, dayId), payload);
+  }
+}
 
 // Ultima compilazione di un questionario: entry con lastCompiledAt più recente.
 // I documenti senza lastCompiledAt vengono ignorati dall'orderBy.

@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet, Platform } from "react-native";
 import * as Animatable from "react-native-animatable";
-import { auth } from "../firebaseconfig";
-import { fetchLatestSurveyEntry } from "../utils/clinicalSurveys";
+import { useAuth } from "../auth/AuthProvider";
+import { fetchLatestSurveyEntry } from "../services/surveys";
 import BottomNavigation from "../components/bottomnavigationnew";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import { Ionicons } from "@expo/vector-icons";
@@ -39,6 +39,7 @@ interface SurveyStatus {
 // ------------------------------------------------------
 export default function ClinicalSurveysScreen() {
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
 
   const [statuses, setStatuses] = useState<Record<SurveyKey, SurveyStatus>>({
     mg_qol15: { status: "todo" },
@@ -112,7 +113,7 @@ export default function ClinicalSurveysScreen() {
   useFocusEffect(
     useCallback(() => {
       const fetchData = async () => {
-        const firebaseUid = auth.currentUser?.uid;
+        const firebaseUid = user?.uid;
         if (!firebaseUid) return;
 
         const patientId = await getPatientDocId();
@@ -189,7 +190,7 @@ export default function ClinicalSurveysScreen() {
       };
 
       fetchData();
-    }, [])
+    }, [user])
   );
 
   // ------------------------------------------------------

@@ -12,8 +12,8 @@ import { Picker } from "@react-native-picker/picker";
 import Slider from "@react-native-community/slider";
 import { Ionicons } from "@expo/vector-icons";
 import BottomNavigation from "../components/bottomnavigationnew";
-import { auth, db } from "../firebaseconfig";
-import { doc, setDoc, Timestamp } from "firebase/firestore";
+import { useAuth } from "../auth/AuthProvider";
+import { saveDailySleep } from "../services/tracking";
 import Toast from "react-native-toast-message";
 import { useFocusEffect } from "@react-navigation/native";
 import * as Animatable from "react-native-animatable";
@@ -40,6 +40,7 @@ import { getPatientDocId } from "../utils/session";
 
 export default function SleepTracking() {
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
 
   // stessa logica della tua BottomNavigation
   const bottomPad = Math.max(insets.bottom, 10);
@@ -70,7 +71,6 @@ export default function SleepTracking() {
   );
 
   const handleSave = async () => {
-    const user = auth.currentUser;
     if (!user) {
       Toast.show({
         type: "error",
@@ -91,9 +91,6 @@ export default function SleepTracking() {
       return;
     }
 
-    const today = new Date().toISOString().split("T")[0];
-    const ref = doc(db, "users", patientId, "sleep", today);
-
     const sleepData = {
       quality,
       hours: parseInt(hours) || 0,
@@ -101,11 +98,10 @@ export default function SleepTracking() {
       nightmares,
       apnea,
       notes,
-      createdAt: Timestamp.now(),
     };
 
     try {
-      await setDoc(ref, sleepData);
+      await saveDailySleep(patientId, sleepData);
       Toast.show({
         type: "success",
         text1: "Dati salvati correttamente",

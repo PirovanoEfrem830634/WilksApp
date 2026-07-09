@@ -8,8 +8,8 @@ import {
   Lock,
   Pill,
 } from "lucide-react-native";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
-import { auth, db } from "../firebaseconfig";
+import { useAuth } from "../auth/AuthProvider";
+import { subscribeToMedications } from "../services/medications";
 import BottomNavigation from "../components/bottomnavigationnew";
 import * as Animatable from "react-native-animatable";
 import FontStyles from "../Styles/fontstyles";
@@ -142,6 +142,7 @@ const computeNextDose = (days: string[], times: string[]): NextDoseInfo => {
 
 // ---------- Component ----------
 export default function MyMedications() {
+  const { user } = useAuth();
   const [medications, setMedications] = useState<Medication[]>([]);
   const insets = useSafeAreaInsets();
 
@@ -154,7 +155,6 @@ export default function MyMedications() {
     let unsub: (() => void) | null = null;
 
     const run = async () => {
-      const user = auth.currentUser;
       if (!user) return;
 
       // ✅ usa patientDocId, NON user.uid
@@ -164,16 +164,12 @@ export default function MyMedications() {
         return;
       }
 
-      const medsRef = collection(db, "users", patientId, "medications");
-      const qMeds = query(medsRef, orderBy("createdAt", "desc"));
-
-      unsub = onSnapshot(
-        qMeds,
-        (snap) => {
-          const meds = snap.docs.map((d) => {
-            const data = d.data() as any;
+      unsub = subscribeToMedications(
+        patientId,
+        (rows) => {
+          const meds = rows.map((data: any) => {
             return {
-              id: d.id,
+              id: data.id,
               name: data?.name || "",
               dose: data?.dose || "",
               days: Array.isArray(data?.days) ? data.days : [],
@@ -192,7 +188,7 @@ export default function MyMedications() {
     return () => {
       if (unsub) unsub();
     };
-  }, []);
+  }, [user]);
 
   const orderedWithNext = useMemo(() => {
     const withNext = medications.map((m) => ({

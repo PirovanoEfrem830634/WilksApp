@@ -7,9 +7,9 @@ import {
   StyleSheet,
   ScrollView,
 } from "react-native";
-import { auth, db } from "../firebaseconfig";
-import { getDoc, doc } from "firebase/firestore";
-import { signOut, onAuthStateChanged } from "firebase/auth";
+import { useAuth } from "../auth/AuthProvider";
+import { logout } from "../services/auth";
+import { fetchPatient } from "../services/patientProfile";
 import { useRouter, useNavigation } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import BottomNavigation from "../components/bottomnavigationnew";
@@ -32,6 +32,7 @@ interface UserData {
 }
 
 export default function Profile() {
+  const { user, loadingAuth } = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -43,7 +44,9 @@ export default function Profile() {
   }, [navigation]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const loadProfile = async () => {
+      if (loadingAuth) return;
+
       if (user) {
         const patientId = await getPatientDocId();
         if (!patientId) {
@@ -54,11 +57,10 @@ export default function Profile() {
         }
 
         try {
-          const userDocRef = doc(db, "users", patientId);
-          const userDoc = await getDoc(userDocRef);
+          const profile = await fetchPatient(patientId);
 
-          if (userDoc.exists()) {
-            setUserData(userDoc.data() as UserData);
+          if (profile) {
+            setUserData(profile as unknown as UserData);
           } else {
             console.log("User document does not exist");
             setUserData(null);
@@ -71,13 +73,13 @@ export default function Profile() {
         setUserData(null);
       }
       setLoading(false);
-    });
+    };
 
-    return () => unsubscribe();
-    }, []);
+    loadProfile();
+    }, [user, loadingAuth]);
 
     const handleLogout = async () => {
-      await signOut(auth);
+      await logout();
       setUserData(null);
       await clearPatientDocId();
       router.replace("/sign-in");

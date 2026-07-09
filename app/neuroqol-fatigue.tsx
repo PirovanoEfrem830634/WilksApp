@@ -11,9 +11,8 @@ import * as Animatable from "react-native-animatable";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import PressableScaleWithRef from "../components/PressableScaleWithRef";
-import { auth } from "../firebaseconfig";
-import { setDoc, Timestamp } from "firebase/firestore";
-import { surveyEntryRef } from "../utils/clinicalSurveys";
+import { useAuth } from "../auth/AuthProvider";
+import { saveSurveyEntry } from "../services/surveys";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 import BottomNavigation from "../components/bottomnavigationnew";
@@ -95,6 +94,7 @@ const labelToValue: Record<ScaleLabel, number> = {
 
 export default function NeuroQoLFatigueScreen() {
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
 
   const [answers, setAnswers] = useState<Record<string, ScaleLabel>>({});
   const answeredCount = useMemo(() => Object.keys(answers).length, [answers]);
@@ -123,7 +123,7 @@ export default function NeuroQoLFatigueScreen() {
   };
 
   const saveSurvey = async () => {
-    const firebaseUid = auth.currentUser?.uid;
+    const firebaseUid = user?.uid;
     if (!firebaseUid) {
       Alert.alert("Error", "User not logged in");
       return;
@@ -140,13 +140,11 @@ export default function NeuroQoLFatigueScreen() {
       return;
     }
 
-    const ref = surveyEntryRef(patientId, "neuro_qol_fatigue");
-
     try {
-      await setDoc(
-        ref,
+      await saveSurveyEntry(
+        patientId,
+        "neuro_qol_fatigue",
         {
-          lastCompiledAt: Timestamp.now(),
           responses: answers,
           totalScore,
           source: "patient_app",

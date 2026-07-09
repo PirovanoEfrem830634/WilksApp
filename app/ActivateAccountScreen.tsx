@@ -20,13 +20,12 @@ import PressableScaleWithRef from "../components/PressableScaleWithRef";
 import Colors from "../Styles/color";
 import FontStyles from "../Styles/fontstyles";
 
-import { auth, db } from "../firebaseconfig";
+import { logout, signUpOrSignIn } from "../services/auth";
 import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-} from "firebase/auth";
-import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+  consumeActivationTicket,
+  fetchActivationTicket,
+  linkActivatedPatient,
+} from "../services/activation";
 
 type TicketDoc = {
   patientDocId: string;
@@ -75,19 +74,8 @@ export default function ActivateAccountScreen() {
     });
   };
 
-  const getAuthUid = async (e: string, p: string) => {
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, e, p);
-      return cred.user.uid;
-    } catch (err: any) {
-      // Se l'email esiste già, facciamo sign-in e proseguiamo
-      if (err?.code === "auth/email-already-in-use") {
-        const cred = await signInWithEmailAndPassword(auth, e, p);
-        return cred.user.uid;
-      }
-      throw err;
-    }
-  };
+  // Se l'email esiste già, il service fa sign-in e prosegue
+  const getAuthUid = (e: string, p: string) => signUpOrSignIn(e, p);
 
   const handleActivate = async () => {
     const tId = norm(ticketId);
@@ -116,60 +104,48 @@ export default function ActivateAccountScreen() {
       const uid = await getAuthUid(e, p);
 
       // 2) Leggi ticket (rules: serve signed-in, ora lo sei)
-      const ticketRef = doc(db, "activationTickets", tId);
-      const snap = await getDoc(ticketRef);
+      const ticketData = await fetchActivationTicket(tId);
 
-      if (!snap.exists()) {
-        await signOut(auth);
+      if (!ticketData) {
+        await logout();
         throw new Error("Ticket non trovato. Controlla il Ticket ID.");
       }
 
-      const ticket = snap.data() as TicketDoc;
+      const ticket = ticketData as TicketDoc;
 
       // 3) Validazioni
       if (ticket.used === true) {
-        await signOut(auth);
+        await logout();
         throw new Error("Questo ticket è già stato usato.");
       }
 
       if ((ticket.email || "").toLowerCase() !== e) {
-        await signOut(auth);
+        await logout();
         throw new Error("L’email non corrisponde al ticket.");
       }
 
       if (String(ticket.codeHash || "") !== String(c)) {
-        await signOut(auth);
+        await logout();
         throw new Error("Codice errato. Ricontrolla le cifre.");
       }
 
       if (!ticket.patientDocId) {
-        await signOut(auth);
+        await logout();
         throw new Error("Ticket non valido: manca userId.");
       }
 
       // 4) Consuma ticket (NON cambiare userId/email/code)
-      await updateDoc(ticketRef, {
-        used: true,
-        firebase_uid: uid,
-        usedAt: serverTimestamp(),
-        usedByUid: uid,
-        usedByEmail: e,
-      });
+      await consumeActivationTicket(tId, uid, e);
 
       // 5) Link su /users/{userId}
-      const userRef = doc(db, "users", ticket.patientDocId);
-      await updateDoc(userRef, {
-        firebase_uid: uid,
-        has_mobile_account: true,
-        has_mobile_account_at: serverTimestamp(),
-      });
+      await linkActivatedPatient(ticket.patientDocId, uid);
 
       toast("success", "Account attivato ✅", "Ora puoi entrare normalmente.");
       setTimeout(() => router.replace("/sign-in"), 700);
     } catch (err: any) {
       // Se sei loggato ma qualcosa va storto (rules / ticket), meglio sloggare per non lasciare sessione sporca
       try {
-        await signOut(auth);
+        await logout();
       } catch {}
 
       // Messaggi utili

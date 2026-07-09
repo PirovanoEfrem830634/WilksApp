@@ -9,11 +9,10 @@ import {
   UIManager,
   Platform,
 } from "react-native";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebaseconfig";
+import { getCurrentUser } from "../services/auth";
+import { fetchAllEntries } from "../services/tracking";
 import BottomNavigation from "../components/bottomnavigationnew";
 import { ChevronDown, ChevronUp, RefreshCw } from "lucide-react-native";
-import { getAuth } from "firebase/auth";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import Toast from "react-native-toast-message";
 import { evaluateCDSS, getPersonalizedAdvice } from "../utils/cdssLogic";
@@ -68,8 +67,7 @@ const sectionMeta: Record<keyof FirestoreData, { label: string; icon: string; co
 };
 
 const fetchAllData = async (): Promise<FirestoreData> => {
-  const auth = getAuth();
-  const uid = auth.currentUser?.uid;
+  const uid = getCurrentUser()?.uid;
 
   if (!uid) throw new Error("User not authenticated");
 
@@ -77,9 +75,8 @@ const fetchAllData = async (): Promise<FirestoreData> => {
   const data: FirestoreData = { diet: [], medications: [], sleep: [], symptoms: [] };
 
   for (const name of collections) {
-    const snapshot = await getDocs(collection(db, `users/${uid}/${name}`));
-    const docs = snapshot.docs
-      .map(doc => ({ id: doc.id, ...doc.data() }))
+    const entries = await fetchAllEntries(uid, name);
+    const docs = [...entries]
       .sort((a, b) => {
         const getDate = (entry: any) => {
           if (entry.createdAt?.seconds) return new Date(entry.createdAt.seconds * 1000);
